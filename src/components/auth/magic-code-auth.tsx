@@ -1,0 +1,234 @@
+/** @format */
+
+"use client";
+
+import { useState, useRef, FormEvent } from "react";
+import { Mail } from "lucide-react";
+
+import { db } from "@/lib/db/db";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+
+interface MagicCodeAuthProps {
+    trigger?: React.ReactNode;
+    onSuccess?: () => void;
+}
+
+export function MagicCodeAuth({ trigger, onSuccess }: MagicCodeAuthProps) {
+    const [open, setOpen] = useState(false);
+    const [sentEmail, setSentEmail] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen);
+        if (!newOpen) {
+            // Reset state when dialog closes
+            setSentEmail("");
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <>
+            {trigger ? (
+                <div onClick={() => setOpen(true)}>{trigger}</div>
+            ) : (
+                <Button
+                    onClick={() => setOpen(true)}
+                    variant="outline"
+                    className="w-full items-center gap-2 justify-start"
+                    size="lg"
+                >
+                    <Mail className="h-5 w-5" />
+                    Sign in with Email
+                </Button>
+            )}
+            <Dialog
+                open={open}
+                onOpenChange={handleOpenChange}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {!sentEmail
+                                ? "Sign in with Email"
+                                : "Enter your code"}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {!sentEmail
+                                ? "Enter your email, and we'll send you a verification code. We'll create an account for you too if you don't already have one."
+                                : `We sent an email to ${sentEmail}. Check your email, and paste the code you see.`}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {!sentEmail ? (
+                        <EmailStep
+                            onSendEmail={(email) => {
+                                setSentEmail(email);
+                            }}
+                            isLoading={isLoading}
+                            setIsLoading={setIsLoading}
+                        />
+                    ) : (
+                        <CodeStep
+                            sentEmail={sentEmail}
+                            onBack={() => setSentEmail("")}
+                            onSuccess={() => {
+                                setOpen(false);
+                                onSuccess?.();
+                            }}
+                            isLoading={isLoading}
+                            setIsLoading={setIsLoading}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+
+function EmailStep({
+    onSendEmail,
+    isLoading,
+    setIsLoading,
+}: {
+    onSendEmail: (email: string) => void;
+    isLoading: boolean;
+    setIsLoading: (loading: boolean) => void;
+}) {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const inputEl = inputRef.current;
+        if (!inputEl) return;
+
+        const email = inputEl.value.trim();
+        if (!email) return;
+
+        setIsLoading(true);
+        db.auth
+            .sendMagicCode({ email })
+            .then(() => {
+                onSendEmail(email);
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                setIsLoading(false);
+                alert("Uh oh: " + (err.body?.message || err.message));
+            });
+    };
+
+    return (
+        <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+        >
+            <Input
+                ref={inputRef}
+                type="email"
+                placeholder="Enter your email"
+                required
+                autoFocus
+                disabled={isLoading}
+            />
+            <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+            >
+                {isLoading ? "Sending..." : "Send Code"}
+            </Button>
+        </form>
+    );
+}
+
+function CodeStep({
+    sentEmail,
+    onBack,
+    onSuccess,
+    isLoading,
+    setIsLoading,
+}: {
+    sentEmail: string;
+    onBack: () => void;
+    onSuccess: () => void;
+    isLoading: boolean;
+    setIsLoading: (loading: boolean) => void;
+}) {
+    const [code, setCode] = useState("");
+
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const trimmedCode = code.trim();
+        if (!trimmedCode) return;
+
+        setIsLoading(true);
+        db.auth
+            .signInWithMagicCode({ email: sentEmail, code: trimmedCode })
+            .then(() => {
+                setIsLoading(false);
+                onSuccess();
+            })
+            .catch((err) => {
+                setIsLoading(false);
+                setCode("");
+                alert("Uh oh: " + (err.body?.message || err.message));
+            });
+    };
+
+    return (
+        <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+        >
+            <div className="flex justify-center">
+                <InputOTP
+                    maxLength={6}
+                    value={code}
+                    onChange={setCode}
+                    disabled={isLoading}
+                    autoFocus
+                >
+                    <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                </InputOTP>
+            </div>
+            <div className="flex gap-2">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onBack}
+                    className="flex-1"
+                    disabled={isLoading}
+                >
+                    Back
+                </Button>
+                <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={isLoading || code.length < 6}
+                >
+                    {isLoading ? "Verifying..." : "Verify Code"}
+                </Button>
+            </div>
+        </form>
+    );
+}
