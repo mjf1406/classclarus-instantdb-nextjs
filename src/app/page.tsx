@@ -9,7 +9,7 @@ import GuestDescription from "@/components/guest/guest-description";
 import TryAsGuestButton from "@/components/auth/guest-auth";
 import GoogleOAuthButton from "@/components/auth/google-oauth";
 import { ThemeSwitch } from "@/components/theme/theme-switch";
-import Image from "next/image";
+import { Logo } from "@/components/brand/logo";
 
 export default function Home() {
     return (
@@ -32,12 +32,7 @@ function SignedOutView() {
     return (
         <div className="w-full max-w-md space-y-6">
             <div className="text-center space-y-2 flex items-center justify-center">
-                <Image
-                    src="/classclarus-logo.webp"
-                    alt="ClassClarus Logo"
-                    width={434}
-                    height={106}
-                />
+                <Logo />
             </div>
             <div className="space-y-4">
                 <div className="space-y-2">
