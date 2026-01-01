@@ -6,12 +6,12 @@
 
 -   [ ] organizations
     -   [x] create organization
-    -   [ ] edit organization
+    -   [x] edit organization
     -   [x] delete organization
     -   [x] list organizations
     -   `/` page
         -   [ ] the home page shows all orgs the user is in as collapsible sections, which show all the classes the user is in for each org,
-        -   [ ] each org section has ability to create, edit, delete the org if admin
+        -   [x] each org section has ability to create, edit, delete the org if admin
         -   [ ] each class uses the class card, which allows the user to create, edit, delete classes in each org
     -   [ ] `/[orgId]` page shows all classes in the org, with ability to create, edit, delete classes in that org
 -   [ ] classes
@@ -39,3 +39,4 @@
 
 -   upgraded React to 19.2
 -   upgraded Next.js to 16
+-   UX: organizations can be created, edited, and deleted

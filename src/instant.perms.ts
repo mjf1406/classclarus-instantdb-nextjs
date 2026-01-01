@@ -11,9 +11,15 @@ const dataBind = [
     // User is a guest
     "isGuest",
     "auth.isGuest == true",
+    // User is not a guest
+    "isNotGuest",
+    "auth.isGuest == false",
     // User is the owner of the data
     "isOwner",
     "data.owner == auth.id || auth.id == data.user",
+    // User is still the owner of the data
+    "isStillOwner",
+    "auth.id == newData.owner || auth.id == newData.user",
     // User is a premium user
     "isPremium",
     "auth.ref('$user.profile.plan').exists(p, p in ['basic', 'plus', 'pro'])",
@@ -59,8 +65,8 @@ const rules = {
         allow: {
             create: "isAuthenticated",
             view: "isAuthenticated && (isOwner || isAdmin || isMember)",
-            update: "isAuthenticated && isAdmin",
-            delete: "isAuthenticated && isAdmin",
+            update: "isAuthenticated && (isOwner || isAdmin) && (isStillOwner || isStillAdmin)",
+            delete: "isAuthenticated && (isOwner || isAdmin)",
         },
         bind: dataBind,
     },
@@ -68,7 +74,7 @@ const rules = {
         allow: {
             create: "isAuthenticated",
             view: "isAuthenticated && (isOwner || isAdmin || isMember)",
-            update: "isAuthenticated && (isOwner || isAdmin)",
+            update: "isAuthenticated && (isOwner || isAdmin) && (isStillOwner || isStillAdmin)",
             delete: "isAuthenticated && (isOwner || isAdmin)",
         },
         bind: dataBind,
