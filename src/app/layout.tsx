@@ -43,7 +43,13 @@ export default function RootLayout({
                     <GoogleOAuthProvider
                         clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
                     >
-                        {children}
+                        <div
+                            vaul-drawer-wrapper=""
+                            className="bg-background"
+                        >
+                            {" "}
+                            {children}{" "}
+                        </div>
                     </GoogleOAuthProvider>
                 </ThemeProvider>
             </body>
