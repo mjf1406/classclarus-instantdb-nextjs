@@ -23,14 +23,16 @@ export default function OrgList() {
     const [searchQuery, setSearchQuery] = useState("");
     const { user, isLoading: isUserLoading } = db.useAuth();
 
-    // Query organizations with owner and classes relations
-    // This fetches all organizations - in production you'd want to filter by membership
-    const { data, isLoading, error } = db.useQuery({
-        organizations: {
-            owner: {},
-            classes: {},
-        },
-    });
+    const { data, isLoading, error } = db.useQuery(
+        user
+            ? {
+                  organizations: {
+                      owner: {},
+                      classes: {},
+                  },
+              }
+            : {}
+    );
 
     const organizations = data?.organizations ?? [];
 
