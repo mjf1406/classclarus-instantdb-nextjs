@@ -2,7 +2,7 @@
 
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import {
@@ -14,12 +14,12 @@ import {
     Edit,
     GraduationCap,
     MoreVertical,
-    Plus,
     Settings,
     ShieldCheck,
     Trash2,
     Users,
 } from "lucide-react";
+import CreateClassDialog from "@/components/classes/create-class-dialog";
 
 import { db } from "@/lib/db/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -453,10 +453,7 @@ function OrgClasses({
                     </p>
                 </div>
                 {isOwner && (
-                    <Button size="sm">
-                        <Plus className="size-4" />
-                        Add Class
-                    </Button>
+                    <CreateClassDialog organizationId={organization.id} />
                 )}
             </div>
 
@@ -475,10 +472,15 @@ function OrgClasses({
                     </EmptyHeader>
                     {isOwner && (
                         <EmptyContent>
-                            <Button>
-                                <Plus className="size-4" />
-                                Create first class
-                            </Button>
+                            <CreateClassDialog
+                                organizationId={organization.id}
+                                trigger={
+                                    <Button>
+                                        <GraduationCap className="size-4" />
+                                        Create first class
+                                    </Button>
+                                }
+                            />
                         </EmptyContent>
                     )}
                 </Empty>

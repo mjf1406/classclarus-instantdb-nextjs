@@ -142,7 +142,7 @@ export default function OrgList() {
 
             {/* Organization grid */}
             {filteredOrganizations.length > 0 && (
-                <div className="grid gap-5 grid-cols-2">
+                <div className="flex flex-col lg:grid gap-5 lg:grid-cols-2">
                     {filteredOrganizations.map((org) => (
                         <OrgCard
                             key={org.id}

@@ -14,6 +14,7 @@ import {
     MoreVertical,
     Pencil,
     Trash2,
+    ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -41,6 +42,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { EditOrgDialog } from "@/components/organizations/edit-org-dialog";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/db/db";
@@ -63,7 +69,7 @@ interface OrganizationData {
         firstName?: string;
         lastName?: string;
     };
-    classes?: { id: string }[];
+    classes?: { id: string; name: string }[];
 }
 
 interface OrgCardProps {
@@ -232,7 +238,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                         </div>
 
                         {/* Stats section */}
-                        <div className="mt-5 grid grid-cols-3 gap-3">
+                        <div className="mt-5 grid grid-cols-2 gap-3">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div className="flex flex-col items-center rounded-lg bg-muted/50 px-3 py-2.5 transition-colors hover:bg-muted">
@@ -270,26 +276,49 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                         : `${admins.length} admins`}
                                 </TooltipContent>
                             </Tooltip>
+                        </div>
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center rounded-lg bg-muted/50 px-3 py-2.5 transition-colors hover:bg-muted">
-                                        <GraduationCap className="size-4 text-muted-foreground mb-1" />
-                                        <span className="text-lg font-semibold tabular-nums">
-                                            {classCount}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
+                        {/* Classes collapsible section */}
+                        <Collapsible className="mt-3">
+                            <CollapsibleTrigger
+                                asChild
+                                onClick={(e) => e.preventDefault()}
+                            >
+                                <button className="flex w-full items-center justify-between rounded-lg bg-muted/50 px-4 py-3 text-left transition-colors hover:bg-muted group/classes">
+                                    <div className="flex items-center gap-3">
+                                        <GraduationCap className="size-4 text-muted-foreground" />
+                                        <span className="text-sm font-medium">
                                             Classes
                                         </span>
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary tabular-nums">
+                                            {classCount}
+                                        </span>
                                     </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {classCount === 1
-                                        ? "1 class"
-                                        : `${classCount} classes`}
-                                </TooltipContent>
-                            </Tooltip>
-                        </div>
+                                    <ChevronDown className="size-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]/classes:rotate-180" />
+                                </button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                                <div className="mt-2 space-y-1.5 pl-1">
+                                    {classes && classes.length > 0 ? (
+                                        classes.map((cls) => (
+                                            <div
+                                                key={cls.id}
+                                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
+                                            >
+                                                <div className="size-1.5 rounded-full bg-primary/50" />
+                                                <span className="truncate">
+                                                    {cls.name}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="px-3 py-2 text-sm italic text-muted-foreground/60">
+                                            No classes yet
+                                        </p>
+                                    )}
+                                </div>
+                            </CollapsibleContent>
+                        </Collapsible>
 
                         {/* Footer section with dates and owner */}
                         <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
@@ -426,14 +455,15 @@ export function OrgCardSkeleton() {
                     <div className="h-4 w-full rounded bg-muted animate-pulse" />
                 </div>
             </div>
-            <div className="mt-5 grid grid-cols-3 gap-3">
-                {[1, 2, 3].map((i) => (
+            <div className="mt-5 grid grid-cols-2 gap-3">
+                {[1, 2].map((i) => (
                     <div
                         key={i}
                         className="h-18 rounded-lg bg-muted animate-pulse"
                     />
                 ))}
             </div>
+            <div className="mt-3 h-12 rounded-lg bg-muted animate-pulse" />
             <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
                 <div className="flex items-center gap-2">
                     <div className="size-6 rounded-full bg-muted animate-pulse" />
