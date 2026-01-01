@@ -12,14 +12,13 @@ import {
     Clock,
     Crown,
     Edit,
-    GraduationCap,
     MoreVertical,
     Settings,
     ShieldCheck,
     Trash2,
     Users,
 } from "lucide-react";
-import CreateClassDialog from "@/components/classes/create-class-dialog";
+import ClassList from "@/components/classes/class-list";
 
 import { db } from "@/lib/db/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -60,9 +59,6 @@ export default function OrgPage({ params }: OrgPageProps) {
         organizations: {
             $: { where: { id: orgId } },
             owner: {},
-            classes: {
-                owner: {},
-            },
         },
     });
 
@@ -183,10 +179,7 @@ export default function OrgPage({ params }: OrgPageProps) {
                 <OrgStats organization={organization} />
 
                 {/* Classes section */}
-                <OrgClasses
-                    organization={organization}
-                    isOwner={isOwner}
-                />
+                <ClassList organizationId={organization.id} />
             </main>
         </div>
     );
@@ -361,11 +354,10 @@ function OrgStats({
 }: {
     organization: NonNullable<ReturnType<typeof useOrgData>>;
 }) {
-    const { memberIds, adminIds, classes } = organization;
+    const { memberIds, adminIds } = organization;
 
     const members = Array.isArray(memberIds) ? memberIds : [];
     const admins = Array.isArray(adminIds) ? adminIds : [];
-    const classCount = classes?.length ?? 0;
 
     const stats = [
         {
@@ -382,18 +374,11 @@ function OrgStats({
             color: "text-emerald-500",
             bgColor: "bg-emerald-500/10",
         },
-        {
-            label: "Classes",
-            value: classCount,
-            icon: GraduationCap,
-            color: "text-violet-500",
-            bgColor: "bg-violet-500/10",
-        },
     ];
 
     return (
         <section className="mb-8">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
                 {stats.map((stat) => (
                     <div
                         key={stat.label}
@@ -423,142 +408,6 @@ function OrgStats({
                 ))}
             </div>
         </section>
-    );
-}
-
-// Organization classes component
-function OrgClasses({
-    organization,
-    isOwner,
-}: {
-    organization: NonNullable<ReturnType<typeof useOrgData>>;
-    isOwner: boolean;
-}) {
-    const { classes } = organization;
-    const classList = classes ?? [];
-
-    return (
-        <section>
-            <div className="mb-4 flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-semibold tracking-tight">
-                        Classes
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                        {classList.length === 0
-                            ? "No classes yet"
-                            : `${classList.length} class${
-                                  classList.length !== 1 ? "es" : ""
-                              }`}
-                    </p>
-                </div>
-                {isOwner && (
-                    <CreateClassDialog organizationId={organization.id} />
-                )}
-            </div>
-
-            {classList.length === 0 ? (
-                <Empty className="min-h-60 border bg-card rounded-xl">
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <GraduationCap className="size-6" />
-                        </EmptyMedia>
-                        <EmptyTitle>No classes yet</EmptyTitle>
-                        <EmptyDescription>
-                            {isOwner
-                                ? "Create your first class to get started managing students and content."
-                                : "This organization doesn't have any classes yet."}
-                        </EmptyDescription>
-                    </EmptyHeader>
-                    {isOwner && (
-                        <EmptyContent>
-                            <CreateClassDialog
-                                organizationId={organization.id}
-                                trigger={
-                                    <Button>
-                                        <GraduationCap className="size-4" />
-                                        Create first class
-                                    </Button>
-                                }
-                            />
-                        </EmptyContent>
-                    )}
-                </Empty>
-            ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {classList.map((cls) => (
-                        <ClassCard
-                            key={cls.id}
-                            classData={cls}
-                        />
-                    ))}
-                </div>
-            )}
-        </section>
-    );
-}
-
-// Simple class card component
-function ClassCard({
-    classData,
-}: {
-    classData: {
-        id: string;
-        name: string;
-        description?: string;
-        icon?: string;
-        joinCode: string;
-        created: Date | string | number;
-        owner?: {
-            id: string;
-            email?: string;
-            firstName?: string;
-            lastName?: string;
-        };
-    };
-}) {
-    const { name, description, joinCode, owner } = classData;
-
-    return (
-        <Link
-            href={`#`}
-            className="group block"
-        >
-            <article className="rounded-xl border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5">
-                <div className="flex items-start gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-primary/20 to-primary/5">
-                        <GraduationCap className="size-5 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
-                            {name}
-                        </h3>
-                        {description ? (
-                            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                                {description}
-                            </p>
-                        ) : (
-                            <p className="mt-1 text-sm text-muted-foreground/60 italic">
-                                No description
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3 text-xs text-muted-foreground">
-                    <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                        {joinCode}
-                    </span>
-                    {owner && (
-                        <span className="truncate max-w-24">
-                            {owner.firstName && owner.lastName
-                                ? `${owner.firstName} ${owner.lastName}`
-                                : owner.email}
-                        </span>
-                    )}
-                </div>
-            </article>
-        </Link>
     );
 }
 
@@ -596,8 +445,8 @@ function OrgPageSkeleton() {
 
                 {/* Stats skeleton */}
                 <section className="mb-8">
-                    <div className="grid gap-4 sm:grid-cols-3">
-                        {[1, 2, 3].map((i) => (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {[1, 2].map((i) => (
                             <Skeleton
                                 key={i}
                                 className="h-20 rounded-xl"
@@ -606,20 +455,20 @@ function OrgPageSkeleton() {
                     </div>
                 </section>
 
-                {/* Classes skeleton */}
+                {/* Classes section skeleton */}
                 <section>
                     <div className="mb-4 flex items-center justify-between">
                         <div>
-                            <Skeleton className="h-6 w-24" />
-                            <Skeleton className="mt-1 h-4 w-16" />
+                            <Skeleton className="h-7 w-24" />
+                            <Skeleton className="mt-1 h-5 w-16" />
                         </div>
-                        <Skeleton className="h-9 w-24 rounded-md" />
+                        <Skeleton className="h-9 w-28 rounded-md" />
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         {[1, 2, 3].map((i) => (
                             <Skeleton
                                 key={i}
-                                className="h-32 rounded-xl"
+                                className="h-56 rounded-xl"
                             />
                         ))}
                     </div>
@@ -634,7 +483,6 @@ function useOrgData() {
     const { data } = db.useQuery({
         organizations: {
             owner: {},
-            classes: { owner: {} },
         },
     });
     return data?.organizations?.[0];

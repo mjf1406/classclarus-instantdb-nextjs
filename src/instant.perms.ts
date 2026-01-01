@@ -23,6 +23,9 @@ const dataBind = [
     // User is a premium user
     "isPremium",
     "auth.ref('$user.profile.plan').exists(p, p in ['basic', 'plus', 'pro'])",
+    // Use is a teacher in a class
+    "isTeacher",
+    "auth.id in data.teachers",
     // User is a member of the data
     "isMember",
     "auth.id in data.memberIds",
@@ -46,9 +49,9 @@ const rules = {
     $files: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated && isOwner",
-            update: "isAuthenticated && isOwner",
-            delete: "isAuthenticated && isOwner",
+            view: "isAuthenticated",
+            update: "isAuthenticated",
+            delete: "isAuthenticated",
         },
         bind: dataBind,
     },
@@ -66,6 +69,7 @@ const rules = {
             create: "isAuthenticated",
             view: "isAuthenticated && (isOwner || isAdmin || isMember)",
             update: "isAuthenticated && (isOwner || isAdmin) && (isStillOwner || isStillAdmin)",
+            // update: "true",
             delete: "isAuthenticated && (isOwner || isAdmin)",
         },
         bind: dataBind,
@@ -75,6 +79,7 @@ const rules = {
             create: "isAuthenticated",
             view: "isAuthenticated && (isOwner || isAdmin || isMember)",
             update: "isAuthenticated && (isOwner || isAdmin) && (isStillOwner || isStillAdmin)",
+            // update: "true",
             delete: "isAuthenticated && (isOwner || isAdmin)",
         },
         bind: dataBind,

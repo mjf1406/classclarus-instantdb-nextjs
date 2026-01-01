@@ -407,6 +407,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                 organizationId={id}
                 initialName={name}
                 initialDescription={description}
+                initialIcon={icon}
                 open={showEditDialog}
                 onOpenChange={setShowEditDialog}
             />

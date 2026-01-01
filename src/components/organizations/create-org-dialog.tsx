@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { id } from "@instantdb/react";
-import { Loader2, Upload, ImageIcon, Plus, X } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
 import { db } from "@/lib/db/db";
 import { Button } from "@/components/ui/button";
@@ -29,16 +29,11 @@ import {
     FieldGroup,
 } from "@/components/ui/field";
 import { EmailInput } from "@/components/organizations/email-input";
-import { cn } from "@/lib/utils";
-
-// Allowed image types
-const ALLOWED_IMAGE_TYPES = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/avif",
-];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+import {
+    IconUploadField,
+    type IconUploadFieldRef,
+} from "@/components/ui/icon-upload-field";
+import { uploadIcon } from "@/lib/hooks/use-icon-upload";
 
 // Zod schema for form validation
 const createOrgSchema = z.object({
@@ -64,15 +59,13 @@ export default function CreateOrganizationDialog({
     const [open, setOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [iconFile, setIconFile] = useState<File | null>(null);
-    const [iconPreview, setIconPreview] = useState<string | null>(null);
-    const [iconError, setIconError] = useState<string | null>(null);
     const [memberEmails, setMemberEmails] = useState<string[]>([]);
     const [adminEmails, setAdminEmails] = useState<string[]>([]);
     const [memberError, setMemberError] = useState<string | null>(null);
     const [adminError, setAdminError] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const iconFieldRef = useRef<IconUploadFieldRef>(null);
 
-    const user = db.useUser();
+    const { user } = db.useAuth();
 
     const {
         register,
@@ -86,51 +79,6 @@ export default function CreateOrganizationDialog({
             description: "",
         },
     });
-
-    const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        setIconError(null);
-
-        if (!file) {
-            setIconFile(null);
-            setIconPreview(null);
-            return;
-        }
-
-        // Validate file type
-        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-            setIconError("Only JPG, PNG, WEBP, or AVIF files are allowed");
-            setIconFile(null);
-            setIconPreview(null);
-            return;
-        }
-
-        // Validate file size
-        if (file.size > MAX_FILE_SIZE) {
-            setIconError("File size must be less than 5MB");
-            setIconFile(null);
-            setIconPreview(null);
-            return;
-        }
-
-        setIconFile(file);
-
-        // Create preview
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            setIconPreview(event.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const removeIcon = () => {
-        setIconFile(null);
-        setIconPreview(null);
-        setIconError(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
 
     const validateEmails = (): boolean => {
         let isValid = true;
@@ -170,24 +118,16 @@ export default function CreateOrganizationDialog({
 
             // Upload icon if provided
             if (iconFile) {
-                const fileName = `orgs/${orgId}/icon-${Date.now()}.${iconFile.name
-                    .split(".")
-                    .pop()}`;
-                const uploadResult = await db.storage.uploadFile(
-                    fileName,
-                    iconFile
-                );
+                const result = await uploadIcon({
+                    file: iconFile,
+                    userId: user.id,
+                    pathPrefix: `orgs/${orgId}`,
+                });
 
-                // Get the file ID from the upload result and fetch the URL
-                const fileId = uploadResult.data?.id;
-                if (fileId) {
-                    const { data: fileData } = await db.queryOnce({
-                        $files: {
-                            $: { where: { id: fileId } },
-                        },
-                    });
-                    iconUrl = fileData?.$files?.[0]?.url;
+                if (result.error) {
+                    throw new Error(result.error);
                 }
+                iconUrl = result.url;
             }
 
             // Prepare member and admin IDs
@@ -231,15 +171,11 @@ export default function CreateOrganizationDialog({
     const resetForm = () => {
         reset();
         setIconFile(null);
-        setIconPreview(null);
-        setIconError(null);
+        iconFieldRef.current?.reset();
         setMemberEmails([]);
         setAdminEmails([]);
         setMemberError(null);
         setAdminError(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
     };
 
     const handleOpenChange = (newOpen: boolean) => {
@@ -317,72 +253,13 @@ export default function CreateOrganizationDialog({
                         </Field>
 
                         {/* Icon/Logo Upload Field */}
-                        <Field data-invalid={!!iconError}>
-                            <FieldLabel htmlFor="org-icon">Logo</FieldLabel>
-                            <div className="flex items-start gap-4">
-                                {/* Preview */}
-                                <div
-                                    className={cn(
-                                        "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-colors",
-                                        iconPreview
-                                            ? "border-primary bg-muted"
-                                            : "border-muted-foreground/25 bg-muted/50",
-                                        iconError && "border-destructive"
-                                    )}
-                                >
-                                    {iconPreview ? (
-                                        <>
-                                            <img
-                                                src={iconPreview}
-                                                alt="Organization logo preview"
-                                                className="h-full w-full object-cover"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={removeIcon}
-                                                className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground shadow-md transition-transform hover:scale-110"
-                                                disabled={isCreating}
-                                            >
-                                                <X className="h-3 w-3" />
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                                    )}
-                                </div>
-
-                                {/* Upload button */}
-                                <div className="flex flex-1 flex-col gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            fileInputRef.current?.click()
-                                        }
-                                        disabled={isCreating}
-                                    >
-                                        <Upload className="mr-2 h-4 w-4" />
-                                        {iconFile
-                                            ? "Change Logo"
-                                            : "Upload Logo"}
-                                    </Button>
-                                    <input
-                                        ref={fileInputRef}
-                                        id="org-icon"
-                                        type="file"
-                                        accept=".jpg,.jpeg,.png,.webp,.avif"
-                                        onChange={handleIconChange}
-                                        disabled={isCreating}
-                                        className="hidden"
-                                    />
-                                    <FieldDescription>
-                                        JPG, PNG, WEBP, or AVIF. Max 5MB.
-                                    </FieldDescription>
-                                </div>
-                            </div>
-                            {iconError && <FieldError>{iconError}</FieldError>}
-                        </Field>
+                        <IconUploadField
+                            ref={iconFieldRef}
+                            label="Logo"
+                            disabled={isCreating}
+                            onFileChange={setIconFile}
+                            id="org-icon"
+                        />
 
                         {/* Members Email Input */}
                         <EmailInput

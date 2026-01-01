@@ -32,8 +32,8 @@ function useCurrentUser() {
     return user;
 }
 
-interface EditOrgDialogProps {
-    organizationId: string;
+interface EditClassDialogProps {
+    classId: string;
     initialName: string;
     initialDescription?: string;
     initialIcon?: string;
@@ -42,26 +42,24 @@ interface EditOrgDialogProps {
     onOpenChange?: (open: boolean) => void;
 }
 
-export function EditOrgDialog({
-    organizationId,
+export function EditClassDialog({
+    classId,
     initialName,
     initialDescription,
     initialIcon,
     trigger,
     open,
     onOpenChange,
-}: EditOrgDialogProps) {
+}: EditClassDialogProps) {
     const user = useCurrentUser();
     const [name, setName] = React.useState(initialName);
     const [description, setDescription] = React.useState(
         initialDescription ?? ""
     );
+    const [iconFile, setIconFile] = React.useState<File | null>(null);
+    const [removeIcon, setRemoveIcon] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
-
-    // Icon state
-    const [iconFile, setIconFile] = React.useState<File | null>(null);
-    const [iconRemoved, setIconRemoved] = React.useState(false);
     const iconFieldRef = React.useRef<IconUploadFieldRef>(null);
 
     // Reset form when dialog opens
@@ -70,7 +68,7 @@ export function EditOrgDialog({
             setName(initialName);
             setDescription(initialDescription ?? "");
             setIconFile(null);
-            setIconRemoved(false);
+            setRemoveIcon(false);
             setError(null);
             iconFieldRef.current?.reset();
         }
@@ -82,34 +80,37 @@ export function EditOrgDialog({
 
         const trimmedName = name.trim();
         if (!trimmedName) {
-            setError("Organization name is required");
+            setError("Class name is required");
             return;
         }
 
         setIsSubmitting(true);
 
         try {
-            let iconUrl: string | undefined = initialIcon;
+            let iconUrl: string | undefined = undefined;
 
             // Upload new icon if provided
             if (iconFile && user?.id) {
                 const result = await uploadIcon({
                     file: iconFile,
                     userId: user.id,
-                    pathPrefix: `orgs/${organizationId}`,
+                    pathPrefix: `classes/${classId}`,
                 });
 
                 if (result.error) {
                     throw new Error(result.error);
                 }
                 iconUrl = result.url;
-            } else if (iconRemoved) {
-                // Icon was removed
+            } else if (removeIcon) {
+                // Explicitly remove icon
                 iconUrl = undefined;
+            } else {
+                // Keep existing icon (don't update)
+                iconUrl = initialIcon;
             }
 
             await db.transact(
-                db.tx.organizations[organizationId].update({
+                db.tx.classes[classId].update({
                     name: trimmedName,
                     description: description.trim() || undefined,
                     icon: iconUrl,
@@ -118,8 +119,8 @@ export function EditOrgDialog({
             );
             onOpenChange?.(false);
         } catch (err) {
-            console.error("Failed to update organization:", err);
-            setError("Failed to update organization. Please try again.");
+            console.error("Failed to update class:", err);
+            setError("Failed to update class. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -136,31 +137,36 @@ export function EditOrgDialog({
                     <CredenzaHeader>
                         <CredenzaTitle className="flex items-center gap-2">
                             <Pencil className="size-5 text-primary" />
-                            Edit Organization
+                            Edit Class
                         </CredenzaTitle>
                         <CredenzaDescription>
-                            Update your organization&apos;s details.
+                            Update your class&apos;s name, description, and
+                            icon.
                         </CredenzaDescription>
                     </CredenzaHeader>
 
                     <CredenzaBody className="space-y-4 py-4">
+                        {/* Name */}
                         <div className="space-y-2">
-                            <Label htmlFor="org-name">
+                            <Label htmlFor="class-name">
                                 Name <span className="text-destructive">*</span>
                             </Label>
                             <Input
-                                id="org-name"
+                                id="class-name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="Enter organization name"
+                                placeholder="Enter class name"
                                 disabled={isSubmitting}
                             />
                         </div>
 
+                        {/* Description */}
                         <div className="space-y-2">
-                            <Label htmlFor="org-description">Description</Label>
+                            <Label htmlFor="class-description">
+                                Description
+                            </Label>
                             <Input
-                                id="org-description"
+                                id="class-description"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="Enter a brief description (optional)"
@@ -168,14 +174,15 @@ export function EditOrgDialog({
                             />
                         </div>
 
-                        {/* Icon/Logo Upload Field */}
+                        {/* Icon Upload */}
                         <IconUploadField
                             ref={iconFieldRef}
-                            label="Logo"
+                            label="Icon"
                             initialPreview={initialIcon}
                             disabled={isSubmitting}
                             onFileChange={setIconFile}
-                            onRemove={() => setIconRemoved(true)}
+                            onRemove={() => setRemoveIcon(true)}
+                            size="sm"
                         />
 
                         {error && (

@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { id } from "@instantdb/react";
-import { Loader2, Upload, ImageIcon, Plus, X, GraduationCap } from "lucide-react";
+import { Loader2, Plus, GraduationCap } from "lucide-react";
 
 import { db } from "@/lib/db/db";
 import { Button } from "@/components/ui/button";
@@ -28,16 +28,11 @@ import {
     FieldError,
     FieldGroup,
 } from "@/components/ui/field";
-import { cn } from "@/lib/utils";
-
-// Allowed image types
-const ALLOWED_IMAGE_TYPES = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/avif",
-];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+import {
+    IconUploadField,
+    type IconUploadFieldRef,
+} from "@/components/ui/icon-upload-field";
+import { uploadIcon } from "@/lib/hooks/use-icon-upload";
 
 // Generate a random join code (6 characters, alphanumeric, uppercase)
 function generateJoinCode(): string {
@@ -75,9 +70,7 @@ export default function CreateClassDialog({
     const [open, setOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [iconFile, setIconFile] = useState<File | null>(null);
-    const [iconPreview, setIconPreview] = useState<string | null>(null);
-    const [iconError, setIconError] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const iconFieldRef = useRef<IconUploadFieldRef>(null);
 
     const { user } = db.useAuth();
 
@@ -93,51 +86,6 @@ export default function CreateClassDialog({
             description: "",
         },
     });
-
-    const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        setIconError(null);
-
-        if (!file) {
-            setIconFile(null);
-            setIconPreview(null);
-            return;
-        }
-
-        // Validate file type
-        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-            setIconError("Only JPG, PNG, WEBP, or AVIF files are allowed");
-            setIconFile(null);
-            setIconPreview(null);
-            return;
-        }
-
-        // Validate file size
-        if (file.size > MAX_FILE_SIZE) {
-            setIconError("File size must be less than 5MB");
-            setIconFile(null);
-            setIconPreview(null);
-            return;
-        }
-
-        setIconFile(file);
-
-        // Create preview
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            setIconPreview(event.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const removeIcon = () => {
-        setIconFile(null);
-        setIconPreview(null);
-        setIconError(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
 
     const onSubmit = async (data: CreateClassFormData) => {
         if (!user?.id) {
@@ -155,24 +103,16 @@ export default function CreateClassDialog({
 
             // Upload icon if provided
             if (iconFile) {
-                const fileName = `classes/${classId}/icon-${Date.now()}.${iconFile.name
-                    .split(".")
-                    .pop()}`;
-                const uploadResult = await db.storage.uploadFile(
-                    fileName,
-                    iconFile
-                );
+                const result = await uploadIcon({
+                    file: iconFile,
+                    userId: user.id,
+                    pathPrefix: `classes/${classId}`,
+                });
 
-                // Get the file ID from the upload result and fetch the URL
-                const fileId = uploadResult.data?.id;
-                if (fileId) {
-                    const { data: fileData } = await db.queryOnce({
-                        $files: {
-                            $: { where: { id: fileId } },
-                        },
-                    });
-                    iconUrl = fileData?.$files?.[0]?.url;
+                if (result.error) {
+                    throw new Error(result.error);
                 }
+                iconUrl = result.url;
             }
 
             // Create the class and link it to the owner and organization
@@ -211,11 +151,7 @@ export default function CreateClassDialog({
     const resetForm = () => {
         reset();
         setIconFile(null);
-        setIconPreview(null);
-        setIconError(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
+        iconFieldRef.current?.reset();
     };
 
     const handleOpenChange = (newOpen: boolean) => {
@@ -295,74 +231,13 @@ export default function CreateClassDialog({
                         </Field>
 
                         {/* Icon/Logo Upload Field */}
-                        <Field data-invalid={!!iconError}>
-                            <FieldLabel htmlFor="class-icon">
-                                Class Icon
-                            </FieldLabel>
-                            <div className="flex items-start gap-4">
-                                {/* Preview */}
-                                <div
-                                    className={cn(
-                                        "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-colors",
-                                        iconPreview
-                                            ? "border-primary bg-muted"
-                                            : "border-muted-foreground/25 bg-muted/50",
-                                        iconError && "border-destructive"
-                                    )}
-                                >
-                                    {iconPreview ? (
-                                        <>
-                                            <img
-                                                src={iconPreview}
-                                                alt="Class icon preview"
-                                                className="h-full w-full object-cover"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={removeIcon}
-                                                className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground shadow-md transition-transform hover:scale-110"
-                                                disabled={isCreating}
-                                            >
-                                                <X className="h-3 w-3" />
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                                    )}
-                                </div>
-
-                                {/* Upload button */}
-                                <div className="flex flex-1 flex-col gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            fileInputRef.current?.click()
-                                        }
-                                        disabled={isCreating}
-                                    >
-                                        <Upload className="mr-2 h-4 w-4" />
-                                        {iconFile
-                                            ? "Change Icon"
-                                            : "Upload Icon"}
-                                    </Button>
-                                    <input
-                                        ref={fileInputRef}
-                                        id="class-icon"
-                                        type="file"
-                                        accept=".jpg,.jpeg,.png,.webp,.avif"
-                                        onChange={handleIconChange}
-                                        disabled={isCreating}
-                                        className="hidden"
-                                    />
-                                    <FieldDescription>
-                                        JPG, PNG, WEBP, or AVIF. Max 5MB.
-                                    </FieldDescription>
-                                </div>
-                            </div>
-                            {iconError && <FieldError>{iconError}</FieldError>}
-                        </Field>
+                        <IconUploadField
+                            ref={iconFieldRef}
+                            label="Icon"
+                            disabled={isCreating}
+                            onFileChange={setIconFile}
+                            id="class-icon"
+                        />
                     </FieldGroup>
 
                     <DialogFooter>

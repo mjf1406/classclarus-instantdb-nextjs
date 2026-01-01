@@ -41,6 +41,9 @@ const _schema = i.schema({
             icon: i.string().optional(),
             joinCode: i.string().unique().indexed(),
             organizationId: i.string().indexed().optional(),
+            students: i.json().optional(), // array of user ids -- students enrolled in the class
+            admins: i.json().optional(), // array of user ids -- teachers with admin access
+            teachers: i.json().optional(), // array of user ids -- teachers without admin access
             created: i.date(),
             updated: i.date(),
         }),
@@ -97,6 +100,32 @@ const _schema = i.schema({
                 has: "many",
                 label: "files",
             }, // Each user can have many files
+        },
+        organizationFiles: {
+            forward: {
+                on: "$files",
+                has: "one",
+                label: "organization",
+                onDelete: "cascade",
+            }, // Each file has one organization
+            reverse: {
+                on: "organizations",
+                has: "many",
+                label: "files",
+            }, // Each organization can have many files
+        },
+        classFiles: {
+            forward: {
+                on: "$files",
+                has: "one",
+                label: "class",
+                onDelete: "cascade",
+            }, // Each file has one class
+            reverse: {
+                on: "classes",
+                has: "many",
+                label: "files",
+            }, // Each class can have many files
         },
     },
     rooms: {},

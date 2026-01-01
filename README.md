@@ -15,10 +15,10 @@
         -   [ ] each class uses the class card, which allows the user to create, edit, delete classes in each org
     -   [ ] `/[orgId]` page shows all classes in the org, with ability to create, edit, delete classes in that org
 -   [ ] classes
-    -   [ ] create class
+    -   [x] create class
     -   [ ] edit class
     -   [ ] delete class
-    -   [ ] list classes
+    -   [x] list classes
 -   guests
     -   [ ] guest description
     -   [ ] guest limitations section
