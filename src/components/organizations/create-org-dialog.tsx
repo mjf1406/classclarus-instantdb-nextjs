@@ -34,7 +34,7 @@ import {
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
-import { generateUniqueJoinCode } from "@/lib/helpers/join-codes";
+import { generateUniqueJoinCode } from "@/lib/helpers/join-codes-server";
 
 // Zod schema for form validation
 const createOrgSchema = z.object({
@@ -135,23 +135,26 @@ export default function CreateOrganizationDialog({
                 iconUrl = result.url;
             }
 
-            // Create the organization and link it to the owner
-            // The owner is automatically an admin (not a role-based member)
-            // Note: Email invites (memberEmails, adminEmails) would need to be handled
-            // by looking up user IDs from emails in production
+            // Create the join code entity
+            const joinCodeId = id();
+            const joinCodeTx = db.tx.orgJoinCodes[joinCodeId].create({
+                code: joinCode,
+            });
+
+            // TODO: Email invites (admins, parents, students) need to be handled by looking up user IDs from emails in production
             const orgTx = db.tx.organizations[orgId]
                 .create({
                     name: data.name.trim(),
                     description: data.description?.trim() || undefined,
                     icon: iconUrl,
-                    joinCode,
                     created: now,
                     updated: now,
                 })
                 .link({ owner: user.id })
-                .link({ admins: user.id }); // Owner is always an admin
+                .link({ admins: user.id }) // Owner is always an admin
+                .link({ joinCodeEntity: joinCodeId }); // Link the join code entity
 
-            await db.transact(orgTx);
+            await db.transact([joinCodeTx, orgTx]);
 
             // Reset form and close dialog
             resetForm();

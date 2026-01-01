@@ -37,62 +37,71 @@ export async function lookupJoinCode(
     }
 
     try {
-        // Check organizations
-        const orgData = await dbAdmin.query({
-            organizations: {
-                $: { where: { joinCode: code } },
-            },
-        });
-
-        if (orgData?.organizations?.[0]) {
-            const org = orgData.organizations[0];
-            return {
-                success: true,
-                data: {
-                    type: "organization",
-                    entityId: org.id,
-                    entityName: org.name,
-                },
-            };
-        }
-
-        // Check classes for student/teacher/parent codes
-        const classData = await dbAdmin.query({
-            classes: {
-                $: {
-                    where: {
-                        or: [
-                            { joinCodeStudent: code },
-                            { joinCodeTeacher: code },
-                            { joinCodeParent: code },
-                        ],
-                    },
-                },
+        // Check organization join codes
+        const orgCodeData = await dbAdmin.query({
+            orgJoinCodes: {
+                $: { where: { code: code } },
                 organization: {},
             },
         });
 
-        if (classData?.classes?.[0]) {
-            const classEntity = classData.classes[0];
-            let type: JoinCodeType;
-            if (classEntity.joinCodeStudent === code) {
-                type = "classStudent";
-            } else if (classEntity.joinCodeTeacher === code) {
-                type = "classTeacher";
-            } else {
-                type = "classParent";
+        if (orgCodeData?.orgJoinCodes?.[0]) {
+            const orgCode = orgCodeData.orgJoinCodes[0];
+            const org = orgCode.organization;
+            if (org) {
+                return {
+                    success: true,
+                    data: {
+                        type: "organization",
+                        entityId: org.id,
+                        entityName: org.name,
+                    },
+                };
             }
+        }
 
-            return {
-                success: true,
-                data: {
-                    type,
-                    entityId: classEntity.id,
-                    entityName: classEntity.name,
-                    organizationId: classEntity.organization?.id,
-                    classId: classEntity.id,
+        // Check class join codes for student/teacher/parent codes
+        const classCodeData = await dbAdmin.query({
+            classJoinCodes: {
+                $: {
+                    where: {
+                        or: [
+                            { studentCode: code },
+                            { teacherCode: code },
+                            { parentCode: code },
+                        ],
+                    },
                 },
-            };
+                class: {
+                    organization: {},
+                },
+            },
+        });
+
+        if (classCodeData?.classJoinCodes?.[0]) {
+            const classCode = classCodeData.classJoinCodes[0];
+            const classEntity = classCode.class;
+            if (classEntity) {
+                let type: JoinCodeType;
+                if (classCode.studentCode === code) {
+                    type = "classStudent";
+                } else if (classCode.teacherCode === code) {
+                    type = "classTeacher";
+                } else {
+                    type = "classParent";
+                }
+
+                return {
+                    success: true,
+                    data: {
+                        type,
+                        entityId: classEntity.id,
+                        entityName: classEntity.name,
+                        organizationId: classEntity.organization?.id,
+                        classId: classEntity.id,
+                    },
+                };
+            }
         }
 
         return { success: false, error: "Join code not found" };
@@ -204,7 +213,7 @@ export async function joinClassAsStudent(
         const orgId = classEntity.organization?.id;
 
         // Link user as student to class and organization
-        const transactions = [
+        const transactions: any[] = [
             dbAdmin.tx.classes[classId].link({ classStudents: userId }),
         ];
 
@@ -263,7 +272,7 @@ export async function joinClassAsTeacher(
         const orgId = classEntity.organization?.id;
 
         // Link user as teacher to class and organization
-        const transactions = [
+        const transactions: any[] = [
             dbAdmin.tx.classes[classId].link({ classTeachers: userId }),
         ];
 
@@ -362,7 +371,7 @@ export async function joinClassAsParent(
         const orgId = classEntity.organization?.id;
 
         // Link user as parent to class and organization
-        const transactions = [];
+        const transactions: any[] = [];
         if (!parentIds.includes(userId)) {
             transactions.push(
                 dbAdmin.tx.classes[classId].link({ classParents: userId })

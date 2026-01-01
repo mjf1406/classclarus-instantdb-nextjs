@@ -97,6 +97,24 @@ const rules = {
         },
         bind: dataBind,
     },
+    orgJoinCodes: {
+        allow: {
+            create: "isAuthenticated",
+            view: "isAuthenticated && (auth.id in data.ref('organization.owner.id') || auth.id in data.ref('organization.admins.id'))",
+            update: "isAuthenticated && (auth.id in data.ref('organization.owner.id') || auth.id in data.ref('organization.admins.id'))",
+            delete: "isAuthenticated && (auth.id in data.ref('organization.owner.id') || auth.id in data.ref('organization.admins.id'))",
+        },
+        bind: dataBind,
+    },
+    classJoinCodes: {
+        allow: {
+            create: "isAuthenticated",
+            view: "isAuthenticated && (auth.id in data.ref('class.owner.id') || auth.id in data.ref('class.classAdmins.id') || auth.id in data.ref('class.organization.owner.id') || auth.id in data.ref('class.organization.admins.id'))",
+            update: "isAuthenticated && (auth.id in data.ref('class.owner.id') || auth.id in data.ref('class.classAdmins.id') || auth.id in data.ref('class.organization.owner.id') || auth.id in data.ref('class.organization.admins.id'))",
+            delete: "isAuthenticated && (auth.id in data.ref('class.owner.id') || auth.id in data.ref('class.classAdmins.id') || auth.id in data.ref('class.organization.owner.id') || auth.id in data.ref('class.organization.admins.id'))",
+        },
+        bind: dataBind,
+    },
 } satisfies InstantRules;
 
 export default rules;

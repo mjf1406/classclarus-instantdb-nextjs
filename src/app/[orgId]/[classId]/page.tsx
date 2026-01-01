@@ -93,6 +93,7 @@ export default function ClassPage({ params }: ClassPageProps) {
             classAdmins: {},
             classTeachers: {},
             classStudents: {},
+            joinCodeEntity: {},
             organization: {
                 owner: {},
                 admins: {},
@@ -130,11 +131,11 @@ export default function ClassPage({ params }: ClassPageProps) {
         return false;
     })();
 
-    const joinCodes = classData
+    const joinCodes = classData?.joinCodeEntity
         ? {
-              student: classData.joinCodeStudent,
-              teacher: classData.joinCodeTeacher,
-              parent: classData.joinCodeParent,
+              student: classData.joinCodeEntity.studentCode,
+              teacher: classData.joinCodeEntity.teacherCode,
+              parent: classData.joinCodeEntity.parentCode,
           }
         : null;
 
@@ -653,17 +654,17 @@ function ClassHero({
         owner,
         created,
         updated,
-        joinCodeStudent,
-        joinCodeTeacher,
-        joinCodeParent,
+        joinCodeEntity,
         organization,
     } = classData;
 
-    const joinCodes = {
-        student: joinCodeStudent,
-        teacher: joinCodeTeacher,
-        parent: joinCodeParent,
-    };
+    const joinCodes = joinCodeEntity
+        ? {
+              student: joinCodeEntity.studentCode,
+              teacher: joinCodeEntity.teacherCode,
+              parent: joinCodeEntity.parentCode,
+          }
+        : null;
 
     const getInitials = (className: string) => {
         return className

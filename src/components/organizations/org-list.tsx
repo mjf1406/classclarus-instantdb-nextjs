@@ -57,6 +57,7 @@ export default function OrgList() {
                   orgTeachers: {},
                   orgParents: {},
                   admins: {},
+                  joinCodeEntity: {},
                   classes: {
                       owner: {},
                       classAdmins: {},

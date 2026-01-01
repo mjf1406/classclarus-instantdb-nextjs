@@ -4,50 +4,50 @@ overview: Move join codes to separate entities with restricted permissions so on
 todos:
   - id: schema-entities
     content: Add orgJoinCodes and classJoinCodes entities with links to schema
-    status: pending
+    status: completed
   - id: schema-remove-fields
     content: Remove joinCode fields from organizations and classes entities
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: permissions
     content: Add permission rules for new join code entities
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: join-code-helper
     content: Update isJoinCodeInUse to query new entities
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: create-org-dialog
     content: Update create org to create linked joinCodeEntity
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: create-class-dialog
     content: Update create class to create linked joinCodeEntity
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: org-card
     content: Update org-card to query and display join codes from entity
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: class-card
     content: Update class-card to query and display join codes from entity
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: join-actions
     content: Update join actions to lookup codes in new entities
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
   - id: class-page
     content: Update class page if it displays join codes
-    status: pending
+    status: completed
     dependencies:
       - schema-entities
 ---

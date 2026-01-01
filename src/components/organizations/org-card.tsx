@@ -61,7 +61,9 @@ interface OrganizationData {
     name: string;
     description?: string;
     icon?: string;
-    joinCode?: string;
+    joinCodeEntity?: {
+        code: string;
+    };
     adminIds?: string[]; // Deprecated - kept for backward compatibility during migration
     created: Date | string | number;
     updated: Date | string | number;
@@ -127,7 +129,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
         name,
         description,
         icon,
-        joinCode,
+        joinCodeEntity,
         adminIds, // Deprecated - fallback during migration
         created,
         updated,
@@ -138,6 +140,8 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
         admins: linkedAdmins,
         classes,
     } = organization;
+
+    const joinCode = joinCodeEntity?.code;
 
     const handleDelete = () => {
         db.transact(db.tx.organizations[id].delete());

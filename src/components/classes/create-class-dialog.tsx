@@ -33,7 +33,7 @@ import {
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
-import { generateAllJoinCodes } from "@/lib/helpers/join-codes";
+import { generateAllJoinCodes } from "@/lib/helpers/join-codes-server";
 
 // Zod schema for form validation
 const createClassSchema = z.object({
@@ -111,6 +111,14 @@ export default function CreateClassDialog({
                 iconUrl = result.url;
             }
 
+            // Create the join code entity
+            const joinCodeId = id();
+            const joinCodeTx = db.tx.classJoinCodes[joinCodeId].create({
+                studentCode: joinCodeStudent,
+                teacherCode: joinCodeTeacher,
+                parentCode: joinCodeParent,
+            });
+
             // Create the class and link it to the owner and organization
             // The owner is automatically a class admin
             const classTx = db.tx.classes[classId]
@@ -118,17 +126,15 @@ export default function CreateClassDialog({
                     name: data.name.trim(),
                     description: data.description?.trim() || undefined,
                     icon: iconUrl,
-                    joinCodeStudent,
-                    joinCodeTeacher,
-                    joinCodeParent,
                     created: now,
                     updated: now,
                 })
                 .link({ owner: user.id })
                 .link({ organization: organizationId })
-                .link({ classAdmins: user.id }); // Owner is always a class admin
+                .link({ classAdmins: user.id }) // Owner is always a class admin
+                .link({ joinCodeEntity: joinCodeId }); // Link the join code entity
 
-            await db.transact(classTx);
+            await db.transact([joinCodeTx, classTx]);
 
             // Reset form and close dialog
             resetForm();

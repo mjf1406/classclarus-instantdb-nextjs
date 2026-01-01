@@ -1,11 +1,12 @@
 /** @format */
 
+"use server";
+
 import dbAdmin from "@/lib/db/db-admin";
 
 // Generate a random join code (8 characters, alphanumeric, uppercase)
-export function generateJoinCode(): string {
+function generateJoinCode(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluded confusing chars: I, O, 0, 1
-    // An 8-character code has 32^8 = 1,099,511,627,776 (1+ trillion) possible combinations
     let code = "";
     for (let i = 0; i < 8; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -15,7 +16,7 @@ export function generateJoinCode(): string {
 
 // Check if a code exists in any join code entity
 // Uses admin SDK to bypass permissions and check all codes
-export async function isJoinCodeInUse(code: string): Promise<boolean> {
+async function isJoinCodeInUse(code: string): Promise<boolean> {
     const { data } = await dbAdmin.query({
         orgJoinCodes: {
             $: {
@@ -81,3 +82,4 @@ export async function generateAllJoinCodes(): Promise<{
 
     return { joinCodeStudent, joinCodeTeacher, joinCodeParent };
 }
+

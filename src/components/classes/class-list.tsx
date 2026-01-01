@@ -33,6 +33,9 @@ export default function ClassList({ organizationId }: ClassListProps) {
             $: { where: { organization: organizationId } },
             owner: {},
             classAdmins: {},
+            classTeachers: {},
+            classStudents: {},
+            joinCodeEntity: {},
             organization: {
                 owner: {},
             },

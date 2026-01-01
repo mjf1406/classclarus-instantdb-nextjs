@@ -62,9 +62,11 @@ interface ClassData {
     name: string;
     description?: string;
     icon?: string;
-    joinCodeStudent: string;
-    joinCodeTeacher: string;
-    joinCodeParent: string;
+    joinCodeEntity?: {
+        studentCode: string;
+        teacherCode: string;
+        parentCode: string;
+    };
     organizationId?: string;
     students?: string[]; // Deprecated - kept for backward compatibility during migration
     admins?: string[]; // Deprecated - kept for backward compatibility during migration
@@ -128,7 +130,9 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
     const [showEditDialog, setShowEditDialog] = React.useState(false);
     const [showFullscreen, setShowFullscreen] = React.useState(false);
     const [copied, setCopied] = React.useState<JoinCodeType | null>(null);
-    const [copiedLink, setCopiedLink] = React.useState<JoinCodeType | null>(null);
+    const [copiedLink, setCopiedLink] = React.useState<JoinCodeType | null>(
+        null
+    );
     const [selectedCodeType, setSelectedCodeType] =
         React.useState<JoinCodeType>("student");
     const [isRevealed, setIsRevealed] = React.useState(false);
@@ -138,22 +142,22 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
         name,
         description,
         icon,
-        joinCodeStudent,
-        joinCodeTeacher,
-        joinCodeParent,
-        organizationId,
-        students,
-        admins,
-        teachers,
+        joinCodeEntity,
+        organization,
+        classStudents: linkedStudents,
+        classTeachers: linkedTeachers,
+        classAdmins: linkedAdmins,
         created,
         updated,
         owner,
     } = classData;
 
+    const organizationId = organization?.id;
+
     const joinCodes = {
-        student: joinCodeStudent,
-        teacher: joinCodeTeacher,
-        parent: joinCodeParent,
+        student: joinCodeEntity?.studentCode ?? "",
+        teacher: joinCodeEntity?.teacherCode ?? "",
+        parent: joinCodeEntity?.parentCode ?? "",
     };
 
     const codeLabels = {
@@ -339,10 +343,10 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
         }
     };
 
-    // Parse arrays (they're stored as JSON)
-    const studentList = Array.isArray(students) ? students : [];
-    const adminList = Array.isArray(admins) ? admins : [];
-    const teacherList = Array.isArray(teachers) ? teachers : [];
+    // Use linked arrays if available
+    const studentList = Array.isArray(linkedStudents) ? linkedStudents : [];
+    const teacherList = Array.isArray(linkedTeachers) ? linkedTeachers : [];
+    const adminList = Array.isArray(linkedAdmins) ? linkedAdmins : [];
 
     // Get initials for fallback avatar
     const getInitials = (className: string) => {
@@ -474,140 +478,152 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
                             )}
                         </div>
 
-                        {/* Join codes section */}
-                        <div className="mt-4 space-y-2">
-                            {/* Code type tabs */}
-                            <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
-                                {(
-                                    ["student", "teacher", "parent"] as const
-                                ).map((type) => (
-                                    <button
-                                        key={type}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setSelectedCodeType(type);
-                                        }}
-                                        className={cn(
-                                            "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
-                                            selectedCodeType === type
-                                                ? "bg-background shadow-sm"
-                                                : "hover:bg-background/50 text-muted-foreground"
-                                        )}
-                                    >
-                                        <span className={codeColors[type]}>
-                                            {codeLabels[type]}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Selected code display */}
-                            <div className="flex items-center gap-2">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
+                        {/* Join codes section - only visible to admins/owners */}
+                        {joinCodeEntity && (
+                            <div className="mt-4 space-y-2">
+                                {/* Code type tabs */}
+                                <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
+                                    {(
+                                        [
+                                            "student",
+                                            "teacher",
+                                            "parent",
+                                        ] as const
+                                    ).map((type) => (
                                         <button
+                                            key={type}
                                             onClick={(e) => {
-                                                if (!isRevealed) {
-                                                    handleRevealCode(e);
-                                                } else {
-                                                    handleCopyJoinCode(
-                                                        e,
-                                                        selectedCodeType
-                                                    );
-                                                }
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setSelectedCodeType(type);
                                             }}
-                                            className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted flex-1 justify-between group/code relative overflow-hidden"
+                                            className={cn(
+                                                "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
+                                                selectedCodeType === type
+                                                    ? "bg-background shadow-sm"
+                                                    : "hover:bg-background/50 text-muted-foreground"
+                                            )}
                                         >
-                                            <span
-                                                className={cn(
-                                                    "text-muted-foreground transition-colors",
-                                                    codeColors[selectedCodeType]
-                                                )}
-                                            >
-                                                {codeLabels[selectedCodeType]}{" "}
-                                                Code
+                                            <span className={codeColors[type]}>
+                                                {codeLabels[type]}
                                             </span>
-                                            <span className="flex items-center gap-2 font-mono font-semibold relative">
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Selected code display */}
+                                <div className="flex items-center gap-2">
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button
+                                                onClick={(e) => {
+                                                    if (!isRevealed) {
+                                                        handleRevealCode(e);
+                                                    } else {
+                                                        handleCopyJoinCode(
+                                                            e,
+                                                            selectedCodeType
+                                                        );
+                                                    }
+                                                }}
+                                                className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted flex-1 justify-between group/code relative overflow-hidden"
+                                            >
                                                 <span
                                                     className={cn(
-                                                        "transition-all duration-500 ease-out",
-                                                        !isRevealed &&
-                                                            "blur-sm select-none"
+                                                        "text-muted-foreground transition-colors",
+                                                        codeColors[
+                                                            selectedCodeType
+                                                        ]
                                                     )}
                                                 >
                                                     {
-                                                        joinCodes[
+                                                        codeLabels[
                                                             selectedCodeType
                                                         ]
-                                                    }
+                                                    }{" "}
+                                                    Code
                                                 </span>
-                                                {!isRevealed && (
-                                                    <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
-                                                        Click to reveal
+                                                <span className="flex items-center gap-2 font-mono font-semibold relative">
+                                                    <span
+                                                        className={cn(
+                                                            "transition-all duration-500 ease-out",
+                                                            !isRevealed &&
+                                                                "blur-sm select-none"
+                                                        )}
+                                                    >
+                                                        {
+                                                            joinCodes[
+                                                                selectedCodeType
+                                                            ]
+                                                        }
                                                     </span>
-                                                )}
-                                                {isRevealed &&
-                                                    (copied ===
-                                                    selectedCodeType ? (
-                                                        <Check className="size-4 text-green-500" />
-                                                    ) : (
-                                                        <Copy className="size-4 text-muted-foreground group-hover/code:text-foreground transition-colors" />
-                                                    ))}
-                                            </span>
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        {!isRevealed
-                                            ? "Click to reveal code"
-                                            : copied === selectedCodeType
-                                            ? "Copied!"
-                                            : "Click to copy join code"}
-                                    </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={handleOpenFullscreen}
-                                            className="h-9 w-9"
-                                        >
-                                            <Maximize2 className="size-4" />
-                                            <span className="sr-only">
-                                                Fullscreen
-                                            </span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        View in fullscreen
-                                    </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={(e) =>
-                                                handleOpenInNewWindow(
-                                                    e,
-                                                    selectedCodeType
-                                                )
-                                            }
-                                            className="h-9 w-9"
-                                        >
-                                            <ExternalLink className="size-4" />
-                                            <span className="sr-only">
-                                                Open in new window
-                                            </span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        Open in new window
-                                    </TooltipContent>
-                                </Tooltip>
+                                                    {!isRevealed && (
+                                                        <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
+                                                            Click to reveal
+                                                        </span>
+                                                    )}
+                                                    {isRevealed &&
+                                                        (copied ===
+                                                        selectedCodeType ? (
+                                                            <Check className="size-4 text-green-500" />
+                                                        ) : (
+                                                            <Copy className="size-4 text-muted-foreground group-hover/code:text-foreground transition-colors" />
+                                                        ))}
+                                                </span>
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            {!isRevealed
+                                                ? "Click to reveal code"
+                                                : copied === selectedCodeType
+                                                ? "Copied!"
+                                                : "Click to copy join code"}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={handleOpenFullscreen}
+                                                className="h-9 w-9"
+                                            >
+                                                <Maximize2 className="size-4" />
+                                                <span className="sr-only">
+                                                    Fullscreen
+                                                </span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            View in fullscreen
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={(e) =>
+                                                    handleOpenInNewWindow(
+                                                        e,
+                                                        selectedCodeType
+                                                    )
+                                                }
+                                                className="h-9 w-9"
+                                            >
+                                                <ExternalLink className="size-4" />
+                                                <span className="sr-only">
+                                                    Open in new window
+                                                </span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            Open in new window
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Stats section */}
                         <div className="mt-3 grid grid-cols-3 gap-2">
