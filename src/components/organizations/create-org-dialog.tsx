@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
 
 export function DialogCloseButton() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline">Share</Button>
+                <Button variant="outline">
+                    <Plus /> Create Organization
+                </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
