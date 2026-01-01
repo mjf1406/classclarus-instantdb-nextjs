@@ -2,9 +2,9 @@
 
 "use client";
 
+import * as React from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import {
-    Building2,
     Users,
     ShieldCheck,
     Calendar,
@@ -12,7 +12,7 @@ import {
     GraduationCap,
     Crown,
     MoreVertical,
-    Settings,
+    Pencil,
     Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -31,7 +31,19 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { EditOrgDialog } from "@/components/organizations/edit-org-dialog";
 import { cn } from "@/lib/utils";
+import { db } from "@/lib/db/db";
 
 // Type for organization data from useQuery
 interface OrganizationData {
@@ -60,6 +72,9 @@ interface OrgCardProps {
 }
 
 export default function OrgCard({ organization, isOwner }: OrgCardProps) {
+    const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+    const [showEditDialog, setShowEditDialog] = React.useState(false);
+
     const {
         id,
         name,
@@ -72,6 +87,11 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
         owner,
         classes,
     } = organization;
+
+    const handleDelete = () => {
+        db.transact(db.tx.organizations[id].delete());
+        setShowDeleteDialog(false);
+    };
 
     // Parse member and admin IDs (they're stored as JSON arrays)
     const members = Array.isArray(memberIds) ? memberIds : [];
@@ -172,7 +192,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                 <Button
                                     variant="ghost"
                                     size="icon-sm"
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className=""
                                     onClick={(e) => e.preventDefault()}
                                 >
                                     <MoreVertical className="size-4" />
@@ -185,11 +205,11 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                 <DropdownMenuItem
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        // TODO: Implement settings
+                                        setShowEditDialog(true);
                                     }}
                                 >
-                                    <Settings className="size-4" />
-                                    Settings
+                                    <Pencil className="size-4" />
+                                    Edit
                                 </DropdownMenuItem>
                                 {isOwner && (
                                     <>
@@ -198,7 +218,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                             className="text-destructive focus:text-destructive"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                // TODO: Implement delete
+                                                setShowDeleteDialog(true);
                                             }}
                                         >
                                             <Trash2 className="size-4" />
@@ -208,6 +228,50 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        {/* Edit Organization Dialog */}
+                        <EditOrgDialog
+                            organizationId={id}
+                            initialName={name}
+                            initialDescription={description}
+                            open={showEditDialog}
+                            onOpenChange={setShowEditDialog}
+                        />
+
+                        {/* Delete Confirmation Dialog */}
+                        <AlertDialog
+                            open={showDeleteDialog}
+                            onOpenChange={setShowDeleteDialog}
+                        >
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Delete Organization
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Are you sure you want to delete{" "}
+                                        <span className="font-semibold text-foreground">
+                                            {name}
+                                        </span>
+                                        ? This action cannot be undone. All
+                                        classes and data associated with this
+                                        organization will be permanently
+                                        removed.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleDelete}
+                                        className="bg-destructive text-white hover:bg-destructive/90"
+                                    >
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
 
                     {/* Stats section */}

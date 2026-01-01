@@ -5,10 +5,10 @@
 ## To-do List
 
 -   [ ] organizations
-    -   [ ] create organization
+    -   [x] create organization
     -   [ ] edit organization
-    -   [ ] delete organization
-    -   [ ] list organizations
+    -   [x] delete organization
+    -   [x] list organizations
     -   `/` page
         -   [ ] the home page shows all orgs the user is in as collapsible sections, which show all the classes the user is in for each org,
         -   [ ] each org section has ability to create, edit, delete the org if admin

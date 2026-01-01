@@ -50,7 +50,7 @@ function SignedOutView() {
 
 function SignedInView() {
     return (
-        <div className="w-full max-w-md space-y-6">
+        <div className="w-full max-w-2xl space-y-6">
             <div className="text-center space-y-2 flex items-center justify-center">
                 <Logo />
             </div>
