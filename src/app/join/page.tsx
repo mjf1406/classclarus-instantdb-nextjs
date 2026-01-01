@@ -2,8 +2,8 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { db } from "@/lib/db/db";
 import AppNavbar from "@/components/navbar/app-navbar";
@@ -25,15 +25,11 @@ import {
 } from "./actions";
 import { StudentSelection } from "@/components/join-codes";
 
-type PageState =
-    | "idle"
-    | "loading"
-    | "studentSelection"
-    | "success"
-    | "error";
+type PageState = "idle" | "loading" | "studentSelection" | "success" | "error";
 
 export default function JoinPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, isLoading: isUserLoading } = db.useAuth();
     const [code, setCode] = useState("");
     const [state, setState] = useState<PageState>("idle");
@@ -42,6 +38,7 @@ export default function JoinPage() {
     const [students, setStudents] = useState<
         Array<{ id: string; email?: string }>
     >([]);
+    const [hasProcessedUrlCode, setHasProcessedUrlCode] = useState(false);
 
     const handleCodeComplete = useCallback(
         async (value: string) => {
@@ -69,8 +66,12 @@ export default function JoinPage() {
                     return;
                 }
 
-                const { type, entityId, organizationId, classId: lookupClassId } =
-                    lookupResult.data;
+                const {
+                    type,
+                    entityId,
+                    organizationId,
+                    classId: lookupClassId,
+                } = lookupResult.data;
 
                 // Handle parent join code - show student selection
                 if (type === "classParent") {
@@ -183,7 +184,28 @@ export default function JoinPage() {
         setError(null);
         setClassId(null);
         setStudents([]);
+        setHasProcessedUrlCode(false);
+        // Clear query parameter
+        router.replace("/join");
     };
+
+    // Handle code from URL query parameter
+    useEffect(() => {
+        if (hasProcessedUrlCode || isUserLoading || !user) {
+            return;
+        }
+
+        const urlCode = searchParams.get("code");
+        if (urlCode && urlCode.length === 8) {
+            setCode(urlCode);
+            setHasProcessedUrlCode(true);
+            // Auto-trigger the join process
+            handleCodeComplete(urlCode).catch((err) => {
+                console.error("Error processing URL code:", err);
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, hasProcessedUrlCode, isUserLoading, user]);
 
     // Show loading state while checking auth
     if (isUserLoading) {
@@ -270,7 +292,7 @@ export default function JoinPage() {
                             <StudentSelection
                                 students={students}
                                 onSelect={handleStudentSelection}
-                                isLoading={state === "loading"}
+                                isLoading={false}
                             />
                             <div className="flex justify-center">
                                 <Button

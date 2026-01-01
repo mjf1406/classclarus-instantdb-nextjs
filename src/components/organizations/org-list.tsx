@@ -30,53 +30,54 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from "@/components/ui/empty";
+import Link from "next/link";
 
 export default function OrgList() {
     const [searchQuery, setSearchQuery] = useState("");
     const { user, isLoading: isUserLoading } = db.useAuth();
 
-    const { data, isLoading, error } = db.useQuery(
-        user
-            ? {
-                  organizations: {
-                      owner: {},
-                      members: {},
-                      admins: {},
-                      classes: {
-                          owner: {},
-                          classAdmins: {},
-                          classTeachers: {},
-                          $: {
-                              where: {
-                                  or: [
-                                      { "owner.id": user.id },
-                                      { "classAdmins.id": user.id },
-                                      { "classTeachers.id": user.id },
-                                  ],
-                              },
-                          },
-                      },
-                      $: {
-                          where: {
-                              or: [
-                                  { "owner.id": user.id },
-                                  { "admins.id": user.id },
-                                  { "members.id": user.id },
-                              ],
-                          },
+    // The query syntax is correct for filtering by relation fields
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query = user
+        ? ({
+              organizations: {
+                  $: {
+                      where: {
+                          or: [
+                              { "owner.id": user.id },
+                              { "admins.id": user.id },
+                              { "orgStudents.id": user.id },
+                              { "orgTeachers.id": user.id },
+                              { "orgParents.id": user.id },
+                          ],
                       },
                   },
-              }
-            : {}
-    );
+                  owner: {},
+                  orgStudents: {},
+                  orgTeachers: {},
+                  orgParents: {},
+                  admins: {},
+                  classes: {
+                      owner: {},
+                      classAdmins: {},
+                      classTeachers: {},
+                  },
+              },
+          } as any)
+        : ({} as any);
 
-    const organizations = data?.organizations ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, isLoading, error } = db.useQuery(query);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organizations = (data as any)?.organizations ?? [];
 
     // Filter organizations by search query
     const filteredOrganizations = useMemo(() => {
         if (!searchQuery.trim()) return organizations;
         const query = searchQuery.toLowerCase().trim();
-        return organizations.filter((org) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return organizations.filter((org: any) =>
             org.name.toLowerCase().includes(query)
         );
     }, [organizations, searchQuery]);
@@ -181,7 +182,8 @@ export default function OrgList() {
             {/* Organization grid */}
             {filteredOrganizations.length > 0 && (
                 <div className="flex flex-col gap-5">
-                    {filteredOrganizations.map((org) => (
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {filteredOrganizations.map((org: any) => (
                         <OrgCard
                             key={org.id}
                             organization={org}
@@ -244,7 +246,15 @@ function OrgListHeader({
                         </p>
                     </div>
                 </div>
-                <CreateOrganizationDialog />
+                <div className="space-x-4">
+                    <CreateOrganizationDialog />
+                    <Button
+                        asChild
+                        variant={"outline"}
+                    >
+                        <Link href="/join">Join Org</Link>
+                    </Button>
+                </div>
             </div>
             {/* What is an Organization? collapsible */}
             <Collapsible

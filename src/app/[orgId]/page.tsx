@@ -12,6 +12,7 @@ import {
     Clock,
     Crown,
     Edit,
+    GraduationCap,
     MoreVertical,
     Settings,
     ShieldCheck,
@@ -59,7 +60,9 @@ export default function OrgPage({ params }: OrgPageProps) {
         organizations: {
             $: { where: { id: orgId } },
             owner: {},
-            members: {},
+            orgStudents: {},
+            orgTeachers: {},
+            orgParents: {},
             admins: {},
         },
     });
@@ -356,27 +359,49 @@ function OrgStats({
 }: {
     organization: NonNullable<ReturnType<typeof useOrgData>>;
 }) {
-    // Use linked members/admins if available, otherwise fall back to JSON arrays during migration
-    const linkedMembers = organization.members ?? [];
+    // Use linked role arrays
+    const linkedStudents = organization.orgStudents ?? [];
+    const linkedTeachers = organization.orgTeachers ?? [];
+    const linkedParents = organization.orgParents ?? [];
     const linkedAdmins = organization.admins ?? [];
 
-    const memberCount = Array.isArray(linkedMembers) ? linkedMembers.length : 0;
+    const studentCount = Array.isArray(linkedStudents)
+        ? linkedStudents.length
+        : 0;
+    const teacherCount = Array.isArray(linkedTeachers)
+        ? linkedTeachers.length
+        : 0;
+    const parentCount = Array.isArray(linkedParents) ? linkedParents.length : 0;
     const adminCount = Array.isArray(linkedAdmins) ? linkedAdmins.length : 0;
 
     const stats = [
         {
-            label: "Members",
-            value: memberCount,
+            label: "Students",
+            value: studentCount,
             icon: Users,
             color: "text-blue-500",
             bgColor: "bg-blue-500/10",
         },
         {
+            label: "Teachers",
+            value: teacherCount,
+            icon: GraduationCap,
+            color: "text-emerald-500",
+            bgColor: "bg-emerald-500/10",
+        },
+        {
+            label: "Parents",
+            value: parentCount,
+            icon: Users,
+            color: "text-amber-500",
+            bgColor: "bg-amber-500/10",
+        },
+        {
             label: "Admins",
             value: adminCount,
             icon: ShieldCheck,
-            color: "text-emerald-500",
-            bgColor: "bg-emerald-500/10",
+            color: "text-violet-500",
+            bgColor: "bg-violet-500/10",
         },
     ];
 
@@ -487,7 +512,9 @@ function useOrgData() {
     const { data } = db.useQuery({
         organizations: {
             owner: {},
-            members: {},
+            orgStudents: {},
+            orgTeachers: {},
+            orgParents: {},
             admins: {},
         },
     });

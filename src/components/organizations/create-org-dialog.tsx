@@ -136,7 +136,7 @@ export default function CreateOrganizationDialog({
             }
 
             // Create the organization and link it to the owner
-            // The owner is automatically a member and admin
+            // The owner is automatically an admin (not a role-based member)
             // Note: Email invites (memberEmails, adminEmails) would need to be handled
             // by looking up user IDs from emails in production
             const orgTx = db.tx.organizations[orgId]
@@ -149,7 +149,6 @@ export default function CreateOrganizationDialog({
                     updated: now,
                 })
                 .link({ owner: user.id })
-                .link({ members: user.id }) // Owner is always a member
                 .link({ admins: user.id }); // Owner is always an admin
 
             await db.transact(orgTx);

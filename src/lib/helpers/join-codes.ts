@@ -5,7 +5,7 @@ import { db } from "@/lib/db/db";
 // Generate a random join code (8 characters, alphanumeric, uppercase)
 export function generateJoinCode(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluded confusing chars: I, O, 0, 1
-    // An 8-character code has 32^8 = 1,099,511,627,776 (1+ billion) possible combinations
+    // An 8-character code has 32^8 = 1,099,511,627,776 (1+ trillion) possible combinations
     let code = "";
     for (let i = 0; i < 8; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));

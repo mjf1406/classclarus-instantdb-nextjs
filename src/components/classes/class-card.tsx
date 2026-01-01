@@ -18,6 +18,7 @@ import {
     ShieldCheck,
     Maximize2,
     ExternalLink,
+    Link2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -127,6 +128,7 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
     const [showEditDialog, setShowEditDialog] = React.useState(false);
     const [showFullscreen, setShowFullscreen] = React.useState(false);
     const [copied, setCopied] = React.useState<JoinCodeType | null>(null);
+    const [copiedLink, setCopiedLink] = React.useState<JoinCodeType | null>(null);
     const [selectedCodeType, setSelectedCodeType] =
         React.useState<JoinCodeType>("student");
     const [isRevealed, setIsRevealed] = React.useState(false);
@@ -183,6 +185,22 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
             setTimeout(() => setCopied(null), 2000);
         } catch (err) {
             console.error("Failed to copy join code:", err);
+        }
+    };
+
+    const handleCopyJoinLink = async (
+        e: React.MouseEvent,
+        codeType: JoinCodeType
+    ) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const link = `app.classclarus.com/join?code=${joinCodes[codeType]}`;
+            await navigator.clipboard.writeText(link);
+            setCopiedLink(codeType);
+            setTimeout(() => setCopiedLink(null), 2000);
+        } catch (err) {
+            console.error("Failed to copy join link:", err);
         }
     };
 
@@ -912,8 +930,27 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
                             variant="outline"
                             size="lg"
                         >
-                            <Copy className="size-5 mr-2" />
+                            {copied === selectedCodeType ? (
+                                <Check className="size-5 mr-2 text-green-500" />
+                            ) : (
+                                <Copy className="size-5 mr-2" />
+                            )}
                             Copy Code
+                        </Button>
+                        <Button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleCopyJoinLink(e, selectedCodeType);
+                            }}
+                            variant="outline"
+                            size="lg"
+                        >
+                            {copiedLink === selectedCodeType ? (
+                                <Check className="size-5 mr-2 text-green-500" />
+                            ) : (
+                                <Link2 className="size-5 mr-2" />
+                            )}
+                            Copy Link
                         </Button>
                         <Button
                             onClick={(e) => {

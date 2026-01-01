@@ -15,6 +15,9 @@ import {
     Pencil,
     Trash2,
     ChevronDown,
+    Copy,
+    Check,
+    Link2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -58,7 +61,7 @@ interface OrganizationData {
     name: string;
     description?: string;
     icon?: string;
-    memberIds?: string[]; // Deprecated - kept for backward compatibility during migration
+    joinCode?: string;
     adminIds?: string[]; // Deprecated - kept for backward compatibility during migration
     created: Date | string | number;
     updated: Date | string | number;
@@ -70,7 +73,23 @@ interface OrganizationData {
         firstName?: string;
         lastName?: string;
     };
-    members?: Array<{
+    orgStudents?: Array<{
+        id: string;
+        email?: string;
+        imageURL?: string;
+        avatarURL?: string;
+        firstName?: string;
+        lastName?: string;
+    }>;
+    orgTeachers?: Array<{
+        id: string;
+        email?: string;
+        imageURL?: string;
+        avatarURL?: string;
+        firstName?: string;
+        lastName?: string;
+    }>;
+    orgParents?: Array<{
         id: string;
         email?: string;
         imageURL?: string;
@@ -99,18 +118,23 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
     const [isClassesOpen, setIsClassesOpen] = React.useState(false);
+    const [copied, setCopied] = React.useState(false);
+    const [copiedLink, setCopiedLink] = React.useState(false);
+    const [isRevealed, setIsRevealed] = React.useState(false);
 
     const {
         id,
         name,
         description,
         icon,
-        memberIds, // Deprecated - fallback during migration
+        joinCode,
         adminIds, // Deprecated - fallback during migration
         created,
         updated,
         owner,
-        members: linkedMembers,
+        orgStudents: linkedStudents,
+        orgTeachers: linkedTeachers,
+        orgParents: linkedParents,
         admins: linkedAdmins,
         classes,
     } = organization;
@@ -120,11 +144,53 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
         setShowDeleteDialog(false);
     };
 
-    // Use linked members/admins if available, otherwise fall back to JSON arrays during migration
-    const members = linkedMembers ?? (Array.isArray(memberIds) ? memberIds : []);
+    const handleCopyJoinCode = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!joinCode) return;
+        try {
+            await navigator.clipboard.writeText(joinCode);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error("Failed to copy join code:", err);
+        }
+    };
+
+    const handleCopyJoinLink = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!joinCode) return;
+        try {
+            const link = `app.classclarus.com/join?code=${joinCode}`;
+            await navigator.clipboard.writeText(link);
+            setCopiedLink(true);
+            setTimeout(() => setCopiedLink(false), 2000);
+        } catch (err) {
+            console.error("Failed to copy join link:", err);
+        }
+    };
+
+    const handleRevealCode = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsRevealed(true);
+    };
+
+    // Use linked role arrays if available
+    const students = linkedStudents ?? [];
+    const teachers = linkedTeachers ?? [];
+    const parents = linkedParents ?? [];
     const admins = linkedAdmins ?? (Array.isArray(adminIds) ? adminIds : []);
-    const memberCount = Array.isArray(linkedMembers) ? linkedMembers.length : (Array.isArray(memberIds) ? memberIds.length : 0);
-    const adminCount = Array.isArray(linkedAdmins) ? linkedAdmins.length : (Array.isArray(adminIds) ? adminIds.length : 0);
+    const studentCount = Array.isArray(linkedStudents)
+        ? linkedStudents.length
+        : 0;
+    const teacherCount = Array.isArray(linkedTeachers)
+        ? linkedTeachers.length
+        : 0;
+    const parentCount = Array.isArray(linkedParents) ? linkedParents.length : 0;
+    const adminCount = Array.isArray(linkedAdmins)
+        ? linkedAdmins.length
+        : Array.isArray(adminIds)
+        ? adminIds.length
+        : 0;
     const classCount = classes?.length ?? 0;
 
     // Get initials for fallback avatar
@@ -174,291 +240,387 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                     "hover:-translate-y-0.5"
                 )}
             >
-                    {/* Gradient accent bar */}
-                    <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-primary/70 to-primary/40 opacity-0 transition-opacity group-hover:opacity-100" />
+                {/* Gradient accent bar */}
+                <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-primary/70 to-primary/40 opacity-0 transition-opacity group-hover:opacity-100" />
 
-                    {/* Card content */}
-                    <div className="p-5">
-                        {/* Header section */}
-                        <div className="flex items-start gap-4">
-                            {/* Organization icon/avatar */}
-                            <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm">
-                                {icon ? (
-                                    <AvatarImage
-                                        src={icon}
-                                        alt={`${name} logo`}
-                                        className="object-cover"
-                                    />
-                                ) : null}
-                                <AvatarFallback className="rounded-xl bg-linear-to-br from-primary/20 to-primary/5 text-lg font-semibold text-primary">
-                                    {getInitials(name)}
-                                </AvatarFallback>
-                            </Avatar>
+                {/* Card content */}
+                <div className="p-5">
+                    {/* Header section */}
+                    <div className="flex items-start gap-4">
+                        {/* Organization icon/avatar */}
+                        <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm">
+                            {icon ? (
+                                <AvatarImage
+                                    src={icon}
+                                    alt={`${name} logo`}
+                                    className="object-cover"
+                                />
+                            ) : null}
+                            <AvatarFallback className="rounded-xl bg-linear-to-br from-primary/20 to-primary/5 text-lg font-semibold text-primary">
+                                {getInitials(name)}
+                            </AvatarFallback>
+                        </Avatar>
 
-                            {/* Title and description */}
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="truncate text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                                        {name}
-                                    </h3>
-                                    {isOwner && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <span className="flex items-center">
-                                                    <Crown className="size-4 text-amber-500" />
+                        {/* Title and description */}
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                                <h3 className="truncate text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                    {name}
+                                </h3>
+                                {isOwner && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span className="flex items-center">
+                                                <Crown className="size-4 text-amber-500" />
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            You own this organization
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
+                            </div>
+                            {description ? (
+                                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                                    {description}
+                                </p>
+                            ) : (
+                                <p className="mt-1 text-sm italic text-muted-foreground/60">
+                                    No description
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Actions menu */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <MoreVertical className="size-4" />
+                                    <span className="sr-only">
+                                        More options
+                                    </span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowEditDialog(true);
+                                    }}
+                                >
+                                    <Pencil className="size-4" />
+                                    Edit
+                                </DropdownMenuItem>
+                                {isOwner && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            className="text-destructive focus:text-destructive"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowDeleteDialog(true);
+                                            }}
+                                        >
+                                            <Trash2 className="size-4" />
+                                            Delete Organization
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    {/* Join code section */}
+                    {joinCode && (
+                        <div className="mt-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            onClick={(e) => {
+                                                if (!isRevealed) {
+                                                    handleRevealCode(e);
+                                                } else {
+                                                    handleCopyJoinCode(e);
+                                                }
+                                            }}
+                                            className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted flex-1 justify-between group/code relative overflow-hidden"
+                                        >
+                                            <span className="text-muted-foreground">
+                                                Join Code
+                                            </span>
+                                            <span className="flex items-center gap-2 font-mono font-semibold relative">
+                                                <span
+                                                    className={cn(
+                                                        "transition-all duration-500 ease-out",
+                                                        !isRevealed &&
+                                                            "blur-sm select-none"
+                                                    )}
+                                                >
+                                                    {joinCode}
                                                 </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                You own this organization
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    )}
+                                                {!isRevealed && (
+                                                    <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
+                                                        Click to reveal
+                                                    </span>
+                                                )}
+                                                {isRevealed &&
+                                                    (copied ? (
+                                                        <Check className="size-4 text-green-500" />
+                                                    ) : (
+                                                        <Copy className="size-4 text-muted-foreground group-hover/code:text-foreground transition-colors" />
+                                                    ))}
+                                            </span>
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {!isRevealed
+                                            ? "Click to reveal code"
+                                            : copied
+                                            ? "Copied!"
+                                            : "Click to copy join code"}
+                                    </TooltipContent>
+                                </Tooltip>
+                                {isRevealed && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={handleCopyJoinLink}
+                                                className="h-9 w-9"
+                                            >
+                                                {copiedLink ? (
+                                                    <Check className="size-4 text-green-500" />
+                                                ) : (
+                                                    <Link2 className="size-4" />
+                                                )}
+                                                <span className="sr-only">
+                                                    Copy join link
+                                                </span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            {copiedLink
+                                                ? "Link copied!"
+                                                : "Copy join link"}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Stats section */}
+                    <div className="mt-5 grid grid-cols-3 gap-2">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
+                                    <Users className="size-4 text-blue-500 mb-1" />
+                                    <span className="text-base font-semibold tabular-nums">
+                                        {studentCount}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Students
+                                    </span>
                                 </div>
-                                {description ? (
-                                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                                        {description}
-                                    </p>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {studentCount === 1
+                                    ? "1 student"
+                                    : `${studentCount} students`}
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
+                                    <GraduationCap className="size-4 text-emerald-500 mb-1" />
+                                    <span className="text-base font-semibold tabular-nums">
+                                        {teacherCount}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Teachers
+                                    </span>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {teacherCount === 1
+                                    ? "1 teacher"
+                                    : `${teacherCount} teachers`}
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
+                                    <ShieldCheck className="size-4 text-amber-500 mb-1" />
+                                    <span className="text-base font-semibold tabular-nums">
+                                        {parentCount}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Parents
+                                    </span>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {parentCount === 1
+                                    ? "1 parent"
+                                    : `${parentCount} parents`}
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
+
+                    {/* Classes collapsible section */}
+                    <Collapsible
+                        className="mt-3"
+                        open={isClassesOpen}
+                        onOpenChange={setIsClassesOpen}
+                    >
+                        <CollapsibleTrigger asChild>
+                            <button
+                                className="flex w-full items-center justify-between rounded-lg bg-muted/50 px-4 py-3 text-left transition-colors hover:bg-muted group/classes"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsClassesOpen(!isClassesOpen);
+                                }}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <GraduationCap className="size-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium">
+                                        Classes
+                                    </span>
+                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary tabular-nums">
+                                        {classCount}
+                                    </span>
+                                </div>
+                                <ChevronDown
+                                    className={cn(
+                                        "size-4 text-muted-foreground transition-transform duration-200",
+                                        isClassesOpen && "rotate-180"
+                                    )}
+                                />
+                            </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                            <div className="mt-2 space-y-1.5 pl-1">
+                                {classes && classes.length > 0 ? (
+                                    classes.map((cls) => (
+                                        <Link
+                                            key={cls.id}
+                                            href={`/${id}/${cls.id}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                                        >
+                                            <Avatar className="size-5 rounded-md">
+                                                {cls.icon ? (
+                                                    <AvatarImage
+                                                        src={cls.icon}
+                                                        alt={`${cls.name} icon`}
+                                                        className="object-cover"
+                                                    />
+                                                ) : null}
+                                                <AvatarFallback className="rounded-md bg-primary/10 text-[10px] font-medium text-primary">
+                                                    {cls.name
+                                                        .slice(0, 2)
+                                                        .toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <span className="truncate">
+                                                {cls.name}
+                                            </span>
+                                        </Link>
+                                    ))
                                 ) : (
-                                    <p className="mt-1 text-sm italic text-muted-foreground/60">
-                                        No description
+                                    <p className="px-3 py-2 text-sm italic text-muted-foreground/60">
+                                        No classes yet
                                     </p>
                                 )}
                             </div>
+                        </CollapsibleContent>
+                    </Collapsible>
 
-                            {/* Actions menu */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <MoreVertical className="size-4" />
-                                        <span className="sr-only">
-                                            More options
-                                        </span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowEditDialog(true);
-                                        }}
-                                    >
-                                        <Pencil className="size-4" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    {isOwner && (
-                                        <>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                className="text-destructive focus:text-destructive"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setShowDeleteDialog(true);
-                                                }}
-                                            >
-                                                <Trash2 className="size-4" />
-                                                Delete Organization
-                                            </DropdownMenuItem>
-                                        </>
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
+                    {/* Footer section with dates and owner */}
+                    <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
+                        {/* Owner info */}
+                        {owner && (
+                            <div className="flex items-center gap-2">
+                                <Avatar className="size-6">
+                                    {owner.imageURL || owner.avatarURL ? (
+                                        <AvatarImage
+                                            src={
+                                                owner.imageURL ??
+                                                owner.avatarURL ??
+                                                undefined
+                                            }
+                                            alt={owner.email ?? "Owner"}
+                                        />
+                                    ) : null}
+                                    <AvatarFallback className="text-xs">
+                                        {owner.email?.[0]?.toUpperCase() ?? "?"}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs text-muted-foreground truncate max-w-30">
+                                    {owner.firstName && owner.lastName
+                                        ? `${owner.firstName} ${owner.lastName}`
+                                        : owner.email ?? "Guest"}
+                                </span>
+                            </div>
+                        )}
 
-                        {/* Stats section */}
-                        <div className="mt-5 grid grid-cols-2 gap-3">
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center rounded-lg bg-muted/50 px-3 py-2.5 transition-colors hover:bg-muted">
-                                        <Users className="size-4 text-muted-foreground mb-1" />
-                                        <span className="text-lg font-semibold tabular-nums">
-                                            {memberCount}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            Members
-                                        </span>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {memberCount === 1
-                                        ? "1 member"
-                                        : `${memberCount} members`}
-                                </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center rounded-lg bg-muted/50 px-3 py-2.5 transition-colors hover:bg-muted">
-                                        <ShieldCheck className="size-4 text-muted-foreground mb-1" />
-                                        <span className="text-lg font-semibold tabular-nums">
-                                            {adminCount}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            Admins
-                                        </span>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {adminCount === 1
-                                        ? "1 admin"
-                                        : `${adminCount} admins`}
-                                </TooltipContent>
-                            </Tooltip>
-                        </div>
-
-                        {/* Classes collapsible section */}
-                        <Collapsible
-                            className="mt-3"
-                            open={isClassesOpen}
-                            onOpenChange={setIsClassesOpen}
-                        >
-                            <CollapsibleTrigger asChild>
-                                <button
-                                    className="flex w-full items-center justify-between rounded-lg bg-muted/50 px-4 py-3 text-left transition-colors hover:bg-muted group/classes"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsClassesOpen(!isClassesOpen);
-                                    }}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <GraduationCap className="size-4 text-muted-foreground" />
-                                        <span className="text-sm font-medium">
-                                            Classes
-                                        </span>
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary tabular-nums">
-                                            {classCount}
-                                        </span>
-                                    </div>
-                                    <ChevronDown
-                                        className={cn(
-                                            "size-4 text-muted-foreground transition-transform duration-200",
-                                            isClassesOpen && "rotate-180"
-                                        )}
-                                    />
-                                </button>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-                                <div className="mt-2 space-y-1.5 pl-1">
-                                    {classes && classes.length > 0 ? (
-                                        classes.map((cls) => (
-                                            <Link
-                                                key={cls.id}
-                                                href={`/${id}/${cls.id}`}
-                                                onClick={(e) =>
-                                                    e.stopPropagation()
-                                                }
-                                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-                                            >
-                                                <Avatar className="size-5 rounded-md">
-                                                    {cls.icon ? (
-                                                        <AvatarImage
-                                                            src={cls.icon}
-                                                            alt={`${cls.name} icon`}
-                                                            className="object-cover"
-                                                        />
-                                                    ) : null}
-                                                    <AvatarFallback className="rounded-md bg-primary/10 text-[10px] font-medium text-primary">
-                                                        {cls.name
-                                                            .slice(0, 2)
-                                                            .toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <span className="truncate">
-                                                    {cls.name}
-                                                </span>
-                                            </Link>
-                                        ))
-                                    ) : (
-                                        <p className="px-3 py-2 text-sm italic text-muted-foreground/60">
-                                            No classes yet
-                                        </p>
-                                    )}
-                                </div>
-                            </CollapsibleContent>
-                        </Collapsible>
-
-                        {/* Footer section with dates and owner */}
-                        <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
-                            {/* Owner info */}
-                            {owner && (
-                                <div className="flex items-center gap-2">
-                                    <Avatar className="size-6">
-                                        {owner.imageURL || owner.avatarURL ? (
-                                            <AvatarImage
-                                                src={
-                                                    owner.imageURL ??
-                                                    owner.avatarURL ??
-                                                    undefined
-                                                }
-                                                alt={owner.email ?? "Owner"}
-                                            />
-                                        ) : null}
-                                        <AvatarFallback className="text-xs">
-                                            {owner.email?.[0]?.toUpperCase() ??
-                                                "?"}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-xs text-muted-foreground truncate max-w-30">
-                                        {owner.firstName && owner.lastName
-                                            ? `${owner.firstName} ${owner.lastName}`
-                                            : owner.email ?? "Guest"}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Date info */}
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                {createdDate && (
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div className="flex items-center gap-1">
-                                                <Calendar className="size-3" />
-                                                <span>
-                                                    {/* {format(
+                        {/* Date info */}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            {createdDate && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="size-3" />
+                                            <span>
+                                                {/* {format(
                                                         createdDate,
                                                         "MMM d, yyyy"
                                                     )} */}
-                                                    {createdDate.toLocaleDateString()}
+                                                {createdDate.toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        Created {format(createdDate, "PPpp")}
+                                        {/* {createdDate.toLocaleString()} */}
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
+
+                            {updatedDate &&
+                                updatedDate.getTime() !==
+                                    createdDate?.getTime() && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="size-3" />
+                                                <span>
+                                                    {formatDistanceToNow(
+                                                        updatedDate,
+                                                        {
+                                                            addSuffix: true,
+                                                        }
+                                                    )}
                                                 </span>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            Created{" "}
-                                            {format(createdDate, "PPpp")}
-                                            {/* {createdDate.toLocaleString()} */}
+                                            Last updated{" "}
+                                            {format(updatedDate, "PPpp")}
                                         </TooltipContent>
                                     </Tooltip>
                                 )}
-
-                                {updatedDate &&
-                                    updatedDate.getTime() !==
-                                        createdDate?.getTime() && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className="flex items-center gap-1">
-                                                    <Clock className="size-3" />
-                                                    <span>
-                                                        {formatDistanceToNow(
-                                                            updatedDate,
-                                                            {
-                                                                addSuffix: true,
-                                                            }
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                Last updated{" "}
-                                                {format(updatedDate, "PPpp")}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    )}
-                            </div>
                         </div>
                     </div>
+                </div>
             </article>
 
             {/* Edit Organization Dialog */}

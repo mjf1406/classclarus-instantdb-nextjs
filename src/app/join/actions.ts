@@ -29,21 +29,16 @@ interface JoinResult {
     students?: Array<{ id: string; email?: string }>;
 }
 
-/**
- * Looks up a join code and returns its type and associated entity
- * Server action - automatically secure
- */
 export async function lookupJoinCode(
     code: string
 ): Promise<{ success: boolean; data?: LookupResult; error?: string }> {
-
     if (!code || code.length !== 8) {
         return { success: false, error: "Invalid join code format" };
     }
 
     try {
         // Check organizations
-        const { data: orgData } = await dbAdmin.query({
+        const orgData = await dbAdmin.query({
             organizations: {
                 $: { where: { joinCode: code } },
             },
@@ -62,7 +57,7 @@ export async function lookupJoinCode(
         }
 
         // Check classes for student/teacher/parent codes
-        const { data: classData } = await dbAdmin.query({
+        const classData = await dbAdmin.query({
             classes: {
                 $: {
                     where: {
@@ -110,21 +105,18 @@ export async function lookupJoinCode(
     }
 }
 
-/**
- * Joins an organization as a member
- * Server action - automatically secure
- */
 export async function joinOrganization(
     userId: string,
     orgId: string
 ): Promise<JoinResult> {
-
     try {
-        // Check if user is already a member
-        const { data } = await dbAdmin.query({
+        // Check if organization exists
+        const data = await dbAdmin.query({
             organizations: {
                 $: { where: { id: orgId } },
-                members: {},
+                orgStudents: {},
+                orgTeachers: {},
+                orgParents: {},
             },
         });
 
@@ -133,21 +125,36 @@ export async function joinOrganization(
             return { success: false, error: "Organization not found" };
         }
 
-        const existingMembers = org.members ?? [];
-        const memberIds = Array.isArray(existingMembers)
-            ? existingMembers.map((m: any) => m.id ?? m)
+        // Check if user is already in any role
+        const existingStudents = org.orgStudents ?? [];
+        const existingTeachers = org.orgTeachers ?? [];
+        const existingParents = org.orgParents ?? [];
+
+        const studentIds = Array.isArray(existingStudents)
+            ? existingStudents.map((s: any) => s.id ?? s)
+            : [];
+        const teacherIds = Array.isArray(existingTeachers)
+            ? existingTeachers.map((t: any) => t.id ?? t)
+            : [];
+        const parentIds = Array.isArray(existingParents)
+            ? existingParents.map((p: any) => p.id ?? p)
             : [];
 
-        if (memberIds.includes(userId)) {
+        if (
+            studentIds.includes(userId) ||
+            teacherIds.includes(userId) ||
+            parentIds.includes(userId)
+        ) {
             return {
                 success: false,
                 error: "You are already a member of this organization",
             };
         }
 
-        // Link user as member
+        // When joining via org code, add as student by default
+        // (This could be made configurable in the future)
         await dbAdmin.transact(
-            dbAdmin.tx.organizations[orgId].link({ members: userId })
+            dbAdmin.tx.organizations[orgId].link({ orgStudents: userId })
         );
 
         return {
@@ -163,18 +170,13 @@ export async function joinOrganization(
     }
 }
 
-/**
- * Joins a class as a student
- * Server action - automatically secure
- */
 export async function joinClassAsStudent(
     userId: string,
     classId: string
 ): Promise<JoinResult> {
-
     try {
         // Check if user is already a student
-        const { data } = await dbAdmin.query({
+        const data = await dbAdmin.query({
             classes: {
                 $: { where: { id: classId } },
                 classStudents: {},
@@ -199,12 +201,21 @@ export async function joinClassAsStudent(
             };
         }
 
-        // Link user as student
-        await dbAdmin.transact(
-            dbAdmin.tx.classes[classId].link({ classStudents: userId })
-        );
-
         const orgId = classEntity.organization?.id;
+
+        // Link user as student to class and organization
+        const transactions = [
+            dbAdmin.tx.classes[classId].link({ classStudents: userId }),
+        ];
+
+        if (orgId) {
+            transactions.push(
+                dbAdmin.tx.organizations[orgId].link({ orgStudents: userId })
+            );
+        }
+
+        await dbAdmin.transact(transactions);
+
         return {
             success: true,
             redirectUrl: `/${orgId}/${classId}`,
@@ -218,18 +229,13 @@ export async function joinClassAsStudent(
     }
 }
 
-/**
- * Joins a class as a teacher
- * Server action - automatically secure
- */
 export async function joinClassAsTeacher(
     userId: string,
     classId: string
 ): Promise<JoinResult> {
-
     try {
         // Check if user is already a teacher
-        const { data } = await dbAdmin.query({
+        const data = await dbAdmin.query({
             classes: {
                 $: { where: { id: classId } },
                 classTeachers: {},
@@ -254,12 +260,21 @@ export async function joinClassAsTeacher(
             };
         }
 
-        // Link user as teacher
-        await dbAdmin.transact(
-            dbAdmin.tx.classes[classId].link({ classTeachers: userId })
-        );
-
         const orgId = classEntity.organization?.id;
+
+        // Link user as teacher to class and organization
+        const transactions = [
+            dbAdmin.tx.classes[classId].link({ classTeachers: userId }),
+        ];
+
+        if (orgId) {
+            transactions.push(
+                dbAdmin.tx.organizations[orgId].link({ orgTeachers: userId })
+            );
+        }
+
+        await dbAdmin.transact(transactions);
+
         return {
             success: true,
             redirectUrl: `/${orgId}/${classId}`,
@@ -273,20 +288,13 @@ export async function joinClassAsTeacher(
     }
 }
 
-/**
- * Gets the list of students in a class for parent selection
- * Server action - automatically secure
- */
-export async function getClassStudents(
-    classId: string
-): Promise<{
+export async function getClassStudents(classId: string): Promise<{
     success: boolean;
     students?: Array<{ id: string; email?: string }>;
     error?: string;
 }> {
-
     try {
-        const { data } = await dbAdmin.query({
+        const data = await dbAdmin.query({
             classes: {
                 $: { where: { id: classId } },
                 classStudents: {},
@@ -319,16 +327,11 @@ export async function getClassStudents(
     }
 }
 
-/**
- * Joins a class as a parent and links to selected students
- * Server action - automatically secure
- */
 export async function joinClassAsParent(
     userId: string,
     classId: string,
     studentIds: string[]
 ): Promise<JoinResult> {
-
     if (!studentIds || studentIds.length === 0) {
         return {
             success: false,
@@ -338,7 +341,7 @@ export async function joinClassAsParent(
 
     try {
         // Check if user is already a parent
-        const { data } = await dbAdmin.query({
+        const data = await dbAdmin.query({
             classes: {
                 $: { where: { id: classId } },
                 classParents: {},
@@ -356,11 +359,20 @@ export async function joinClassAsParent(
             ? existingParents.map((p: any) => p.id ?? p)
             : [];
 
-        // Link user as parent to class
+        const orgId = classEntity.organization?.id;
+
+        // Link user as parent to class and organization
         const transactions = [];
         if (!parentIds.includes(userId)) {
             transactions.push(
                 dbAdmin.tx.classes[classId].link({ classParents: userId })
+            );
+        }
+
+        // Link parent to organization
+        if (orgId) {
+            transactions.push(
+                dbAdmin.tx.organizations[orgId].link({ orgParents: userId })
             );
         }
 
@@ -373,7 +385,6 @@ export async function joinClassAsParent(
 
         await dbAdmin.transact(transactions);
 
-        const orgId = classEntity.organization?.id;
         return {
             success: true,
             redirectUrl: `/${orgId}/${classId}`,
@@ -386,4 +397,3 @@ export async function joinClassAsParent(
         };
     }
 }
-

@@ -29,12 +29,18 @@ const dataBind = [
     // User is still a teacher in a class
     "isStillTeacher",
     "auth.id in newData.ref('classTeachers.id')",
-    // User is a member of the data (organization members)
-    "isMember",
-    "auth.id in data.ref('members.id')",
-    // User is still a member of the data
-    "isStillMember",
-    "auth.id in newData.ref('members.id')",
+    // User is a member of the org
+    "isOrgMember",
+    "auth.id in data.ref('orgStudents.id') || auth.id in data.ref('orgTeachers.id') || auth.id in data.ref('orgParents.id')",
+    // User is still a member of the org
+    "isStillOrgMember",
+    "auth.id in newData.ref('orgStudents.id') || auth.id in newData.ref('orgTeachers.id') || auth.id in newData.ref('orgParents.id')",
+    // User is a class member
+    "isClassMember",
+    "auth.id in data.ref('classStudents.id') || auth.id in data.ref('classTeachers.id')",
+    // User is still a class member
+    "isStillClassMember",
+    "auth.id in newData.ref('classStudents.id') || auth.id in newData.ref('classTeachers.id')",
     // User is an admin of the data (organization admins)
     "isAdmin",
     "auth.id in data.ref('admins.id')",
@@ -76,7 +82,7 @@ const rules = {
     organizations: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated && (isOwner || isAdmin || isMember)",
+            view: "isAuthenticated && (isOwner || isAdmin || isOrgMember)",
             update: "isAuthenticated && (isOwner || isAdmin) && (isStillOwner || isStillAdmin)",
             delete: "isAuthenticated && (isOwner || isAdmin)",
         },
@@ -85,7 +91,7 @@ const rules = {
     classes: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated && (isOwner || isClassAdmin || isTeacher)",
+            view: "isAuthenticated && (isOwner || isClassAdmin || isClassMember)",
             update: "isAuthenticated && (isOwner || isClassAdmin) && (isStillOwner || isStillClassAdmin)",
             delete: "isAuthenticated && (isOwner || isClassAdmin)",
         },
