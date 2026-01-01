@@ -15,7 +15,12 @@ import GuestUpgradeCard from "@/components/guest/guest-upgrade-card";
 export default function Home() {
     return (
         <>
-            <AppNavbar />
+            <db.SignedIn>
+                <AppNavbar />
+            </db.SignedIn>
+            <db.SignedOut>
+                <AppNavbar />
+            </db.SignedOut>
             <div className="min-h-screen flex justify-center p-4">
                 <db.SignedIn>
                     <SignedInView />
