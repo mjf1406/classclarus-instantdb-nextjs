@@ -33,75 +33,7 @@ import {
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
-
-// Generate a random join code (8 characters, alphanumeric, uppercase)
-function generateJoinCode(): string {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluded confusing chars: I, O, 0, 1
-    let code = "";
-    for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
-// Check if a code exists in any of the three join code fields across all classes
-async function isCodeInUse(code: string): Promise<boolean> {
-    const { data } = await db.queryOnce({
-        classes: {
-            $: {
-                where: {
-                    or: [
-                        { joinCodeStudent: code },
-                        { joinCodeTeacher: code },
-                        { joinCodeParent: code },
-                    ],
-                },
-            },
-        },
-    });
-    return (data?.classes?.length ?? 0) > 0;
-}
-
-// Generate a unique join code that doesn't exist in any code field
-async function generateUniqueJoinCode(
-    existingCodes: Set<string>
-): Promise<string> {
-    const maxAttempts = 100;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const code = generateJoinCode();
-        // Check against codes we're about to use in this batch
-        if (existingCodes.has(code)) {
-            continue;
-        }
-        // Check against codes in the database
-        const inUse = await isCodeInUse(code);
-        if (!inUse) {
-            return code;
-        }
-    }
-    throw new Error(
-        "Failed to generate unique join code after maximum attempts"
-    );
-}
-
-// Generate all three unique join codes
-async function generateAllJoinCodes(): Promise<{
-    joinCodeStudent: string;
-    joinCodeTeacher: string;
-    joinCodeParent: string;
-}> {
-    const usedCodes = new Set<string>();
-
-    const joinCodeStudent = await generateUniqueJoinCode(usedCodes);
-    usedCodes.add(joinCodeStudent);
-
-    const joinCodeTeacher = await generateUniqueJoinCode(usedCodes);
-    usedCodes.add(joinCodeTeacher);
-
-    const joinCodeParent = await generateUniqueJoinCode(usedCodes);
-
-    return { joinCodeStudent, joinCodeTeacher, joinCodeParent };
-}
+import { generateAllJoinCodes } from "@/lib/helpers/join-codes";
 
 // Zod schema for form validation
 const createClassSchema = z.object({
@@ -157,11 +89,11 @@ export default function CreateClassDialog({
         try {
             const now = new Date();
             const classId = id();
-            
+
             // Generate unique join codes for students, teachers, and parents
             const { joinCodeStudent, joinCodeTeacher, joinCodeParent } =
                 await generateAllJoinCodes();
-            
+
             let iconUrl: string | undefined;
 
             // Upload icon if provided
@@ -189,7 +121,6 @@ export default function CreateClassDialog({
                     joinCodeStudent,
                     joinCodeTeacher,
                     joinCodeParent,
-                    organizationId,
                     created: now,
                     updated: now,
                 })

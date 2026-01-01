@@ -34,6 +34,7 @@ import {
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
+import { generateUniqueJoinCode } from "@/lib/helpers/join-codes";
 
 // Zod schema for form validation
 const createOrgSchema = z.object({
@@ -116,6 +117,9 @@ export default function CreateOrganizationDialog({
             const orgId = id();
             let iconUrl: string | undefined;
 
+            // Generate unique join code
+            const joinCode = await generateUniqueJoinCode();
+
             // Upload icon if provided
             if (iconFile) {
                 const result = await uploadIcon({
@@ -140,6 +144,7 @@ export default function CreateOrganizationDialog({
                     name: data.name.trim(),
                     description: data.description?.trim() || undefined,
                     icon: iconUrl,
+                    joinCode,
                     created: now,
                     updated: now,
                 })

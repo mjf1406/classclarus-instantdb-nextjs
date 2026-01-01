@@ -30,7 +30,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
     // Query classes for this organization with owner relation
     const { data, isLoading, error } = db.useQuery({
         classes: {
-            $: { where: { organizationId } },
+            $: { where: { organization: organizationId } },
             owner: {},
             classAdmins: {},
             organization: {
@@ -57,9 +57,11 @@ export default function ClassList({ organizationId }: ClassListProps) {
         const isOrgOwner = organization.owner?.id === user.id;
         // Use linked admins if available, fall back to JSON array during migration
         const linkedAdmins = organization.admins ?? [];
-        const orgAdmins = Array.isArray(linkedAdmins) 
+        const orgAdmins = Array.isArray(linkedAdmins)
             ? linkedAdmins.map((admin: any) => admin.id ?? admin)
-            : (Array.isArray(organization.adminIds) ? organization.adminIds : []);
+            : Array.isArray(organization.admins)
+            ? organization.admins
+            : [];
         const isOrgAdmin = orgAdmins.includes(user.id);
         return isOrgOwner || isOrgAdmin;
     }, [user?.id, organization]);
@@ -73,7 +75,9 @@ export default function ClassList({ organizationId }: ClassListProps) {
         const linkedClassAdmins = classData.classAdmins ?? [];
         const classAdmins = Array.isArray(linkedClassAdmins)
             ? linkedClassAdmins.map((admin: any) => admin.id ?? admin)
-            : (Array.isArray(classData.admins) ? classData.admins : []);
+            : Array.isArray(classData.classAdmins)
+            ? classData.classAdmins
+            : [];
         return isClassOwner || classAdmins.includes(user.id);
     };
 
@@ -288,4 +292,3 @@ function ClassListHeader({
         </div>
     );
 }
-

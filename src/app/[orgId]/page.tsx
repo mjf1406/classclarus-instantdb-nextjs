@@ -359,15 +359,9 @@ function OrgStats({
     // Use linked members/admins if available, otherwise fall back to JSON arrays during migration
     const linkedMembers = organization.members ?? [];
     const linkedAdmins = organization.admins ?? [];
-    const memberIds = organization.memberIds; // Deprecated - fallback during migration
-    const adminIds = organization.adminIds; // Deprecated - fallback during migration
 
-    const memberCount = Array.isArray(linkedMembers) 
-        ? linkedMembers.length 
-        : (Array.isArray(memberIds) ? memberIds.length : 0);
-    const adminCount = Array.isArray(linkedAdmins) 
-        ? linkedAdmins.length 
-        : (Array.isArray(adminIds) ? adminIds.length : 0);
+    const memberCount = Array.isArray(linkedMembers) ? linkedMembers.length : 0;
+    const adminCount = Array.isArray(linkedAdmins) ? linkedAdmins.length : 0;
 
     const stats = [
         {

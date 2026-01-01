@@ -305,7 +305,7 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
         <div class="steps">
             <h2>How to Join</h2>
             <ol>
-                <li>Go to <span class="url">www.classclarus.com/join</span></li>
+                <li>Go to <span class="url">app.classclarus.com/join</span></li>
                 <li>Input the code you see on the screen</li>
                 <li>Click the <strong>Join Class</strong> button</li>
                 <li>All done!</li>
@@ -840,7 +840,7 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
                                                 codeColors[selectedCodeType]
                                             )}
                                         >
-                                            www.classclarus.com/join
+                                            app.classclarus.com/join
                                         </span>
                                     </span>
                                 </li>

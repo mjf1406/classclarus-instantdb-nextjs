@@ -34,7 +34,7 @@ export default function Home() {
     );
 }
 
-function SignedOutView() {
+export function SignedOutView() {
     return (
         <div className="w-full max-w-md space-y-6">
             <div className="space-y-4">
