@@ -184,6 +184,30 @@ const _schema = i.schema({
                 label: "studentClasses",
             }, // Each user can be a student in many classes
         },
+        classParents: {
+            forward: {
+                on: "classes",
+                has: "many",
+                label: "classParents",
+            }, // Each class can have many parents
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "parentClasses",
+            }, // Each user can be a parent in many classes
+        },
+        parentStudents: {
+            forward: {
+                on: "$users",
+                has: "many",
+                label: "children",
+            }, // Each parent can have many children (students)
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "parents",
+            }, // Each student can have many parents
+        },
     },
     rooms: {},
 });
