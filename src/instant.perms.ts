@@ -58,7 +58,7 @@ const rules = {
     organizations: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated && (isMember || isAdmin)",
+            view: "isAuthenticated && (isOwner || isAdmin || isMember)",
             update: "isAuthenticated && isAdmin",
             delete: "isAuthenticated && isAdmin",
         },
@@ -67,7 +67,7 @@ const rules = {
     classes: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated && (isOwner || isMember || isAdmin)",
+            view: "isAuthenticated && (isOwner || isAdmin || isMember)",
             update: "isAuthenticated && (isOwner || isAdmin)",
             delete: "isAuthenticated && (isOwner || isAdmin)",
         },

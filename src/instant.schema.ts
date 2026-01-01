@@ -30,8 +30,8 @@ const _schema = i.schema({
             name: i.string().indexed(),
             description: i.string().optional(),
             icon: i.string().optional(),
-            memberIds: i.json(), // array of user ids
-            adminIds: i.json(), // array of user ids
+            memberIds: i.json().optional(), // array of user ids
+            adminIds: i.json().optional(), // array of user ids
             created: i.date(),
             updated: i.date(),
         }),

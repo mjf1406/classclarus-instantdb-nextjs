@@ -54,7 +54,6 @@ function SignedInView() {
             <div className="text-center space-y-2 flex items-center justify-center">
                 <Logo />
             </div>
-            <CreateOrganizationDialog />
             <OrgList />
         </div>
     );
