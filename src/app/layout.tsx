@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Create Instant App",
-    description: "Instant DB Starter App",
+    title: "ClassClarus | App",
+    description: "Gamify your classroom to motivate your students.",
 };
 
 export default function RootLayout({
