@@ -585,6 +585,35 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
+                                                onClick={(e) =>
+                                                    handleCopyJoinLink(
+                                                        e,
+                                                        selectedCodeType
+                                                    )
+                                                }
+                                                className="h-9 w-9"
+                                            >
+                                                {copiedLink === selectedCodeType ? (
+                                                    <Check className="size-4 text-green-500" />
+                                                ) : (
+                                                    <Link2 className="size-4" />
+                                                )}
+                                                <span className="sr-only">
+                                                    Copy join link
+                                                </span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            {copiedLink === selectedCodeType
+                                                ? "Link copied!"
+                                                : "Copy join link"}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={handleOpenFullscreen}
                                                 className="h-9 w-9"
                                             >

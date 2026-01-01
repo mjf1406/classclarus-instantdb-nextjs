@@ -5,8 +5,15 @@
 import { useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 import { Button } from "../ui/button";
 import { db } from "@/lib/db/db";
+import { updateUserProfileAfterOAuth } from "@/app/auth/actions";
+
+interface GoogleJwtPayload {
+    given_name?: string;
+    family_name?: string;
+}
 
 const GOOGLE_CLIENT_NAME = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_NAME || "";
 
@@ -39,11 +46,26 @@ export function GoogleOAuthButton() {
             credentialResponse.credential
         );
 
+        // Decode JWT to extract user's name
+        const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
+        const firstName = decoded.given_name || "";
+        const lastName = decoded.family_name || "";
+
         db.auth
             .signInWithIdToken({
                 clientName: GOOGLE_CLIENT_NAME,
                 idToken: credentialResponse.credential,
                 nonce,
+            })
+            .then(async (result) => {
+                if (result.user) {
+                    await updateUserProfileAfterOAuth({
+                        userId: result.user.id,
+                        firstName,
+                        lastName,
+                        plan: "free",
+                    });
+                }
             })
             .catch((err) => {
                 console.error("Error signing in with Google:", err);
@@ -148,11 +170,26 @@ export function GoogleOAuthButtonSmall() {
             credentialResponse.credential
         );
 
+        // Decode JWT to extract user's name
+        const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
+        const firstName = decoded.given_name || "";
+        const lastName = decoded.family_name || "";
+
         db.auth
             .signInWithIdToken({
                 clientName: GOOGLE_CLIENT_NAME,
                 idToken: credentialResponse.credential,
                 nonce,
+            })
+            .then(async (result) => {
+                if (result.user) {
+                    await updateUserProfileAfterOAuth({
+                        userId: result.user.id,
+                        firstName,
+                        lastName,
+                        plan: "free",
+                    });
+                }
             })
             .catch((err) => {
                 console.error("Error signing in with Google:", err);

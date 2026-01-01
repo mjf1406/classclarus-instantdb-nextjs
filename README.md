@@ -16,21 +16,22 @@
         -   [x] each org section has ability to create, edit, delete the org if admin
     -   [x] `/[orgId]` page shows all classes in the org, with ability to create, edit, delete classes in that org
     -   [ ] edit complex fields for org
-        -   [ ] manage members
         -   [ ] manage admins
+        -   [ ] manage parents
+        -   [ ] manage students
 -   [ ] classes
     -   [x] create class
     -   [x] edit basic fields for class
     -   [ ] edit complex fields for class
+        -   [ ] manage admins
         -   [ ] manage students
         -   [ ] manage teachers
-        -   [ ] manage admins
     -   [x] delete class
     -   [x] list classes
 -   guests
     -   [x] guest description
     -   [x] guest limitations section
-    -   [ ] guest upgrade card
+    -   [x] guest upgrade card
     -   [ ] CRON job: once per day at midnight, delete all guest accounts that are older than 14 days
 -   [ ] authentication
     -   [x] magic code auth added
@@ -45,6 +46,21 @@
     -   [ ] limit to 60 requests per 1 minute per free authenticated user
 
 ## Change Log
+
+### 2026/01/01
+
+-   security: moved join codes to separate entities (`orgJoinCodes`, `classJoinCodes`) with restricted permissions so only owners/admins can view them
+-   feature: complete `/join` page for entering join codes
+    -   8-character OTP-style input
+    -   URL query parameter support (`?code=XXXXXXXX`) for direct joining via links
+    -   organization join codes (joins user as student)
+    -   class join codes for students, teachers, and parents
+    -   parent flow with student selection UI to link children
+-   components: new join code components (`JoinCodeDisplay`, `JoinCodeInput`, `StudentSelection`)
+-   server actions: complete join flow with `lookupJoinCode`, `joinOrganization`, `joinClassAsStudent`, `joinClassAsTeacher`, `joinClassAsParent`
+-   updated `org-card` and `class-card` to query and display join codes from the new entities
+-   auth: on Google sign up, extract first name and last name from Google profile and store in `$users` table
+-   auth: guest user upgrades correctly with magic code or Google auth now transfer first name, last name, and plan to the new authenticated user record
 
 ### 2025/12/31
 

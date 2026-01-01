@@ -100,8 +100,9 @@ export function NavUserNavbar() {
                                 {displayName}
                             </span>
                             {userInfo?.plan && (
-                                <span className="truncate text-xs">
-                                    {userInfo?.plan}
+                                <span className="truncate text-xs text-muted-foreground">
+                                    {(userInfo?.plan).charAt(0).toUpperCase() +
+                                        (userInfo?.plan).slice(1)}
                                 </span>
                             )}
                             {user.isGuest && (

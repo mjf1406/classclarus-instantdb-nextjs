@@ -389,32 +389,30 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                             : "Click to copy join code"}
                                     </TooltipContent>
                                 </Tooltip>
-                                {isRevealed && (
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={handleCopyJoinLink}
-                                                className="h-9 w-9"
-                                            >
-                                                {copiedLink ? (
-                                                    <Check className="size-4 text-green-500" />
-                                                ) : (
-                                                    <Link2 className="size-4" />
-                                                )}
-                                                <span className="sr-only">
-                                                    Copy join link
-                                                </span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            {copiedLink
-                                                ? "Link copied!"
-                                                : "Copy join link"}
-                                        </TooltipContent>
-                                    </Tooltip>
-                                )}
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={handleCopyJoinLink}
+                                            className="h-9 w-9"
+                                        >
+                                            {copiedLink ? (
+                                                <Check className="size-4 text-green-500" />
+                                            ) : (
+                                                <Link2 className="size-4" />
+                                            )}
+                                            <span className="sr-only">
+                                                Copy join link
+                                            </span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {copiedLink
+                                            ? "Link copied!"
+                                            : "Copy join link"}
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
                         </div>
                     )}
