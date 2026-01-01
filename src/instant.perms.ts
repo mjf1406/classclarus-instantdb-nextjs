@@ -8,9 +8,12 @@ const dataBind = [
     // Authenticated user
     "isAuthenticated",
     "auth.id != null",
+    // User is a guest
+    "isGuest",
+    "auth.isGuest == true",
     // User is the owner of the data
     "isOwner",
-    "data.owner == auth.id",
+    "data.owner == auth.id || auth.id == data.id",
     // User is a premium user
     "isPremium",
     "auth.ref('$user.profile.plan').exists(p, p in ['basic', 'plus', 'pro'])",
@@ -45,9 +48,9 @@ const rules = {
     },
     $users: {
         allow: {
-            view: "isAuthenticated && auth.id == data.id",
+            view: "isAuthenticated",
             create: "false",
-            update: "isAuthenticated && auth.id == data.id",
+            update: "isAuthenticated && isOwner",
             delete: "false",
         },
         bind: dataBind,

@@ -59,6 +59,19 @@ const _schema = i.schema({
                 label: "classes",
             }, // Each user can have many classes
         },
+        userOrganizations: {
+            forward: {
+                on: "organizations",
+                has: "one",
+                label: "owner",
+                onDelete: "cascade",
+            }, // Each organization has one owner who created it, which is a user id
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "organizations",
+            }, // Each user can have many organizations
+        },
         classOrganization: {
             forward: {
                 on: "classes",
