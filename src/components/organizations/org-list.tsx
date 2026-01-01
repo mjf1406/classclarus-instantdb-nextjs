@@ -3,7 +3,19 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Building2, Plus, Search, X } from "lucide-react";
+import {
+    Building2,
+    ChevronDown,
+    HelpCircle,
+    Plus,
+    Search,
+    X,
+} from "lucide-react";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 import { db } from "@/lib/db/db";
 import OrgCard, { OrgCardSkeleton } from "@/components/organizations/org-card";
@@ -28,10 +40,29 @@ export default function OrgList() {
             ? {
                   organizations: {
                       owner: {},
-                      classes: {},
+                      members: {},
+                      admins: {},
+                      classes: {
+                          owner: {},
+                          classAdmins: {},
+                          classTeachers: {},
+                          $: {
+                              where: {
+                                  or: [
+                                      { "owner.id": user.id },
+                                      { "classAdmins.id": user.id },
+                                      { "classTeachers.id": user.id },
+                                  ],
+                              },
+                          },
+                      },
                       $: {
                           where: {
-                              owner: user.id,
+                              or: [
+                                  { "owner.id": user.id },
+                                  { "admins.id": user.id },
+                                  { "members.id": user.id },
+                              ],
                           },
                       },
                   },
@@ -180,36 +211,91 @@ function OrgListHeader({
     const showSearch = count > 0 || (searchQuery && searchQuery.length > 0);
     const isFiltered = searchQuery && searchQuery.trim().length > 0;
 
+    const [isWhatIsOrgOpen, setIsWhatIsOrgOpen] = useState(false);
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
-                        Organizations
-                    </h2>
-                    <p className="text-muted-foreground">
-                        {isLoading ? (
-                            <span className="inline-block h-4 w-32 animate-pulse rounded bg-muted" />
-                        ) : count === 0 ? (
-                            "Get started by creating an organization"
-                        ) : isFiltered ? (
-                            filteredCount === count ? (
-                                `${count} organization${count !== 1 ? "s" : ""}`
+                <div className="space-y-2">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight">
+                            Organizations
+                        </h2>
+                        <p className="text-muted-foreground">
+                            {isLoading ? (
+                                <span className="inline-block h-4 w-32 animate-pulse rounded bg-muted" />
+                            ) : count === 0 ? (
+                                "Get started by creating an organization"
+                            ) : isFiltered ? (
+                                filteredCount === count ? (
+                                    `${count} organization${
+                                        count !== 1 ? "s" : ""
+                                    }`
+                                ) : (
+                                    `Showing ${filteredCount} of ${count} organization${
+                                        count !== 1 ? "s" : ""
+                                    }`
+                                )
+                            ) : count === 1 ? (
+                                "1 organization"
                             ) : (
-                                `Showing ${filteredCount} of ${count} organization${
-                                    count !== 1 ? "s" : ""
-                                }`
-                            )
-                        ) : count === 1 ? (
-                            "1 organization"
-                        ) : (
-                            `${count} organizations`
-                        )}
-                    </p>
+                                `${count} organizations`
+                            )}
+                        </p>
+                    </div>
                 </div>
                 <CreateOrganizationDialog />
             </div>
-
+            {/* What is an Organization? collapsible */}
+            <Collapsible
+                open={isWhatIsOrgOpen}
+                onOpenChange={setIsWhatIsOrgOpen}
+            >
+                <CollapsibleTrigger className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+                    <ChevronDown
+                        className={`size-4 transition-transform duration-200 ${
+                            isWhatIsOrgOpen ? "rotate-180" : ""
+                        }`}
+                    />
+                    <HelpCircle />
+                    <span className="group-hover:underline underline-offset-2">
+                        What is an Organization?
+                    </span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3 pb-1">
+                    <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground max-w-2xl space-y-3">
+                        <p>
+                            An organization is a flexible container for grouping
+                            your classes. It could represent:
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 ml-1">
+                            <li>
+                                A <strong>school district</strong> containing
+                                multiple schools and their classes, in which
+                                case your district admin would invite you to
+                                their organization.
+                            </li>
+                            <li>
+                                A <strong>single school</strong> with all its
+                                classes, in which case your school admin would
+                                invite you to their organization.
+                            </li>
+                            <li>
+                                A <strong>personal workspace</strong> (e.g.,
+                                &ldquo;My Classes&rdquo;) if your institution
+                                isn&apos;t on ClassClarus yet.
+                            </li>
+                        </ul>
+                        <p>
+                            If your school or district isn&apos;t already on
+                            ClassClarus, we recommend creating an organization
+                            with any name and adding all your classes there.
+                            Another option is to create a separate organization
+                            for each school year to keep things tidy.
+                        </p>
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
             {/* Search bar */}
             {showSearch && onSearchChange && (
                 <div className="relative">

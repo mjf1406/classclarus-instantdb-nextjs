@@ -32,6 +32,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
         classes: {
             $: { where: { organizationId } },
             owner: {},
+            classAdmins: {},
             organization: {
                 owner: {},
             },
@@ -43,6 +44,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
         organizations: {
             $: { where: { id: organizationId } },
             owner: {},
+            admins: {},
         },
     });
 
@@ -53,9 +55,11 @@ export default function ClassList({ organizationId }: ClassListProps) {
     const canEditInOrg = useMemo(() => {
         if (!user?.id || !organization) return false;
         const isOrgOwner = organization.owner?.id === user.id;
-        const orgAdmins = Array.isArray(organization.adminIds)
-            ? organization.adminIds
-            : [];
+        // Use linked admins if available, fall back to JSON array during migration
+        const linkedAdmins = organization.admins ?? [];
+        const orgAdmins = Array.isArray(linkedAdmins) 
+            ? linkedAdmins.map((admin: any) => admin.id ?? admin)
+            : (Array.isArray(organization.adminIds) ? organization.adminIds : []);
         const isOrgAdmin = orgAdmins.includes(user.id);
         return isOrgOwner || isOrgAdmin;
     }, [user?.id, organization]);
@@ -65,9 +69,11 @@ export default function ClassList({ organizationId }: ClassListProps) {
         if (!user?.id) return false;
         if (canEditInOrg) return true; // Org owner/admin can edit all classes
         const isClassOwner = classData.owner?.id === user.id;
-        const classAdmins = Array.isArray(classData.admins)
-            ? classData.admins
-            : [];
+        // Use linked classAdmins if available, fall back to JSON array during migration
+        const linkedClassAdmins = classData.classAdmins ?? [];
+        const classAdmins = Array.isArray(linkedClassAdmins)
+            ? linkedClassAdmins.map((admin: any) => admin.id ?? admin)
+            : (Array.isArray(classData.admins) ? classData.admins : []);
         return isClassOwner || classAdmins.includes(user.id);
     };
 

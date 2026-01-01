@@ -131,24 +131,21 @@ export default function CreateOrganizationDialog({
                 iconUrl = result.url;
             }
 
-            // Prepare member and admin IDs
-            // For now, we store emails directly - in production you'd want to look up user IDs
-            // The current user is automatically included as an admin
-            const allAdminIds = [user.id]; // Owner is always an admin
-            const allMemberIds = [user.id]; // Owner is always a member
-
             // Create the organization and link it to the owner
+            // The owner is automatically a member and admin
+            // Note: Email invites (memberEmails, adminEmails) would need to be handled
+            // by looking up user IDs from emails in production
             const orgTx = db.tx.organizations[orgId]
                 .create({
                     name: data.name.trim(),
                     description: data.description?.trim() || undefined,
                     icon: iconUrl,
-                    memberIds: [...allMemberIds, ...memberEmails], // Store emails for pending invites
-                    adminIds: [...allAdminIds, ...adminEmails], // Store emails for pending invites
                     created: now,
                     updated: now,
                 })
-                .link({ owner: user.id });
+                .link({ owner: user.id })
+                .link({ members: user.id }) // Owner is always a member
+                .link({ admins: user.id }); // Owner is always an admin
 
             await db.transact(orgTx);
 

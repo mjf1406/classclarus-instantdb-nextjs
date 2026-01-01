@@ -59,6 +59,8 @@ export default function OrgPage({ params }: OrgPageProps) {
         organizations: {
             $: { where: { id: orgId } },
             owner: {},
+            members: {},
+            admins: {},
         },
     });
 
@@ -354,22 +356,30 @@ function OrgStats({
 }: {
     organization: NonNullable<ReturnType<typeof useOrgData>>;
 }) {
-    const { memberIds, adminIds } = organization;
+    // Use linked members/admins if available, otherwise fall back to JSON arrays during migration
+    const linkedMembers = organization.members ?? [];
+    const linkedAdmins = organization.admins ?? [];
+    const memberIds = organization.memberIds; // Deprecated - fallback during migration
+    const adminIds = organization.adminIds; // Deprecated - fallback during migration
 
-    const members = Array.isArray(memberIds) ? memberIds : [];
-    const admins = Array.isArray(adminIds) ? adminIds : [];
+    const memberCount = Array.isArray(linkedMembers) 
+        ? linkedMembers.length 
+        : (Array.isArray(memberIds) ? memberIds.length : 0);
+    const adminCount = Array.isArray(linkedAdmins) 
+        ? linkedAdmins.length 
+        : (Array.isArray(adminIds) ? adminIds.length : 0);
 
     const stats = [
         {
             label: "Members",
-            value: members.length,
+            value: memberCount,
             icon: Users,
             color: "text-blue-500",
             bgColor: "bg-blue-500/10",
         },
         {
             label: "Admins",
-            value: admins.length,
+            value: adminCount,
             icon: ShieldCheck,
             color: "text-emerald-500",
             bgColor: "bg-emerald-500/10",
@@ -483,6 +493,8 @@ function useOrgData() {
     const { data } = db.useQuery({
         organizations: {
             owner: {},
+            members: {},
+            admins: {},
         },
     });
     return data?.organizations?.[0];

@@ -23,21 +23,30 @@ const dataBind = [
     // User is a premium user
     "isPremium",
     "auth.ref('$user.profile.plan').exists(p, p in ['basic', 'plus', 'pro'])",
-    // Use is a teacher in a class
+    // User is a teacher in a class
     "isTeacher",
-    "auth.id in data.teachers",
-    // User is a member of the data
+    "auth.id in data.ref('classTeachers.id')",
+    // User is still a teacher in a class
+    "isStillTeacher",
+    "auth.id in newData.ref('classTeachers.id')",
+    // User is a member of the data (organization members)
     "isMember",
-    "auth.id in data.memberIds",
+    "auth.id in data.ref('members.id')",
     // User is still a member of the data
     "isStillMember",
-    "auth.id in newData.memberIds",
-    // User is an admin of the data
+    "auth.id in newData.ref('members.id')",
+    // User is an admin of the data (organization admins)
     "isAdmin",
-    "auth.id in data.adminIds",
+    "auth.id in data.ref('admins.id')",
     // User is still an admin of the data
     "isStillAdmin",
-    "auth.id in newData.adminIds",
+    "auth.id in newData.ref('admins.id')",
+    // User is a class admin
+    "isClassAdmin",
+    "auth.id in data.ref('classAdmins.id')",
+    // User is still a class admin
+    "isStillClassAdmin",
+    "auth.id in newData.ref('classAdmins.id')",
 ];
 
 const rules = {
@@ -76,9 +85,9 @@ const rules = {
     classes: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated && (isOwner || isAdmin || isMember)",
-            update: "isAuthenticated && (isOwner || isAdmin) && (isStillOwner || isStillAdmin)",
-            delete: "isAuthenticated && (isOwner || isAdmin)",
+            view: "isAuthenticated && (isOwner || isClassAdmin || isTeacher)",
+            update: "isAuthenticated && (isOwner || isClassAdmin) && (isStillOwner || isStillClassAdmin)",
+            delete: "isAuthenticated && (isOwner || isClassAdmin)",
         },
         bind: dataBind,
     },

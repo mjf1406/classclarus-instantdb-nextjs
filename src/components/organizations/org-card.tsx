@@ -58,8 +58,8 @@ interface OrganizationData {
     name: string;
     description?: string;
     icon?: string;
-    memberIds?: string[];
-    adminIds?: string[];
+    memberIds?: string[]; // Deprecated - kept for backward compatibility during migration
+    adminIds?: string[]; // Deprecated - kept for backward compatibility during migration
     created: Date | string | number;
     updated: Date | string | number;
     owner?: {
@@ -70,6 +70,22 @@ interface OrganizationData {
         firstName?: string;
         lastName?: string;
     };
+    members?: Array<{
+        id: string;
+        email?: string;
+        imageURL?: string;
+        avatarURL?: string;
+        firstName?: string;
+        lastName?: string;
+    }>;
+    admins?: Array<{
+        id: string;
+        email?: string;
+        imageURL?: string;
+        avatarURL?: string;
+        firstName?: string;
+        lastName?: string;
+    }>;
     classes?: { id: string; name: string; icon?: string }[];
 }
 
@@ -89,11 +105,13 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
         name,
         description,
         icon,
-        memberIds,
-        adminIds,
+        memberIds, // Deprecated - fallback during migration
+        adminIds, // Deprecated - fallback during migration
         created,
         updated,
         owner,
+        members: linkedMembers,
+        admins: linkedAdmins,
         classes,
     } = organization;
 
@@ -102,9 +120,11 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
         setShowDeleteDialog(false);
     };
 
-    // Parse member and admin IDs (they're stored as JSON arrays)
-    const members = Array.isArray(memberIds) ? memberIds : [];
-    const admins = Array.isArray(adminIds) ? adminIds : [];
+    // Use linked members/admins if available, otherwise fall back to JSON arrays during migration
+    const members = linkedMembers ?? (Array.isArray(memberIds) ? memberIds : []);
+    const admins = linkedAdmins ?? (Array.isArray(adminIds) ? adminIds : []);
+    const memberCount = Array.isArray(linkedMembers) ? linkedMembers.length : (Array.isArray(memberIds) ? memberIds.length : 0);
+    const adminCount = Array.isArray(linkedAdmins) ? linkedAdmins.length : (Array.isArray(adminIds) ? adminIds.length : 0);
     const classCount = classes?.length ?? 0;
 
     // Get initials for fallback avatar
@@ -255,7 +275,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                     <div className="flex flex-col items-center rounded-lg bg-muted/50 px-3 py-2.5 transition-colors hover:bg-muted">
                                         <Users className="size-4 text-muted-foreground mb-1" />
                                         <span className="text-lg font-semibold tabular-nums">
-                                            {members.length}
+                                            {memberCount}
                                         </span>
                                         <span className="text-xs text-muted-foreground">
                                             Members
@@ -263,9 +283,9 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    {members.length === 1
+                                    {memberCount === 1
                                         ? "1 member"
-                                        : `${members.length} members`}
+                                        : `${memberCount} members`}
                                 </TooltipContent>
                             </Tooltip>
 
@@ -274,7 +294,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                     <div className="flex flex-col items-center rounded-lg bg-muted/50 px-3 py-2.5 transition-colors hover:bg-muted">
                                         <ShieldCheck className="size-4 text-muted-foreground mb-1" />
                                         <span className="text-lg font-semibold tabular-nums">
-                                            {admins.length}
+                                            {adminCount}
                                         </span>
                                         <span className="text-xs text-muted-foreground">
                                             Admins
@@ -282,9 +302,9 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    {admins.length === 1
+                                    {adminCount === 1
                                         ? "1 admin"
-                                        : `${admins.length} admins`}
+                                        : `${adminCount} admins`}
                                 </TooltipContent>
                             </Tooltip>
                         </div>

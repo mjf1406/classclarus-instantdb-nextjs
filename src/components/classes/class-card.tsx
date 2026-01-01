@@ -65,9 +65,9 @@ interface ClassData {
     joinCodeTeacher: string;
     joinCodeParent: string;
     organizationId?: string;
-    students?: string[];
-    admins?: string[];
-    teachers?: string[];
+    students?: string[]; // Deprecated - kept for backward compatibility during migration
+    admins?: string[]; // Deprecated - kept for backward compatibility during migration
+    teachers?: string[]; // Deprecated - kept for backward compatibility during migration
     created: Date | string | number;
     updated: Date | string | number;
     owner?: {
@@ -78,10 +78,37 @@ interface ClassData {
         firstName?: string;
         lastName?: string;
     };
+    classAdmins?: Array<{
+        id: string;
+        email?: string;
+        imageURL?: string;
+        avatarURL?: string;
+        firstName?: string;
+        lastName?: string;
+    }>;
+    classTeachers?: Array<{
+        id: string;
+        email?: string;
+        imageURL?: string;
+        avatarURL?: string;
+        firstName?: string;
+        lastName?: string;
+    }>;
+    classStudents?: Array<{
+        id: string;
+        email?: string;
+        imageURL?: string;
+        avatarURL?: string;
+        firstName?: string;
+        lastName?: string;
+    }>;
     organization?: {
         id: string;
         name: string;
-        adminIds?: string[];
+        adminIds?: string[]; // Deprecated - kept for backward compatibility during migration
+        admins?: Array<{
+            id: string;
+        }>;
         owner?: {
             id: string;
         };

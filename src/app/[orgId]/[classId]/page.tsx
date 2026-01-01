@@ -90,8 +90,12 @@ export default function ClassPage({ params }: ClassPageProps) {
         classes: {
             $: { where: { id: classId } },
             owner: {},
+            classAdmins: {},
+            classTeachers: {},
+            classStudents: {},
             organization: {
                 owner: {},
+                admins: {},
             },
         },
     });
@@ -106,19 +110,21 @@ export default function ClassPage({ params }: ClassPageProps) {
         // Class owner
         if (classData.owner?.id === user.id) return true;
 
-        // Class admins
-        const classAdmins = Array.isArray(classData.admins)
-            ? classData.admins
-            : [];
+        // Class admins (use linked relation if available, fall back to JSON array during migration)
+        const linkedClassAdmins = classData.classAdmins ?? [];
+        const classAdmins = Array.isArray(linkedClassAdmins)
+            ? linkedClassAdmins.map((admin: any) => admin.id ?? admin)
+            : (Array.isArray(classData.admins) ? classData.admins : []);
         if (classAdmins.includes(user.id)) return true;
 
         // Organization owner
         if (organization?.owner?.id === user.id) return true;
 
-        // Organization admins
-        const orgAdmins = Array.isArray(organization?.adminIds)
-            ? organization.adminIds
-            : [];
+        // Organization admins (use linked relation if available, fall back to JSON array during migration)
+        const linkedOrgAdmins = organization?.admins ?? [];
+        const orgAdmins = Array.isArray(linkedOrgAdmins)
+            ? linkedOrgAdmins.map((admin: any) => admin.id ?? admin)
+            : (Array.isArray(organization?.adminIds) ? organization.adminIds : []);
         if (orgAdmins.includes(user.id)) return true;
 
         return false;
@@ -401,9 +407,9 @@ export default function ClassPage({ params }: ClassPageProps) {
                         iconColor="text-blue-500"
                         bgColor="bg-blue-500/10"
                         userIds={
-                            Array.isArray(classData.students)
-                                ? classData.students
-                                : []
+                            Array.isArray(classData.classStudents)
+                                ? classData.classStudents.map((student: any) => student.id ?? student)
+                                : (Array.isArray(classData.students) ? classData.students : [])
                         }
                         emptyMessage="No students enrolled yet"
                     />
@@ -414,9 +420,9 @@ export default function ClassPage({ params }: ClassPageProps) {
                             iconColor="text-emerald-500"
                             bgColor="bg-emerald-500/10"
                             userIds={
-                                Array.isArray(classData.teachers)
-                                    ? classData.teachers
-                                    : []
+                                Array.isArray(classData.classTeachers)
+                                    ? classData.classTeachers.map((teacher: any) => teacher.id ?? teacher)
+                                    : (Array.isArray(classData.teachers) ? classData.teachers : [])
                             }
                             emptyMessage="No teachers assigned yet"
                         />
@@ -426,9 +432,9 @@ export default function ClassPage({ params }: ClassPageProps) {
                             iconColor="text-violet-500"
                             bgColor="bg-violet-500/10"
                             userIds={
-                                Array.isArray(classData.admins)
-                                    ? classData.admins
-                                    : []
+                                Array.isArray(classData.classAdmins)
+                                    ? classData.classAdmins.map((admin: any) => admin.id ?? admin)
+                                    : (Array.isArray(classData.admins) ? classData.admins : [])
                             }
                             emptyMessage="No class admins yet"
                         />
@@ -959,32 +965,39 @@ function ClassHero({
 
 // Class stats component
 function ClassStats({ classData }: { classData: ClassDataType }) {
-    const students = Array.isArray(classData.students)
-        ? classData.students
-        : [];
-    const teachers = Array.isArray(classData.teachers)
-        ? classData.teachers
-        : [];
-    const admins = Array.isArray(classData.admins) ? classData.admins : [];
+    // Use linked relations if available, fall back to JSON arrays during migration
+    const linkedStudents = classData.classStudents ?? [];
+    const linkedTeachers = classData.classTeachers ?? [];
+    const linkedAdmins = classData.classAdmins ?? [];
+    
+    const studentCount = Array.isArray(linkedStudents)
+        ? linkedStudents.length
+        : (Array.isArray(classData.students) ? classData.students.length : 0);
+    const teacherCount = Array.isArray(linkedTeachers)
+        ? linkedTeachers.length
+        : (Array.isArray(classData.teachers) ? classData.teachers.length : 0);
+    const adminCount = Array.isArray(linkedAdmins)
+        ? linkedAdmins.length
+        : (Array.isArray(classData.admins) ? classData.admins.length : 0);
 
     const stats = [
         {
             label: "Students",
-            value: students.length,
+            value: studentCount,
             icon: Users,
             color: "text-blue-500",
             bgColor: "bg-blue-500/10",
         },
         {
             label: "Teachers",
-            value: teachers.length,
+            value: teacherCount,
             icon: GraduationCap,
             color: "text-emerald-500",
             bgColor: "bg-emerald-500/10",
         },
         {
             label: "Admins",
-            value: admins.length,
+            value: adminCount,
             icon: ShieldCheck,
             color: "text-violet-500",
             bgColor: "bg-violet-500/10",

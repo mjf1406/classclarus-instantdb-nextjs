@@ -30,8 +30,6 @@ const _schema = i.schema({
             name: i.string().indexed(),
             description: i.string().optional(),
             icon: i.string().optional(),
-            memberIds: i.json().optional(), // array of user ids
-            adminIds: i.json().optional(), // array of user ids
             created: i.date(),
             updated: i.date(),
         }),
@@ -43,9 +41,6 @@ const _schema = i.schema({
             joinCodeTeacher: i.string().unique().indexed(),
             joinCodeParent: i.string().unique().indexed(),
             organizationId: i.string().indexed().optional(),
-            students: i.json().optional(), // array of user ids -- students enrolled in the class
-            admins: i.json().optional(), // array of user ids -- teachers with admin access
-            teachers: i.json().optional(), // array of user ids -- teachers without admin access
             created: i.date(),
             updated: i.date(),
         }),
@@ -128,6 +123,66 @@ const _schema = i.schema({
                 has: "many",
                 label: "files",
             }, // Each class can have many files
+        },
+        orgMembers: {
+            forward: {
+                on: "organizations",
+                has: "many",
+                label: "members",
+            }, // Each organization can have many members
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "memberOrganizations",
+            }, // Each user can be a member of many organizations
+        },
+        orgAdmins: {
+            forward: {
+                on: "organizations",
+                has: "many",
+                label: "admins",
+            }, // Each organization can have many admins
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "adminOrganizations",
+            }, // Each user can be an admin of many organizations
+        },
+        classAdmins: {
+            forward: {
+                on: "classes",
+                has: "many",
+                label: "classAdmins",
+            }, // Each class can have many admins
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "adminClasses",
+            }, // Each user can be an admin of many classes
+        },
+        classTeachers: {
+            forward: {
+                on: "classes",
+                has: "many",
+                label: "classTeachers",
+            }, // Each class can have many teachers
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "teacherClasses",
+            }, // Each user can be a teacher of many classes
+        },
+        classStudents: {
+            forward: {
+                on: "classes",
+                has: "many",
+                label: "classStudents",
+            }, // Each class can have many students
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "studentClasses",
+            }, // Each user can be a student in many classes
         },
     },
     rooms: {},

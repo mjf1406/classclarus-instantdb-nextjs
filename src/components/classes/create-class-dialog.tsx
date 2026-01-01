@@ -180,6 +180,7 @@ export default function CreateClassDialog({
             }
 
             // Create the class and link it to the owner and organization
+            // The owner is automatically a class admin
             const classTx = db.tx.classes[classId]
                 .create({
                     name: data.name.trim(),
@@ -193,7 +194,8 @@ export default function CreateClassDialog({
                     updated: now,
                 })
                 .link({ owner: user.id })
-                .link({ organization: organizationId });
+                .link({ organization: organizationId })
+                .link({ classAdmins: user.id }); // Owner is always a class admin
 
             await db.transact(classTx);
 
