@@ -10,6 +10,7 @@ import TryAsGuestButton from "@/components/auth/guest-auth";
 import OrgList from "@/components/organizations/org-list";
 import { GoogleOAuthButton } from "@/components/auth/google-oauth";
 import AppNavbar from "@/components/navbar/app-navbar";
+import SignedOutNavbar from "@/components/navbar/signed-out-navbar";
 import GuestUpgradeCard from "@/components/guest/guest-upgrade-card";
 
 export default function Home() {
@@ -19,7 +20,7 @@ export default function Home() {
                 <AppNavbar />
             </db.SignedIn>
             <db.SignedOut>
-                <AppNavbar />
+                <SignedOutNavbar />
             </db.SignedOut>
             <div className="min-h-screen flex justify-center p-4">
                 <db.SignedIn>

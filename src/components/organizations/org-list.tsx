@@ -29,6 +29,11 @@ export default function OrgList() {
                   organizations: {
                       owner: {},
                       classes: {},
+                      $: {
+                          where: {
+                              owner: user.id,
+                          },
+                      },
                   },
               }
             : {}
