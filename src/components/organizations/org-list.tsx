@@ -36,10 +36,8 @@ export default function OrgList() {
     const [searchQuery, setSearchQuery] = useState("");
     const { user, isLoading: isUserLoading } = db.useAuth();
 
-    // The query syntax is correct for filtering by relation fields
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query = user
-        ? ({
+        ? {
               organizations: {
                   $: {
                       where: {
@@ -64,21 +62,18 @@ export default function OrgList() {
                       classTeachers: {},
                   },
               },
-          } as any)
-        : ({} as any);
+          }
+        : {};
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, isLoading, error } = db.useQuery(query);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizations = (data as any)?.organizations ?? [];
+    const organizations = data?.organizations ?? [];
 
     // Filter organizations by search query
     const filteredOrganizations = useMemo(() => {
         if (!searchQuery.trim()) return organizations;
         const query = searchQuery.toLowerCase().trim();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return organizations.filter((org: any) =>
+        return organizations.filter((org) =>
             org.name.toLowerCase().includes(query)
         );
     }, [organizations, searchQuery]);
@@ -183,8 +178,7 @@ export default function OrgList() {
             {/* Organization grid */}
             {filteredOrganizations.length > 0 && (
                 <div className="flex flex-col gap-5">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {filteredOrganizations.map((org: any) => (
+                    {filteredOrganizations.map((org) => (
                         <OrgCard
                             key={org.id}
                             organization={org}
