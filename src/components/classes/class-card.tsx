@@ -16,6 +16,8 @@ import {
     Copy,
     Check,
     ShieldCheck,
+    Maximize2,
+    ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -43,6 +45,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/db/db";
 import { EditClassDialog } from "@/components/classes/edit-class-dialog";
@@ -53,7 +61,9 @@ interface ClassData {
     name: string;
     description?: string;
     icon?: string;
-    joinCode: string;
+    joinCodeStudent: string;
+    joinCodeTeacher: string;
+    joinCodeParent: string;
     organizationId?: string;
     students?: string[];
     admins?: string[];
@@ -78,6 +88,8 @@ interface ClassData {
     };
 }
 
+type JoinCodeType = "student" | "teacher" | "parent";
+
 interface ClassCardProps {
     classData: ClassData;
     canEdit?: boolean;
@@ -86,14 +98,20 @@ interface ClassCardProps {
 export default function ClassCard({ classData, canEdit }: ClassCardProps) {
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
-    const [copied, setCopied] = React.useState(false);
+    const [showFullscreen, setShowFullscreen] = React.useState(false);
+    const [copied, setCopied] = React.useState<JoinCodeType | null>(null);
+    const [selectedCodeType, setSelectedCodeType] =
+        React.useState<JoinCodeType>("student");
+    const [isRevealed, setIsRevealed] = React.useState(false);
 
     const {
         id,
         name,
         description,
         icon,
-        joinCode,
+        joinCodeStudent,
+        joinCodeTeacher,
+        joinCodeParent,
         organizationId,
         students,
         admins,
@@ -103,20 +121,176 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
         owner,
     } = classData;
 
+    const joinCodes = {
+        student: joinCodeStudent,
+        teacher: joinCodeTeacher,
+        parent: joinCodeParent,
+    };
+
+    const codeLabels = {
+        student: "Student",
+        teacher: "Teacher",
+        parent: "Parent",
+    };
+
+    const codeColors = {
+        student: "text-blue-500",
+        teacher: "text-emerald-500",
+        parent: "text-amber-500",
+    };
+
     const handleDelete = () => {
         db.transact(db.tx.classes[id].delete());
         setShowDeleteDialog(false);
     };
 
-    const handleCopyJoinCode = async (e: React.MouseEvent) => {
+    const handleCopyJoinCode = async (
+        e: React.MouseEvent,
+        codeType: JoinCodeType
+    ) => {
         e.preventDefault();
         e.stopPropagation();
         try {
-            await navigator.clipboard.writeText(joinCode);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            await navigator.clipboard.writeText(joinCodes[codeType]);
+            setCopied(codeType);
+            setTimeout(() => setCopied(null), 2000);
         } catch (err) {
             console.error("Failed to copy join code:", err);
+        }
+    };
+
+    const handleRevealCode = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsRevealed(true);
+    };
+
+    const handleOpenFullscreen = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowFullscreen(true);
+    };
+
+    const handleOpenInNewWindow = (
+        e: React.MouseEvent,
+        codeType: JoinCodeType
+    ) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const code = joinCodes[codeType];
+        const label = codeLabels[codeType];
+        const colorMap = {
+            student: "#3b82f6",
+            teacher: "#10b981",
+            parent: "#f59e0b",
+        };
+        const color = colorMap[codeType];
+        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${label} Join Code - ${name}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, ${color} 0%, ${color}99 100%);
+            color: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 4rem;
+            padding: 2rem;
+            width: 100%;
+        }
+        .code-section {
+            text-align: center;
+        }
+        h1 { font-size: 2rem; margin-bottom: 1rem; opacity: 0.9; }
+        .code-label { font-size: 1.5rem; opacity: 0.8; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; }
+        .code-type { font-size: 1.25rem; opacity: 0.9; margin-bottom: 0.5rem; font-weight: 600; }
+        .code {
+            font-size: 10rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem 3rem;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            display: inline-block;
+        }
+        .steps {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+        }
+        .steps h2 { font-size: 2.5rem; margin-bottom: 2rem; }
+        .steps ol { list-style: none; counter-reset: step; }
+        .steps li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+        }
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            flex-shrink: 0;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: white;
+            color: ${color};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+        .url { font-family: 'Courier New', monospace; font-weight: bold; }
+        @media (max-width: 1200px) {
+            .container { flex-direction: column; gap: 2rem; }
+            .code { font-size: 6rem; letter-spacing: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="code-section">
+            <h1>${name}</h1>
+            <div class="code-type">${label} Code</div>
+            <div class="code-label">Join Code</div>
+            <div class="code">${code}</div>
+        </div>
+        <div class="steps">
+            <h2>How to Join</h2>
+            <ol>
+                <li>Go to <span class="url">www.classclarus.com/join</span></li>
+                <li>Input the code you see on the screen</li>
+                <li>Click the <strong>Join Class</strong> button</li>
+                <li>All done!</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>`;
+        const newWindow = window.open("", "_blank", "width=1400,height=700");
+        if (newWindow) {
+            newWindow.document.write(htmlContent);
+            newWindow.document.close();
         }
     };
 
@@ -255,33 +429,139 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
                             )}
                         </div>
 
-                        {/* Join code section */}
-                        <div className="mt-4">
-                            <Tooltip>
-                                <TooltipTrigger asChild>
+                        {/* Join codes section */}
+                        <div className="mt-4 space-y-2">
+                            {/* Code type tabs */}
+                            <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
+                                {(
+                                    ["student", "teacher", "parent"] as const
+                                ).map((type) => (
                                     <button
-                                        onClick={handleCopyJoinCode}
-                                        className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted w-full justify-between group/code"
+                                        key={type}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setSelectedCodeType(type);
+                                        }}
+                                        className={cn(
+                                            "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
+                                            selectedCodeType === type
+                                                ? "bg-background shadow-sm"
+                                                : "hover:bg-background/50 text-muted-foreground"
+                                        )}
                                     >
-                                        <span className="text-muted-foreground">
-                                            Join Code
-                                        </span>
-                                        <span className="flex items-center gap-2 font-mono font-semibold">
-                                            {joinCode}
-                                            {copied ? (
-                                                <Check className="size-4 text-green-500" />
-                                            ) : (
-                                                <Copy className="size-4 text-muted-foreground group-hover/code:text-foreground transition-colors" />
-                                            )}
+                                        <span className={codeColors[type]}>
+                                            {codeLabels[type]}
                                         </span>
                                     </button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {copied
-                                        ? "Copied!"
-                                        : "Click to copy join code"}
-                                </TooltipContent>
-                            </Tooltip>
+                                ))}
+                            </div>
+
+                            {/* Selected code display */}
+                            <div className="flex items-center gap-2">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            onClick={(e) => {
+                                                if (!isRevealed) {
+                                                    handleRevealCode(e);
+                                                } else {
+                                                    handleCopyJoinCode(
+                                                        e,
+                                                        selectedCodeType
+                                                    );
+                                                }
+                                            }}
+                                            className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted flex-1 justify-between group/code relative overflow-hidden"
+                                        >
+                                            <span
+                                                className={cn(
+                                                    "text-muted-foreground transition-colors",
+                                                    codeColors[selectedCodeType]
+                                                )}
+                                            >
+                                                {codeLabels[selectedCodeType]}{" "}
+                                                Code
+                                            </span>
+                                            <span className="flex items-center gap-2 font-mono font-semibold relative">
+                                                <span
+                                                    className={cn(
+                                                        "transition-all duration-500 ease-out",
+                                                        !isRevealed &&
+                                                            "blur-sm select-none"
+                                                    )}
+                                                >
+                                                    {
+                                                        joinCodes[
+                                                            selectedCodeType
+                                                        ]
+                                                    }
+                                                </span>
+                                                {!isRevealed && (
+                                                    <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
+                                                        Click to reveal
+                                                    </span>
+                                                )}
+                                                {isRevealed &&
+                                                    (copied ===
+                                                    selectedCodeType ? (
+                                                        <Check className="size-4 text-green-500" />
+                                                    ) : (
+                                                        <Copy className="size-4 text-muted-foreground group-hover/code:text-foreground transition-colors" />
+                                                    ))}
+                                            </span>
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {!isRevealed
+                                            ? "Click to reveal code"
+                                            : copied === selectedCodeType
+                                            ? "Copied!"
+                                            : "Click to copy join code"}
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={handleOpenFullscreen}
+                                            className="h-9 w-9"
+                                        >
+                                            <Maximize2 className="size-4" />
+                                            <span className="sr-only">
+                                                Fullscreen
+                                            </span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        View in fullscreen
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) =>
+                                                handleOpenInNewWindow(
+                                                    e,
+                                                    selectedCodeType
+                                                )
+                                            }
+                                            className="h-9 w-9"
+                                        >
+                                            <ExternalLink className="size-4" />
+                                            <span className="sr-only">
+                                                Open in new window
+                                            </span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        Open in new window
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
                         </div>
 
                         {/* Stats section */}
@@ -459,6 +739,169 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Fullscreen Join Code Dialog */}
+            <Dialog
+                open={showFullscreen}
+                onOpenChange={setShowFullscreen}
+            >
+                <DialogContent className="max-w-none! w-screen! h-screen! m-0! rounded-none! top-0! left-0! translate-x-0! translate-y-0! flex flex-col p-8!">
+                    <DialogHeader className="pb-4">
+                        <DialogTitle className="text-center text-3xl">
+                            {name}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="flex flex-wrap items-center justify-center flex-1 gap-8 lg:gap-16">
+                        {/* Join Code */}
+                        <div className="flex flex-col items-center">
+                            <p
+                                className={cn(
+                                    "text-lg md:text-xl mb-3 uppercase tracking-wider font-semibold",
+                                    codeColors[selectedCodeType]
+                                )}
+                            >
+                                {codeLabels[selectedCodeType]} Join Code
+                            </p>
+                            <div
+                                className={cn(
+                                    "rounded-2xl border-4 bg-muted/50 px-8 py-6 md:px-16 md:py-12",
+                                    selectedCodeType === "student" &&
+                                        "border-blue-500",
+                                    selectedCodeType === "teacher" &&
+                                        "border-emerald-500",
+                                    selectedCodeType === "parent" &&
+                                        "border-amber-500"
+                                )}
+                            >
+                                <p
+                                    className="font-bold font-mono tracking-[0.15em] text-center"
+                                    style={{
+                                        fontSize: "clamp(3rem, 10vw, 12rem)",
+                                    }}
+                                >
+                                    {joinCodes[selectedCodeType]}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Procedure Steps */}
+                        <div className="flex flex-col items-start bg-muted/30 rounded-2xl p-6 md:p-10 border">
+                            <p className="text-2xl md:text-3xl font-semibold mb-6">
+                                How to Join
+                            </p>
+                            <ol className="space-y-4 text-xl md:text-2xl">
+                                <li className="flex items-start gap-4">
+                                    <span
+                                        className={cn(
+                                            "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
+                                            selectedCodeType === "student" &&
+                                                "bg-blue-500",
+                                            selectedCodeType === "teacher" &&
+                                                "bg-emerald-500",
+                                            selectedCodeType === "parent" &&
+                                                "bg-amber-500"
+                                        )}
+                                    >
+                                        1
+                                    </span>
+                                    <span>
+                                        Go to{" "}
+                                        <span
+                                            className={cn(
+                                                "font-mono font-semibold",
+                                                codeColors[selectedCodeType]
+                                            )}
+                                        >
+                                            www.classclarus.com/join
+                                        </span>
+                                    </span>
+                                </li>
+                                <li className="flex items-start gap-4">
+                                    <span
+                                        className={cn(
+                                            "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
+                                            selectedCodeType === "student" &&
+                                                "bg-blue-500",
+                                            selectedCodeType === "teacher" &&
+                                                "bg-emerald-500",
+                                            selectedCodeType === "parent" &&
+                                                "bg-amber-500"
+                                        )}
+                                    >
+                                        2
+                                    </span>
+                                    <span>
+                                        Input the code you see on the screen
+                                    </span>
+                                </li>
+                                <li className="flex items-start gap-4">
+                                    <span
+                                        className={cn(
+                                            "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
+                                            selectedCodeType === "student" &&
+                                                "bg-blue-500",
+                                            selectedCodeType === "teacher" &&
+                                                "bg-emerald-500",
+                                            selectedCodeType === "parent" &&
+                                                "bg-amber-500"
+                                        )}
+                                    >
+                                        3
+                                    </span>
+                                    <span>
+                                        Click the{" "}
+                                        <span className="font-semibold">
+                                            Join Class
+                                        </span>{" "}
+                                        button
+                                    </span>
+                                </li>
+                                <li className="flex items-start gap-4">
+                                    <span
+                                        className={cn(
+                                            "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
+                                            selectedCodeType === "student" &&
+                                                "bg-blue-500",
+                                            selectedCodeType === "teacher" &&
+                                                "bg-emerald-500",
+                                            selectedCodeType === "parent" &&
+                                                "bg-amber-500"
+                                        )}
+                                    >
+                                        4
+                                    </span>
+                                    <span>All done!</span>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div className="flex justify-center gap-3 pt-4">
+                        <Button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleCopyJoinCode(e, selectedCodeType);
+                            }}
+                            variant="outline"
+                            size="lg"
+                        >
+                            <Copy className="size-5 mr-2" />
+                            Copy Code
+                        </Button>
+                        <Button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleOpenInNewWindow(e, selectedCodeType);
+                            }}
+                            variant="outline"
+                            size="lg"
+                        >
+                            <ExternalLink className="size-5 mr-2" />
+                            Open in New Window
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

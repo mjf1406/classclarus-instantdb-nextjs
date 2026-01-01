@@ -39,7 +39,9 @@ const _schema = i.schema({
             name: i.string(),
             description: i.string().optional(),
             icon: i.string().optional(),
-            joinCode: i.string().unique().indexed(),
+            joinCodeStudent: i.string().unique().indexed(),
+            joinCodeTeacher: i.string().unique().indexed(),
+            joinCodeParent: i.string().unique().indexed(),
             organizationId: i.string().indexed().optional(),
             students: i.json().optional(), // array of user ids -- students enrolled in the class
             admins: i.json().optional(), // array of user ids -- teachers with admin access

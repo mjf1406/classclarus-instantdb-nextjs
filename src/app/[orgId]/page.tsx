@@ -115,7 +115,7 @@ export default function OrgPage({ params }: OrgPageProps) {
                         <Link href="/">
                             <Button>
                                 <ArrowLeft className="size-4" />
-                                Back to organizations
+                                Back to Organizations
                             </Button>
                         </Link>
                     </EmptyContent>
@@ -134,7 +134,7 @@ export default function OrgPage({ params }: OrgPageProps) {
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ArrowLeft className="size-4" />
-                        <span>Back to organizations</span>
+                        <span>Back to Organizations</span>
                     </Link>
 
                     {isOwner && (
@@ -291,7 +291,7 @@ function OrgHero({
                                     <span>
                                         {owner.firstName && owner.lastName
                                             ? `${owner.firstName} ${owner.lastName}`
-                                            : owner.email ?? "Unknown owner"}
+                                            : owner.email ?? "Guest"}
                                     </span>
                                 </div>
                             )}
