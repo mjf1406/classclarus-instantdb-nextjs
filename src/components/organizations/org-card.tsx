@@ -17,6 +17,7 @@ import {
     ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ interface OrganizationData {
         firstName?: string;
         lastName?: string;
     };
-    classes?: { id: string; name: string }[];
+    classes?: { id: string; name: string; icon?: string }[];
 }
 
 interface OrgCardProps {
@@ -78,8 +79,10 @@ interface OrgCardProps {
 }
 
 export default function OrgCard({ organization, isOwner }: OrgCardProps) {
+    const router = useRouter();
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
+    const [isClassesOpen, setIsClassesOpen] = React.useState(false);
 
     const {
         id,
@@ -128,20 +131,29 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
     const createdDate = parseDate(created);
     const updatedDate = parseDate(updated);
 
+    const handleCardClick = (e: React.MouseEvent) => {
+        // Only navigate if the click target is not an interactive element
+        const target = e.target as HTMLElement;
+        const isInteractive =
+            target.closest("button") ||
+            target.closest("a") ||
+            target.closest('[role="button"]');
+        if (!isInteractive) {
+            router.push(`/${id}`);
+        }
+    };
+
     return (
         <>
-            <Link
-                href={`/${id}`}
-                className="group block"
+            <article
+                onClick={handleCardClick}
+                className={cn(
+                    "group relative overflow-hidden rounded-xl border bg-card transition-all duration-300 cursor-pointer",
+                    "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
+                    "dark:hover:shadow-primary/10",
+                    "hover:-translate-y-0.5"
+                )}
             >
-                <article
-                    className={cn(
-                        "relative overflow-hidden rounded-xl border bg-card transition-all duration-300",
-                        "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
-                        "dark:hover:shadow-primary/10",
-                        "hover:-translate-y-0.5"
-                    )}
-                >
                     {/* Gradient accent bar */}
                     <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-primary/70 to-primary/40 opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -199,8 +211,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                     <Button
                                         variant="ghost"
                                         size="icon-sm"
-                                        className=""
-                                        onClick={(e) => e.preventDefault()}
+                                        onClick={(e) => e.stopPropagation()}
                                     >
                                         <MoreVertical className="size-4" />
                                         <span className="sr-only">
@@ -211,7 +222,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem
                                         onClick={(e) => {
-                                            e.preventDefault();
+                                            e.stopPropagation();
                                             setShowEditDialog(true);
                                         }}
                                     >
@@ -224,7 +235,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                             <DropdownMenuItem
                                                 className="text-destructive focus:text-destructive"
                                                 onClick={(e) => {
-                                                    e.preventDefault();
+                                                    e.stopPropagation();
                                                     setShowDeleteDialog(true);
                                                 }}
                                             >
@@ -279,12 +290,19 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                         </div>
 
                         {/* Classes collapsible section */}
-                        <Collapsible className="mt-3">
-                            <CollapsibleTrigger
-                                asChild
-                                onClick={(e) => e.preventDefault()}
-                            >
-                                <button className="flex w-full items-center justify-between rounded-lg bg-muted/50 px-4 py-3 text-left transition-colors hover:bg-muted group/classes">
+                        <Collapsible
+                            className="mt-3"
+                            open={isClassesOpen}
+                            onOpenChange={setIsClassesOpen}
+                        >
+                            <CollapsibleTrigger asChild>
+                                <button
+                                    className="flex w-full items-center justify-between rounded-lg bg-muted/50 px-4 py-3 text-left transition-colors hover:bg-muted group/classes"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsClassesOpen(!isClassesOpen);
+                                    }}
+                                >
                                     <div className="flex items-center gap-3">
                                         <GraduationCap className="size-4 text-muted-foreground" />
                                         <span className="text-sm font-medium">
@@ -294,22 +312,44 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                             {classCount}
                                         </span>
                                     </div>
-                                    <ChevronDown className="size-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]/classes:rotate-180" />
+                                    <ChevronDown
+                                        className={cn(
+                                            "size-4 text-muted-foreground transition-transform duration-200",
+                                            isClassesOpen && "rotate-180"
+                                        )}
+                                    />
                                 </button>
                             </CollapsibleTrigger>
                             <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
                                 <div className="mt-2 space-y-1.5 pl-1">
                                     {classes && classes.length > 0 ? (
                                         classes.map((cls) => (
-                                            <div
+                                            <Link
                                                 key={cls.id}
-                                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
+                                                href={`/${id}/${cls.id}`}
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
                                             >
-                                                <div className="size-1.5 rounded-full bg-primary/50" />
+                                                <Avatar className="size-5 rounded-md">
+                                                    {cls.icon ? (
+                                                        <AvatarImage
+                                                            src={cls.icon}
+                                                            alt={`${cls.name} icon`}
+                                                            className="object-cover"
+                                                        />
+                                                    ) : null}
+                                                    <AvatarFallback className="rounded-md bg-primary/10 text-[10px] font-medium text-primary">
+                                                        {cls.name
+                                                            .slice(0, 2)
+                                                            .toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
                                                 <span className="truncate">
                                                     {cls.name}
                                                 </span>
-                                            </div>
+                                            </Link>
                                         ))
                                     ) : (
                                         <p className="px-3 py-2 text-sm italic text-muted-foreground/60">
@@ -399,10 +439,9 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                             </div>
                         </div>
                     </div>
-                </article>
-            </Link>
+            </article>
 
-            {/* Edit Organization Dialog - Outside Link to prevent navigation on submit */}
+            {/* Edit Organization Dialog */}
             <EditOrgDialog
                 organizationId={id}
                 initialName={name}
@@ -412,7 +451,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                 onOpenChange={setShowEditDialog}
             />
 
-            {/* Delete Confirmation Dialog - Outside Link to prevent navigation on submit */}
+            {/* Delete Confirmation Dialog */}
             <AlertDialog
                 open={showDeleteDialog}
                 onOpenChange={setShowDeleteDialog}

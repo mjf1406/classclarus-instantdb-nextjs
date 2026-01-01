@@ -193,13 +193,10 @@ export const IconUploadField = React.forwardRef<
                         </p>
                     </div>
                 </div>
-                {error && (
-                    <p className="text-sm text-destructive">{error}</p>
-                )}
+                {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
         );
     }
 );
 
 IconUploadField.displayName = "IconUploadField";
-

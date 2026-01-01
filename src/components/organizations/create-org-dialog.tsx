@@ -122,6 +122,7 @@ export default function CreateOrganizationDialog({
                     file: iconFile,
                     userId: user.id,
                     pathPrefix: `orgs/${orgId}`,
+                    organizationId: orgId,
                 });
 
                 if (result.error) {

@@ -97,6 +97,7 @@ export function EditOrgDialog({
                     file: iconFile,
                     userId: user.id,
                     pathPrefix: `orgs/${organizationId}`,
+                    organizationId: organizationId,
                 });
 
                 if (result.error) {

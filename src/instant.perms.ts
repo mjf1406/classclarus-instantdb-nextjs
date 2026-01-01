@@ -49,9 +49,13 @@ const rules = {
     $files: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated",
-            update: "isAuthenticated",
-            delete: "isAuthenticated",
+            view: "isAuthenticated && isOwner",
+            update: "isAuthenticated && (data.ref('owner.id') == [] || (isOwner && isStillOwner))", // Allow update if: no owner yet (new file) OR you are the owner
+            delete: "isAuthenticated && isOwner",
+            // create: "true",
+            // view: "true",
+            // update: "true",
+            // delete: "true",
         },
         bind: dataBind,
     },

@@ -4,6 +4,8 @@
 
 ## To-do List
 
+-   [ ] fetch orgs the user is owner, admin, or member of
+-   [ ] fetch classes within the given org the user is owner, admin, or teacher of
 -   [ ] organizations
     -   [x] create organization
     -   [x] edit organization
@@ -12,12 +14,18 @@
     -   `/` page
         -   [ ] the home page shows all orgs the user is in as collapsible sections, which show all the classes the user is in for each org,
         -   [x] each org section has ability to create, edit, delete the org if admin
-        -   [ ] each class uses the class card, which allows the user to create, edit, delete classes in each org
-    -   [ ] `/[orgId]` page shows all classes in the org, with ability to create, edit, delete classes in that org
+    -   [x] `/[orgId]` page shows all classes in the org, with ability to create, edit, delete classes in that org
+    -   [ ] edit complex fields for org
+        -   [ ] manage members
+        -   [ ] manage admins
 -   [ ] classes
     -   [x] create class
-    -   [ ] edit class
-    -   [ ] delete class
+    -   [x] edit basic fields for class
+    -   [ ] edit complex fields for class
+        -   [ ] manage students
+        -   [ ] manage teachers
+        -   [ ] manage admins
+    -   [x] delete class
     -   [x] list classes
 -   guests
     -   [ ] guest description

@@ -41,6 +41,10 @@ export interface UploadIconOptions {
     userId: string;
     /** Path prefix for the file, e.g., "orgs/123" or "classes/456" */
     pathPrefix: string;
+    /** Organization ID to link the file to (for org icons) */
+    organizationId?: string;
+    /** Class ID to link the file to (for class icons) */
+    classId?: string;
 }
 
 export interface UploadIconResult {
@@ -50,13 +54,15 @@ export interface UploadIconResult {
 }
 
 /**
- * Uploads an icon file to InstantDB storage, links it to the user as owner,
- * and returns the URL.
+ * Uploads an icon file to InstantDB storage, links it to the user as owner
+ * and optionally to an organization or class, then returns the URL.
  */
 export async function uploadIcon({
     file,
     userId,
     pathPrefix,
+    organizationId,
+    classId,
 }: UploadIconOptions): Promise<UploadIconResult> {
     try {
         const fileName = `${pathPrefix}/icon-${Date.now()}.${file.name
@@ -74,8 +80,26 @@ export async function uploadIcon({
             };
         }
 
-        // Link the file to the user as owner
-        await db.transact(db.tx.$files[fileId].link({ owner: userId }));
+        // Build the link transaction - always link to owner
+        let linkTx = db.tx.$files[fileId].link({ owner: userId });
+        let linkOrgClass;
+
+        // Additionally link to organization if provided
+        if (organizationId) {
+            linkOrgClass = db.tx.$files[fileId].link({
+                organization: organizationId,
+            });
+        }
+        // Additionally link to class if provided
+        if (classId) {
+            linkOrgClass = db.tx.$files[fileId].link({ class: classId });
+        }
+
+        if (linkOrgClass) {
+            await db.transact([linkTx, linkOrgClass]);
+        } else {
+            await db.transact(linkTx);
+        }
 
         // Fetch the URL from the database
         const { data: fileData } = await db.queryOnce({
@@ -96,11 +120,7 @@ export async function uploadIcon({
         return {
             url: undefined,
             fileId: undefined,
-            error:
-                err instanceof Error
-                    ? err.message
-                    : "Failed to upload icon",
+            error: err instanceof Error ? err.message : "Failed to upload icon",
         };
     }
 }
-

@@ -107,6 +107,7 @@ export default function CreateClassDialog({
                     file: iconFile,
                     userId: user.id,
                     pathPrefix: `classes/${classId}`,
+                    classId: classId,
                 });
 
                 if (result.error) {

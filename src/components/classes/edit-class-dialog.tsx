@@ -95,6 +95,7 @@ export function EditClassDialog({
                     file: iconFile,
                     userId: user.id,
                     pathPrefix: `classes/${classId}`,
+                    classId: classId,
                 });
 
                 if (result.error) {
