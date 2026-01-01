@@ -13,12 +13,8 @@ import { useState } from "react";
 const GUEST_MODE_LIMITATIONS = [
     "You can only create classes, not join them.",
     "Students cannot join the classes you create.",
-    "You can only use the default 'My Org' organization.",
-    "You cannot create or join other organizations.",
-    "You cannot invite other teachers or collaborate.",
-    "You cannot export or backup your data.",
-    "You have limited file storage capacity.",
-    "You cannot access premium features or advanced analytics.",
+    "You cannot join other organizations.",
+    "You cannot invite other teachers to the classes you create.",
 ];
 
 export default function GuestLimitations() {

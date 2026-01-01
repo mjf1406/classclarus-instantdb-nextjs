@@ -10,16 +10,17 @@ import TryAsGuestButton from "@/components/auth/guest-auth";
 import GoogleOAuthButton from "@/components/auth/google-oauth";
 import { ThemeSwitch } from "@/components/theme/theme-switch";
 import { Logo } from "@/components/brand/logo";
+import OrgList from "@/components/organizations/org-list";
+import CreateOrganizationDialog from "@/components/organizations/create-org-dialog";
 
 export default function Home() {
     return (
-        <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="min-h-screen flex justify-center p-4">
             <div className="top-0 right-0 fixed m-3">
                 <ThemeSwitch />
             </div>
             <db.SignedIn>
-                {/* <SignedInView /> */}
-                You are signed in.
+                <SignedInView />
             </db.SignedIn>
             <db.SignedOut>
                 <SignedOutView />
@@ -43,6 +44,18 @@ function SignedOutView() {
                 <MagicCodeAuth />
                 <GoogleOAuthButton />
             </div>
+        </div>
+    );
+}
+
+function SignedInView() {
+    return (
+        <div className="w-full max-w-md space-y-6">
+            <div className="text-center space-y-2 flex items-center justify-center">
+                <Logo />
+            </div>
+            <CreateOrganizationDialog />
+            <OrgList />
         </div>
     );
 }

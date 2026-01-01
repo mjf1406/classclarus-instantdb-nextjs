@@ -6,13 +6,20 @@
         "dev": "next dev --turbopack",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "ps": "npx instant-cli@latest push schema",
+        "pp": "npx instant-cli@latest push perms",
+        "pps": "npm run ps && npm run pp",
+        "bs": "npm run build && npm run start",
+        "test:cron": "tsx scripts/test-cron.ts",
+        "test:cron:delete": "tsx scripts/test-cron.ts --delete"
     },
     "dependencies": {
         "@instantdb/admin": "latest",
         "@instantdb/react": "latest",
         "@radix-ui/react-collapsible": "^1.1.12",
         "@radix-ui/react-dialog": "^1.1.15",
+        "@radix-ui/react-label": "^2.1.8",
         "@radix-ui/react-slot": "^1.2.4",
         "@react-oauth/google": "^0.13.4",
         "class-variance-authority": "^0.7.1",
