@@ -47,7 +47,7 @@ export function MagicCodeAuth({ trigger, onSuccess }: MagicCodeAuthProps) {
             ) : (
                 <Button
                     onClick={() => setOpen(true)}
-                    variant="outline"
+                    variant="secondary"
                     className="w-full items-center gap-2 justify-start"
                     size="lg"
                 >
