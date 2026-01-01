@@ -12,7 +12,7 @@
     -   [x] delete organization
     -   [x] list organizations
     -   `/` page
-        -   [ ] the home page shows all orgs the user is in as collapsible sections, which show all the classes the user is in for each org,
+        -   [x] the home page shows all orgs the user is in as collapsible sections, which show all the classes the user is in for each org,
         -   [x] each org section has ability to create, edit, delete the org if admin
     -   [x] `/[orgId]` page shows all classes in the org, with ability to create, edit, delete classes in that org
     -   [ ] edit complex fields for org
@@ -28,13 +28,16 @@
     -   [x] delete class
     -   [x] list classes
 -   guests
-    -   [ ] guest description
-    -   [ ] guest limitations section
+    -   [x] guest description
+    -   [x] guest limitations section
     -   [ ] guest upgrade card
     -   [ ] CRON job: once per day at midnight, delete all guest accounts that are older than 14 days
 -   [ ] authentication
-    -   [ ] magic code auth added
-    -   [ ] Google auth added
+    -   [x] magic code auth added
+        -   [ ] sets plan to free on signup
+    -   [x] Google auth added
+        -   [ ] Google Auth extracts first name, last name from Google nonce and adds it to the $users table
+        -   [ ] sets plan to free on signup
     -   [ ] Guest to magic code upgrade flow added
     -   [ ] Guest to Google upgrade flow added
 -   [ ] rate limiting in `proxy.ts`
@@ -48,3 +51,4 @@
 -   upgraded React to 19.2
 -   upgraded Next.js to 16
 -   UX: organizations can be created, edited, and deleted
+-   see the to-do above for more details
