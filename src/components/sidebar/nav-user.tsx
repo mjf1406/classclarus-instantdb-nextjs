@@ -44,6 +44,7 @@ import {
 import { useAuthContext } from "../auth/auth-provider";
 import GuestDescription from "@/components/guest/guest-description";
 import GuestUpgradeCard from "@/components/guest/guest-upgrade-card";
+import { ThemeSwitch } from "@/components/theme/theme-switch";
 
 const GOOGLE_CLIENT_NAME = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_NAME || "";
 
@@ -155,6 +156,15 @@ function NavUserSignedIn({ isMobile }: { isMobile: boolean }) {
                             </div>
                         </div>
                     </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm text-muted-foreground">
+                                Theme
+                            </span>
+                            <ThemeSwitch />
+                        </div>
+                    </div>
                     {user && user.isGuest && (
                         <>
                             <DropdownMenuSeparator />
@@ -193,6 +203,7 @@ function NavUserSignedIn({ isMobile }: { isMobile: boolean }) {
                             <DropdownMenuSeparator />
                         </>
                     )}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                         <LogOut />
                         Log out
@@ -415,6 +426,12 @@ function NavUserSignedOut({ nonce }: { nonce: string }) {
                     </svg>
                     <span>Sign in with Google</span>
                 </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <div className="flex items-center justify-between gap-2 w-full px-2 py-1.5">
+                    <span className="text-sm text-muted-foreground">Theme</span>
+                    <ThemeSwitch />
+                </div>
             </SidebarMenuItem>
         </>
     );

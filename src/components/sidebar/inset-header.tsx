@@ -4,7 +4,6 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQueryState, parseAsString } from "nuqs";
-import { ThemeSwitch } from "@/components/theme/theme-switch";
 import {
     Breadcrumb,
     BreadcrumbList,
@@ -22,31 +21,60 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 
 export function ClassHeader() {
     const params = useParams();
     const router = useRouter();
-    const organizationId = params.organizationId as string;
+    const organizationId = params.orgId as string;
     const classId = params.classId as string | undefined;
+    const { user } = useAuthContext();
 
     const [activeTab] = useQueryState("tab", parseAsString);
 
-    // Optimized query: fetch only the current organization and its classes
+    // Query all organizations the user is a member of and classes for the current org
     const { data } = db.useQuery(
-        organizationId
+        user
             ? {
-                  organizations: {},
-                  classes: {
-                      organization: {},
+                  organizations: {
+                      $: {
+                          where: {
+                              or: [
+                                  { "owner.id": user.id },
+                                  { "admins.id": user.id },
+                                  { "orgStudents.id": user.id },
+                                  { "orgTeachers.id": user.id },
+                                  { "orgParents.id": user.id },
+                              ],
+                          },
+                      },
                   },
+                  classes: organizationId
+                      ? {
+                            $: { where: { organization: organizationId } },
+                            organization: {},
+                        }
+                      : {},
               }
-            : {}
+            : null
     );
 
-    const currentOrganization = data?.organizations?.[0];
-    const organizationClasses = data?.classes || [];
+    // Type assertion needed because useQuery with conditional null query
+    // causes TypeScript to infer data as 'never' for the null branch
+    const queryData = data as
+        | {
+              organizations?: Array<{ id: string; name: string }>;
+              classes?: Array<{ id: string; name: string }>;
+          }
+        | undefined
+        | null;
+    const allOrganizations = queryData?.organizations || [];
+    const currentOrganization = allOrganizations.find(
+        (org) => org.id === organizationId
+    );
+    const organizationClasses = queryData?.classes || [];
     const currentClass = classId
-        ? organizationClasses.find((c) => c.id === classId)
+        ? organizationClasses.find((c: { id: string }) => c.id === classId)
         : undefined;
 
     // Convert tab slug back to readable name
@@ -57,6 +85,11 @@ export function ClassHeader() {
             .split("-")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
+    };
+
+    // Handle organization selection - navigate to new organization
+    const handleOrganizationChange = (newOrgId: string) => {
+        router.push(`/${newOrgId}`);
     };
 
     // Handle class selection - navigate to new class with dashboard tab
@@ -78,9 +111,30 @@ export function ClassHeader() {
                 <Breadcrumb>
                     <BreadcrumbList className="flex items-center gap-2">
                         <BreadcrumbItem>
-                            <BreadcrumbPage>
-                                {currentOrganization?.name || "ORG NAME"}
-                            </BreadcrumbPage>
+                            <Select
+                                value={organizationId || ""}
+                                onValueChange={handleOrganizationChange}
+                                disabled={
+                                    !user || allOrganizations.length === 0
+                                }
+                            >
+                                <SelectTrigger className="h-auto border-none bg-transparent px-2 py-1 shadow-none hover:bg-accent focus:ring-0 focus:ring-offset-0 disabled:opacity-50 [&>svg]:opacity-50">
+                                    <SelectValue>
+                                        {currentOrganization?.name ||
+                                            "ORG NAME"}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {allOrganizations.map((org) => (
+                                        <SelectItem
+                                            key={org.id}
+                                            value={org.id}
+                                        >
+                                            {org.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </BreadcrumbItem>
                         {showClassBreadcrumb && (
                             <>
@@ -99,7 +153,10 @@ export function ClassHeader() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             {organizationClasses.map(
-                                                (classItem) => (
+                                                (classItem: {
+                                                    id: string;
+                                                    name: string;
+                                                }) => (
                                                     <SelectItem
                                                         key={classItem.id}
                                                         value={classItem.id}
@@ -125,9 +182,6 @@ export function ClassHeader() {
                         )}
                     </BreadcrumbList>
                 </Breadcrumb>
-            </div>
-            <div className="mr-5">
-                <ThemeSwitch />
             </div>
         </header>
     );
