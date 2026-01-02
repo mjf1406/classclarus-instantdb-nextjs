@@ -20,6 +20,9 @@ import {
     Users,
 } from "lucide-react";
 import ClassList from "@/components/classes/class-list";
+import { Logo } from "@/components/brand/logo";
+import { NavUserNavbar } from "@/components/navbar/nav-user-navbar";
+import { ThemeSwitch } from "@/components/theme/theme-switch";
 
 import { db } from "@/lib/db/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -136,7 +139,7 @@ export default function OrgPage({ params }: OrgPageProps) {
 
     return (
         <div className="min-h-screen bg-linear-to-b from-muted/30 to-background">
-            {/* Header with back button and actions */}
+            {/* Header with back button, logo, and nav */}
             <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
                     <Link
@@ -147,34 +150,14 @@ export default function OrgPage({ params }: OrgPageProps) {
                         <span>Back to Organizations</span>
                     </Link>
 
-                    {isOwner && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                >
-                                    <MoreVertical className="size-4" />
-                                    <span className="sr-only">Actions</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                    <Edit className="size-4" />
-                                    Edit organization
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Settings className="size-4" />
-                                    Settings
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                    <Trash2 className="size-4" />
-                                    Delete organization
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                    <div className="absolute left-1/2 -translate-x-1/2">
+                        <Logo />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <ThemeSwitch />
+                        <NavUserNavbar />
+                    </div>
                 </div>
             </header>
 
@@ -228,7 +211,37 @@ function OrgHero({
 
     return (
         <section className="mb-8">
-            <div className="rounded-2xl border bg-card p-6 md:p-8">
+            <div className="relative rounded-2xl border bg-card p-6 md:p-8">
+                {isOwner && (
+                    <div className="absolute top-4 right-4 z-10">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                >
+                                    <MoreVertical className="size-4" />
+                                    <span className="sr-only">Actions</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                    <Edit className="size-4" />
+                                    Edit organization
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Settings className="size-4" />
+                                    Settings
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                    <Trash2 className="size-4" />
+                                    Delete organization
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                )}
                 <div className="flex flex-col gap-6 md:flex-row md:items-start">
                     {/* Organization icon */}
                     <Avatar className="size-24 rounded-2xl border-2 border-border shadow-lg md:size-32">
