@@ -3,6 +3,7 @@
 "use client";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { MagicCodeAuth } from "@/components/auth/magic-code-auth";
 import GuestLimitations from "@/components/guest/guest-limitations-section";
 import GuestDescription from "@/components/guest/guest-description";
@@ -51,7 +52,7 @@ export function SignedOutView() {
 }
 
 function SignedInView() {
-    const user = db.useUser();
+    const { user } = useAuthContext();
     return (
         <div className="w-full max-w-6xl space-y-6">
             <OrgList />

@@ -10,6 +10,7 @@ import { z } from "zod";
 import { ArrowLeft, Loader2, User, Save } from "lucide-react";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,25 +47,12 @@ type AccountFormData = z.infer<typeof accountSchema>;
 
 function AccountPageContent() {
     const router = useRouter();
-    const { user, isLoading: authLoading } = db.useAuth();
+    const { user, isLoading } = useAuthContext();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarRemoved, setAvatarRemoved] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const avatarFieldRef = useRef<IconUploadFieldRef>(null);
-
-    // Query user data for firstName, lastName, avatarURL
-    const { data, isLoading: dataLoading } = db.useQuery(
-        user?.id
-            ? {
-                  $users: {
-                      $: { where: { id: user.id } },
-                  },
-              }
-            : null
-    );
-
-    const userData = data?.$users?.[0];
 
     const {
         register,
@@ -81,13 +69,13 @@ function AccountPageContent() {
 
     // Sync form with user data when it loads
     useEffect(() => {
-        if (userData) {
+        if (user) {
             reset({
-                firstName: userData.firstName ?? "",
-                lastName: userData.lastName ?? "",
+                firstName: user.firstName ?? "",
+                lastName: user.lastName ?? "",
             });
         }
-    }, [userData, reset]);
+    }, [user, reset]);
 
     // Clear success message after 3 seconds
     useEffect(() => {
@@ -99,10 +87,10 @@ function AccountPageContent() {
 
     // Redirect if not authenticated
     useEffect(() => {
-        if (!authLoading && !user) {
+        if (!isLoading && !user) {
             router.push("/");
         }
-    }, [authLoading, user, router]);
+    }, [isLoading, user, router]);
 
     const hasChanges = isDirty || avatarFile !== null || avatarRemoved;
 
@@ -114,7 +102,7 @@ function AccountPageContent() {
 
         try {
             let avatarUrl: string | undefined =
-                userData?.avatarURL ?? undefined;
+                user.avatarURL ?? undefined;
 
             // Upload new avatar if provided
             if (avatarFile) {
@@ -156,7 +144,7 @@ function AccountPageContent() {
         }
     };
 
-    if (authLoading || dataLoading) {
+    if (isLoading) {
         return <AccountSkeleton />;
     }
 
@@ -166,7 +154,7 @@ function AccountPageContent() {
 
     // Get user initials for avatar fallback
     const initials =
-        [userData?.firstName?.[0], userData?.lastName?.[0]]
+        [user.firstName?.[0], user.lastName?.[0]]
             .filter(Boolean)
             .join("")
             .toUpperCase() ||
@@ -174,7 +162,7 @@ function AccountPageContent() {
         "U";
 
     // Determine avatar to display (prioritize custom avatar, then OAuth image)
-    const displayAvatar = userData?.avatarURL || user.imageURL;
+    const displayAvatar = user.avatarURL || user.imageURL;
 
     return (
         <div className="min-h-screen bg-background">
@@ -213,7 +201,7 @@ function AccountPageContent() {
                                 <AvatarImage
                                     src={displayAvatar ?? undefined}
                                     alt={`${
-                                        userData?.firstName ?? "User"
+                                        user.firstName ?? "User"
                                     }'s avatar`}
                                 />
                                 <AvatarFallback className="bg-primary/10 text-2xl font-semibold text-primary">
@@ -222,7 +210,7 @@ function AccountPageContent() {
                             </Avatar>
                             <div className="text-center sm:text-left">
                                 <CardTitle className="text-xl">
-                                    {[userData?.firstName, userData?.lastName]
+                                    {[user.firstName, user.lastName]
                                         .filter(Boolean)
                                         .join(" ") || "Your Profile"}
                                 </CardTitle>
@@ -373,17 +361,17 @@ function AccountPageContent() {
                                     Account Type
                                 </dt>
                                 <dd className="font-medium capitalize text-foreground">
-                                    {userData?.type ?? "Standard"}
+                                    {user.type ?? "Standard"}
                                 </dd>
                             </div>
                             <Separator />
                             <div className="flex justify-between">
                                 <dt className="text-muted-foreground">Plan</dt>
                                 <dd className="font-medium capitalize text-foreground">
-                                    {userData?.plan ?? "Free"}
+                                    {user.plan ?? "Free"}
                                 </dd>
                             </div>
-                            {userData?.created && (
+                            {user.created_at && (
                                 <>
                                     <Separator />
                                     <div className="flex justify-between">
@@ -392,7 +380,7 @@ function AccountPageContent() {
                                         </dt>
                                         <dd className="font-medium text-foreground">
                                             {new Date(
-                                                userData.created
+                                                user.created_at
                                             ).toLocaleDateString(undefined, {
                                                 year: "numeric",
                                                 month: "long",

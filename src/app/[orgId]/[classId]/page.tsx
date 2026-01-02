@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { Logo } from "@/components/brand/logo";
 import { NavUserNavbar } from "@/components/navbar/nav-user-navbar";
 import { ThemeSwitch } from "@/components/theme/theme-switch";
@@ -105,7 +106,7 @@ const codeColors: Record<JoinCodeType, string> = {
 
 export default function ClassPage({ params }: ClassPageProps) {
     const { orgId, classId } = use(params);
-    const { user, isLoading: isUserLoading } = db.useAuth();
+    const { user, isLoading: isUserLoading } = useAuthContext();
     const [copied, setCopied] = useState<JoinCodeType | null>(null);
     const [showFullscreen, setShowFullscreen] = useState(false);
     const [selectedCodeType, setSelectedCodeType] =

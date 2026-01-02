@@ -11,6 +11,7 @@ import { id } from "@instantdb/react";
 import { Loader2, Plus } from "lucide-react";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -71,7 +72,7 @@ export default function CreateOrganizationDialog({
     const iconFieldRef = useRef<IconUploadFieldRef>(null);
     const router = useRouter();
 
-    const { user } = db.useAuth();
+    const { user } = useAuthContext();
 
     const {
         register,

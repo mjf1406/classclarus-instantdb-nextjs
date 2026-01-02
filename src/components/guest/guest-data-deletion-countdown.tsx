@@ -1,11 +1,12 @@
 /** @format */
 
-import { db } from "@/lib/db/db";
-import { User } from "@/lib/types/user";
+"use client";
+
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { useEffect, useState } from "react";
 
 export default function GuestDataDeletionCountdown() {
-    const user: User = db.useUser() as User;
+    const { user } = useAuthContext();
     const joined = user?.created_at || 0;
     const [timeRemaining, setTimeRemaining] = useState<string>("");
     const [isExpired, setIsExpired] = useState<boolean>(false);

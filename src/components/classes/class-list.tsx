@@ -7,6 +7,7 @@ import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { GraduationCap, Plus, Search, X } from "lucide-react";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import ClassCard, { ClassCardSkeleton } from "@/components/classes/class-card";
 import CreateClassDialog from "@/components/classes/create-class-dialog";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
         searchQuery,
         searchQuery.trim() ? 100 : 25
     );
-    const { user, isLoading: isUserLoading } = db.useAuth();
+    const { user, isLoading: isUserLoading } = useAuthContext();
 
     // Query classes for this organization with owner relation
     const { data, isLoading, error } = db.useQuery({

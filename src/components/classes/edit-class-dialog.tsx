@@ -19,18 +19,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import {
     IconUploadField,
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
-
-// Get the current user for file ownership
-function useCurrentUser() {
-    const { user } = db.useAuth();
-    return user;
-}
 
 interface EditClassDialogProps {
     classId: string;
@@ -51,7 +45,7 @@ export function EditClassDialog({
     open,
     onOpenChange,
 }: EditClassDialogProps) {
-    const user = useCurrentUser();
+    const { user } = useAuthContext();
     const [name, setName] = React.useState(initialName);
     const [description, setDescription] = React.useState(
         initialDescription ?? ""

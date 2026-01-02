@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import AppNavbar from "@/components/navbar/app-navbar";
 import SignedOutNavbar from "@/components/navbar/signed-out-navbar";
 import { SignedOutView } from "../page";
@@ -32,7 +33,7 @@ type PageState = "idle" | "loading" | "studentSelection" | "success" | "error";
 function JoinPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, isLoading: isUserLoading } = db.useAuth();
+    const { user, isLoading: isUserLoading } = useAuthContext();
     const [code, setCode] = useState("");
     const [state, setState] = useState<PageState>("idle");
     const [error, setError] = useState<string | null>(null);

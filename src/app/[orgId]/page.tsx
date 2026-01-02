@@ -25,6 +25,7 @@ import { NavUserNavbar } from "@/components/navbar/nav-user-navbar";
 import { ThemeSwitch } from "@/components/theme/theme-switch";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +62,7 @@ interface OrgPageProps {
 
 export default function OrgPage({ params }: OrgPageProps) {
     const { orgId } = use(params);
-    const { user, isLoading: isUserLoading } = db.useAuth();
+    const { user, isLoading: isUserLoading } = useAuthContext();
 
     // Query the organization with related data
     const { data, isLoading, error } = db.useQuery({

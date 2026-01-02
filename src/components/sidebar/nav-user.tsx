@@ -6,6 +6,7 @@ import Link from "next/link";
 import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles } from "lucide-react";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
@@ -19,35 +20,24 @@ import {
 import GuestUpgradeCard from "@/components/guest/guest-upgrade-card";
 
 export function NavUser() {
-    const user = db.useUser();
-    const { data, isLoading } = db.useQuery({
-        $users: {
-            $: {
-                where: {
-                    id: user?.id,
-                },
-                limit: 1,
-            },
-        },
-    });
-    const userInfo = data?.$users?.[0];
+    const { user } = useAuthContext();
 
     if (!user) {
         return null;
     }
 
     const displayName =
-        userInfo?.firstName && userInfo?.lastName
-            ? `${userInfo?.firstName} ${userInfo?.lastName}`
-            : userInfo?.email || "User";
-    const avatarUrl = userInfo?.avatarURL || user.imageURL || undefined;
+        user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.email || "User";
+    const avatarUrl = user.avatarURL || user.imageURL || undefined;
     // Normalize empty strings to undefined
     const normalizedAvatarUrl =
         avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : undefined;
     const initials =
-        userInfo?.firstName && userInfo?.lastName
-            ? `${userInfo?.firstName[0]}${userInfo?.lastName[0]}`
-            : userInfo?.email?.[0]?.toUpperCase() || "U";
+        user.firstName && user.lastName
+            ? `${user.firstName[0]}${user.lastName[0]}`
+            : user.email?.[0]?.toUpperCase() || "U";
 
     const handleSignOut = () => {
         db.auth.signOut().catch((err) => {
@@ -99,10 +89,10 @@ export function NavUser() {
                             <span className="truncate font-medium">
                                 {displayName}
                             </span>
-                            {userInfo?.plan && (
+                            {user.plan && (
                                 <span className="truncate text-xs text-muted-foreground">
-                                    {(userInfo?.plan).charAt(0).toUpperCase() +
-                                        (userInfo?.plan).slice(1)}
+                                    {(user.plan).charAt(0).toUpperCase() +
+                                        (user.plan).slice(1)}
                                 </span>
                             )}
                             {user.isGuest && (

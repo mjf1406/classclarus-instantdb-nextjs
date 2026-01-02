@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/collapsible";
 
 import { db } from "@/lib/db/db";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import OrgCard, { OrgCardSkeleton } from "@/components/organizations/org-card";
 import CreateOrganizationDialog from "@/components/organizations/create-org-dialog";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ export default function OrgList() {
         searchQuery,
         searchQuery.trim() ? 100 : 25
     );
-    const { user, isLoading: isUserLoading } = db.useAuth();
+    const { user, isLoading: isUserLoading } = useAuthContext();
 
     const { data, isLoading, error } = db.useQuery(
         user
