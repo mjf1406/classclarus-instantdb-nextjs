@@ -33,7 +33,10 @@ import {
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
-import { generateAllJoinCodes } from "@/lib/helpers/join-codes-server";
+import {
+    generateAllJoinCodesClient,
+    isUniquenessError,
+} from "@/lib/helpers/join-codes-client";
 
 // Zod schema for form validation
 const createClassSchema = z.object({
@@ -86,72 +89,93 @@ export default function CreateClassDialog({
 
         setIsCreating(true);
 
-        try {
-            const now = new Date();
-            const classId = id();
+        const maxRetries = 5;
+        let lastError: unknown = null;
 
-            setOpen(false);
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                const now = new Date();
+                const classId = id();
 
-            const { joinCodeStudent, joinCodeTeacher, joinCodeParent } =
-                await generateAllJoinCodes();
+                setOpen(false);
 
-            let iconUrl: string | undefined;
+                // Generate all join codes client-side
+                const { joinCodeStudent, joinCodeTeacher, joinCodeParent } =
+                    generateAllJoinCodesClient();
 
-            // Upload icon if provided
-            if (iconFile) {
-                const result = await uploadIcon({
-                    file: iconFile,
-                    userId: user.id,
-                    pathPrefix: `classes/${classId}`,
-                    classId: classId,
+                let iconUrl: string | undefined;
+
+                // Upload icon if provided
+                if (iconFile) {
+                    const result = await uploadIcon({
+                        file: iconFile,
+                        userId: user.id,
+                        pathPrefix: `classes/${classId}`,
+                        classId: classId,
+                    });
+
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    iconUrl = result.url;
+                }
+
+                // Create the join code entity
+                const joinCodeId = id();
+                const joinCodeTx = db.tx.classJoinCodes[joinCodeId].create({
+                    studentCode: joinCodeStudent,
+                    teacherCode: joinCodeTeacher,
+                    parentCode: joinCodeParent,
                 });
 
-                if (result.error) {
-                    throw new Error(result.error);
+                // Create the class and link it to the owner and organization
+                // The owner is automatically a class admin
+                const classTx = db.tx.classes[classId]
+                    .create({
+                        name: data.name.trim(),
+                        description: data.description?.trim() || undefined,
+                        icon: iconUrl,
+                        created: now,
+                        updated: now,
+                    })
+                    .link({ owner: user.id })
+                    .link({ organization: organizationId })
+                    .link({ classAdmins: user.id }) // Owner is always a class admin
+                    .link({ joinCodeEntity: joinCodeId }); // Link the join code entity
+
+                await db.transact([joinCodeTx, classTx]);
+
+                // Reset form and close dialog
+                resetForm();
+                setIsCreating(false);
+                return; // Success - exit the retry loop
+            } catch (err) {
+                lastError = err;
+                
+                // If it's a uniqueness error and we have retries left, try again
+                if (isUniquenessError(err) && attempt < maxRetries - 1) {
+                    console.warn(
+                        `Join code collision detected (attempt ${attempt + 1}/${maxRetries}), retrying...`
+                    );
+                    continue;
                 }
-                iconUrl = result.url;
+                
+                // If it's not a uniqueness error, or we're out of retries, break
+                break;
             }
-
-            // Create the join code entity
-            const joinCodeId = id();
-            const joinCodeTx = db.tx.classJoinCodes[joinCodeId].create({
-                studentCode: joinCodeStudent,
-                teacherCode: joinCodeTeacher,
-                parentCode: joinCodeParent,
-            });
-
-            // Create the class and link it to the owner and organization
-            // The owner is automatically a class admin
-            const classTx = db.tx.classes[classId]
-                .create({
-                    name: data.name.trim(),
-                    description: data.description?.trim() || undefined,
-                    icon: iconUrl,
-                    created: now,
-                    updated: now,
-                })
-                .link({ owner: user.id })
-                .link({ organization: organizationId })
-                .link({ classAdmins: user.id }) // Owner is always a class admin
-                .link({ joinCodeEntity: joinCodeId }); // Link the join code entity
-
-            await db.transact([joinCodeTx, classTx]);
-
-            // Reset form and close dialog
-            resetForm();
-        } catch (err) {
-            console.error("Error creating class:", err);
-            const errorMessage =
-                err && typeof err === "object" && "body" in err
-                    ? (err.body as { message?: string })?.message
-                    : err instanceof Error
-                    ? err.message
-                    : "Unknown error";
-            setOpen(true);
-            alert("Failed to create class: " + errorMessage);
-        } finally {
-            setIsCreating(false);
         }
+
+        // If we get here, all retries failed
+        console.error("Error creating class:", lastError);
+        const errorMessage =
+            lastError && typeof lastError === "object" && "body" in lastError
+                ? (lastError.body as { message?: string })?.message
+                : lastError instanceof Error
+                ? lastError.message
+                : "Unknown error";
+        setOpen(true);
+        alert("Failed to create class: " + errorMessage);
+        setIsCreating(false);
     };
 
     const resetForm = () => {

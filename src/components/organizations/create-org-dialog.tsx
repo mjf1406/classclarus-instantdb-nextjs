@@ -34,7 +34,10 @@ import {
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
-import { generateUniqueJoinCode } from "@/lib/helpers/join-codes-server";
+import {
+    generateUniqueJoinCodeClient,
+    isUniquenessError,
+} from "@/lib/helpers/join-codes-client";
 
 // Zod schema for form validation
 const createOrgSchema = z.object({
@@ -112,66 +115,86 @@ export default function CreateOrganizationDialog({
 
         setIsCreating(true);
 
-        try {
-            const now = new Date();
-            const orgId = id();
-            let iconUrl: string | undefined;
+        const maxRetries = 5;
+        let lastError: unknown = null;
 
-            setOpen(false);
-            // Generate unique join code
-            const joinCode = await generateUniqueJoinCode();
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                const now = new Date();
+                const orgId = id();
+                let iconUrl: string | undefined;
 
-            // Upload icon if provided
-            if (iconFile) {
-                const result = await uploadIcon({
-                    file: iconFile,
-                    userId: user.id,
-                    pathPrefix: `orgs/${orgId}`,
-                    organizationId: orgId,
+                setOpen(false);
+                // Generate unique join code client-side
+                const joinCode = generateUniqueJoinCodeClient();
+
+                // Upload icon if provided
+                if (iconFile) {
+                    const result = await uploadIcon({
+                        file: iconFile,
+                        userId: user.id,
+                        pathPrefix: `orgs/${orgId}`,
+                        organizationId: orgId,
+                    });
+
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    iconUrl = result.url;
+                }
+
+                // Create the join code entity
+                const joinCodeId = id();
+                const joinCodeTx = db.tx.orgJoinCodes[joinCodeId].create({
+                    code: joinCode,
                 });
 
-                if (result.error) {
-                    throw new Error(result.error);
+                // TODO: Email invites (admins, parents, students) need to be handled by looking up user IDs from emails in production
+                const orgTx = db.tx.organizations[orgId]
+                    .create({
+                        name: data.name.trim(),
+                        description: data.description?.trim() || undefined,
+                        icon: iconUrl,
+                        created: now,
+                        updated: now,
+                    })
+                    .link({ owner: user.id })
+                    .link({ admins: user.id }) // Owner is always an admin
+                    .link({ joinCodeEntity: joinCodeId }); // Link the join code entity
+
+                await db.transact([joinCodeTx, orgTx]);
+
+                // Reset form and close dialog
+                resetForm();
+                setIsCreating(false);
+                return; // Success - exit the retry loop
+            } catch (err) {
+                lastError = err;
+                
+                // If it's a uniqueness error and we have retries left, try again
+                if (isUniquenessError(err) && attempt < maxRetries - 1) {
+                    console.warn(
+                        `Join code collision detected (attempt ${attempt + 1}/${maxRetries}), retrying...`
+                    );
+                    continue;
                 }
-                iconUrl = result.url;
+                
+                // If it's not a uniqueness error, or we're out of retries, break
+                break;
             }
-
-            // Create the join code entity
-            const joinCodeId = id();
-            const joinCodeTx = db.tx.orgJoinCodes[joinCodeId].create({
-                code: joinCode,
-            });
-
-            // TODO: Email invites (admins, parents, students) need to be handled by looking up user IDs from emails in production
-            const orgTx = db.tx.organizations[orgId]
-                .create({
-                    name: data.name.trim(),
-                    description: data.description?.trim() || undefined,
-                    icon: iconUrl,
-                    created: now,
-                    updated: now,
-                })
-                .link({ owner: user.id })
-                .link({ admins: user.id }) // Owner is always an admin
-                .link({ joinCodeEntity: joinCodeId }); // Link the join code entity
-
-            await db.transact([joinCodeTx, orgTx]);
-
-            // Reset form and close dialog
-            resetForm();
-        } catch (err) {
-            console.error("Error creating organization:", err);
-            const errorMessage =
-                err && typeof err === "object" && "body" in err
-                    ? (err.body as { message?: string })?.message
-                    : err instanceof Error
-                    ? err.message
-                    : "Unknown error";
-            setOpen(true);
-            alert("Failed to create organization: " + errorMessage);
-        } finally {
-            setIsCreating(false);
         }
+
+        // If we get here, all retries failed
+        console.error("Error creating organization:", lastError);
+        const errorMessage =
+            lastError && typeof lastError === "object" && "body" in lastError
+                ? (lastError.body as { message?: string })?.message
+                : lastError instanceof Error
+                ? lastError.message
+                : "Unknown error";
+        setOpen(true);
+        alert("Failed to create organization: " + errorMessage);
+        setIsCreating(false);
     };
 
     const resetForm = () => {

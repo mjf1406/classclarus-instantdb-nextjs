@@ -61,6 +61,7 @@
 -   updated `org-card` and `class-card` to query and display join codes from the new entities
 -   auth: on Google sign up, extract first name and last name from Google profile and store in `$users` table
 -   auth: guest user upgrades correctly with magic code or Google auth now transfer first name, last name, and plan to the new authenticated user record
+-   UX: moved class/org creation entirely to the client, including join codes which drastically speeds up optimistic updates
 
 ### 2025/12/31
 
