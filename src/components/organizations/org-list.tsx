@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import {
     Building2,
     ChevronDown,
@@ -35,6 +36,11 @@ import Link from "next/link";
 
 export default function OrgList() {
     const [searchQuery, setSearchQuery] = useState("");
+    // Use 25ms delay when clearing (empty search), 100ms when typing
+    const debouncedSearchQuery = useDebouncedValue(
+        searchQuery,
+        searchQuery.trim() ? 100 : 25
+    );
     const { user, isLoading: isUserLoading } = db.useAuth();
 
     const { data, isLoading, error } = db.useQuery(
@@ -79,13 +85,14 @@ export default function OrgList() {
         )?.organizations ?? [];
 
     // Filter organizations by search query
+    // Use debounced value for smooth filtering (25ms when clearing, 100ms when typing)
     const filteredOrganizations = useMemo(() => {
-        if (!searchQuery.trim()) return organizations;
-        const query = searchQuery.toLowerCase().trim();
+        if (!debouncedSearchQuery.trim()) return organizations;
+        const query = debouncedSearchQuery.toLowerCase().trim();
         return organizations.filter((org) =>
             org.name.toLowerCase().includes(query)
         );
-    }, [organizations, searchQuery]);
+    }, [organizations, debouncedSearchQuery]);
 
     // Loading state
     if (isLoading || isUserLoading) {
@@ -186,7 +193,7 @@ export default function OrgList() {
 
             {/* Organization grid */}
             {filteredOrganizations.length > 0 && (
-                <div className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {filteredOrganizations.map((org) => (
                         <OrgCard
                             key={org.id}

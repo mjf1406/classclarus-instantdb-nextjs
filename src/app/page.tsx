@@ -53,7 +53,7 @@ export function SignedOutView() {
 function SignedInView() {
     const user = db.useUser();
     return (
-        <div className="w-full max-w-2xl space-y-6">
+        <div className="w-full max-w-6xl space-y-6">
             <OrgList />
             {user.isGuest && (
                 <div className="w-full mx-auto flex justify-center items-center">

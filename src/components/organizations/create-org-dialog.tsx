@@ -117,6 +117,7 @@ export default function CreateOrganizationDialog({
             const orgId = id();
             let iconUrl: string | undefined;
 
+            setOpen(false);
             // Generate unique join code
             const joinCode = await generateUniqueJoinCode();
 
@@ -158,7 +159,6 @@ export default function CreateOrganizationDialog({
 
             // Reset form and close dialog
             resetForm();
-            setOpen(false);
         } catch (err) {
             console.error("Error creating organization:", err);
             const errorMessage =
@@ -167,6 +167,7 @@ export default function CreateOrganizationDialog({
                     : err instanceof Error
                     ? err.message
                     : "Unknown error";
+            setOpen(true);
             alert("Failed to create organization: " + errorMessage);
         } finally {
             setIsCreating(false);

@@ -125,7 +125,7 @@ interface ClassCardProps {
     canEdit?: boolean;
 }
 
-export default function ClassCard({ classData, canEdit }: ClassCardProps) {
+const ClassCard = React.memo(function ClassCard({ classData, canEdit }: ClassCardProps) {
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
     const [showFullscreen, setShowFullscreen] = React.useState(false);
@@ -1013,7 +1013,9 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
             </Dialog>
         </>
     );
-}
+});
+
+export default ClassCard;
 
 // Loading skeleton for the card
 export function ClassCardSkeleton() {

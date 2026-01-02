@@ -115,7 +115,7 @@ interface OrgCardProps {
     isOwner?: boolean;
 }
 
-export default function OrgCard({ organization, isOwner }: OrgCardProps) {
+const OrgCard = React.memo(function OrgCard({ organization, isOwner }: OrgCardProps) {
     const router = useRouter();
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
@@ -685,7 +685,9 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
             </AlertDialog>
         </>
     );
-}
+});
+
+export default OrgCard;
 
 // Loading skeleton for the card
 export function OrgCardSkeleton() {

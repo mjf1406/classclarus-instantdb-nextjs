@@ -90,7 +90,8 @@ export default function CreateClassDialog({
             const now = new Date();
             const classId = id();
 
-            // Generate unique join codes for students, teachers, and parents
+            setOpen(false);
+
             const { joinCodeStudent, joinCodeTeacher, joinCodeParent } =
                 await generateAllJoinCodes();
 
@@ -138,7 +139,6 @@ export default function CreateClassDialog({
 
             // Reset form and close dialog
             resetForm();
-            setOpen(false);
         } catch (err) {
             console.error("Error creating class:", err);
             const errorMessage =
@@ -147,6 +147,7 @@ export default function CreateClassDialog({
                     : err instanceof Error
                     ? err.message
                     : "Unknown error";
+            setOpen(true);
             alert("Failed to create class: " + errorMessage);
         } finally {
             setIsCreating(false);

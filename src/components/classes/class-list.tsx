@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { GraduationCap, Plus, Search, X } from "lucide-react";
 
 import { db } from "@/lib/db/db";
@@ -25,6 +26,11 @@ interface ClassListProps {
 
 export default function ClassList({ organizationId }: ClassListProps) {
     const [searchQuery, setSearchQuery] = useState("");
+    // Use 25ms delay when clearing (empty search), 100ms when typing
+    const debouncedSearchQuery = useDebouncedValue(
+        searchQuery,
+        searchQuery.trim() ? 100 : 25
+    );
     const { user, isLoading: isUserLoading } = db.useAuth();
 
     // Query classes for this organization with owner relation
@@ -85,11 +91,12 @@ export default function ClassList({ organizationId }: ClassListProps) {
     };
 
     // Filter classes by search query (name only)
+    // Use debounced value for smooth filtering (25ms when clearing, 100ms when typing)
     const filteredClasses = useMemo(() => {
-        if (!searchQuery.trim()) return classes;
-        const query = searchQuery.toLowerCase().trim();
+        if (!debouncedSearchQuery.trim()) return classes;
+        const query = debouncedSearchQuery.toLowerCase().trim();
         return classes.filter((cls) => cls.name.toLowerCase().includes(query));
-    }, [classes, searchQuery]);
+    }, [classes, debouncedSearchQuery]);
 
     // Loading state
     if (isLoading || isUserLoading || isOrgLoading) {
