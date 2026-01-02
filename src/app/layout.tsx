@@ -40,6 +40,7 @@ export default function RootLayout({
                     defaultTheme="system"
                     enableSystem
                     disableTransitionOnChange
+                    themes={["light", "dark", "classclarus"]}
                 >
                     <GoogleOAuthProvider
                         clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
