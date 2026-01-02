@@ -62,6 +62,7 @@
 -   auth: on Google sign up, extract first name and last name from Google profile and store in `$users` table
 -   auth: guest user upgrades correctly with magic code or Google auth now transfer first name, last name, and plan to the new authenticated user record
 -   UX: moved class/org creation entirely to the client, including join codes which drastically speeds up optimistic updates
+-   UX: moved sign up to be entirely client-side for faster optimistic updates
 
 ### 2025/12/31
 

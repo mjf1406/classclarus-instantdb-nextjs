@@ -8,7 +8,6 @@ import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { Button } from "../ui/button";
 import { db } from "@/lib/db/db";
-import { updateUserProfileAfterOAuth } from "@/app/auth/actions";
 
 interface GoogleJwtPayload {
     given_name?: string;
@@ -17,70 +16,73 @@ interface GoogleJwtPayload {
 
 const GOOGLE_CLIENT_NAME = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_NAME || "";
 
-export function GoogleOAuthButton() {
-    const googleButtonRef = useRef<HTMLDivElement>(null);
-    const [nonce] = useState(() => uuidv4());
-
-    const handleGoogleSuccess = (credentialResponse: {
-        credential?: string;
-    }) => {
-        if (!GOOGLE_CLIENT_NAME) {
-            console.error("Google Client Name is not configured");
-            alert(
-                "Google OAuth is not properly configured. Please check your environment variables."
-            );
-            return;
-        }
-
-        if (!credentialResponse.credential) {
-            console.error("No credential received from Google");
-            alert(
-                "Failed to receive credential from Google. Please try again."
-            );
-            return;
-        }
-
-        // Store JWT token temporarily for server action to extract firstName/lastName
-        sessionStorage.setItem(
-            "google_id_token",
-            credentialResponse.credential
+function handleGoogleSuccess(
+    credentialResponse: { credential?: string },
+    nonce: string
+) {
+    if (!GOOGLE_CLIENT_NAME) {
+        console.error("Google Client Name is not configured");
+        alert(
+            "Google OAuth is not properly configured. Please check your environment variables."
         );
+        return;
+    }
 
-        // Decode JWT to extract user's name
-        const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
-        const firstName = decoded.given_name || "";
-        const lastName = decoded.family_name || "";
+    if (!credentialResponse.credential) {
+        console.error("No credential received from Google");
+        alert(
+            "Failed to receive credential from Google. Please try again."
+        );
+        return;
+    }
 
-        db.auth
-            .signInWithIdToken({
-                clientName: GOOGLE_CLIENT_NAME,
-                idToken: credentialResponse.credential,
-                nonce,
-            })
-            .then(async (result) => {
-                if (result.user) {
-                    await updateUserProfileAfterOAuth({
-                        userId: result.user.id,
+    // Store JWT token temporarily
+    sessionStorage.setItem(
+        "google_id_token",
+        credentialResponse.credential
+    );
+
+    // Decode JWT to extract user's name
+    const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
+    const firstName = decoded.given_name || "";
+    const lastName = decoded.family_name || "";
+
+    db.auth
+        .signInWithIdToken({
+            clientName: GOOGLE_CLIENT_NAME,
+            idToken: credentialResponse.credential,
+            nonce,
+        })
+        .then(async (result) => {
+            if (result.user) {
+                // Update user profile directly using client-side transaction
+                db.transact(
+                    db.tx.$users[result.user.id].update({
                         firstName,
                         lastName,
                         plan: "free",
-                    });
-                }
-            })
-            .catch((err) => {
-                console.error("Error signing in with Google:", err);
-                // Clear token on error
-                sessionStorage.removeItem("google_id_token");
-                alert(
-                    "Failed to sign in with Google: " +
-                        (err.body?.message || err.message)
+                    })
                 );
-            });
-    };
+            }
+        })
+        .catch((err) => {
+            console.error("Error signing in with Google:", err);
+            // Clear token on error
+            sessionStorage.removeItem("google_id_token");
+            alert(
+                "Failed to sign in with Google: " +
+                    (err.body?.message || err.message)
+            );
+        });
+}
 
-    const handleGoogleError = () => {
-        alert("Google login failed. Please try again.");
-    };
+function handleGoogleError() {
+    alert("Google login failed. Please try again.");
+}
+
+export function GoogleOAuthButton() {
+    const googleButtonRef = useRef<HTMLDivElement>(null);
+    const [nonce] = useState(() => uuidv4());
 
     const handleGoogleButtonClick = () => {
         const googleButton = googleButtonRef.current?.querySelector(
@@ -98,7 +100,9 @@ export function GoogleOAuthButton() {
                 className="hidden"
             >
                 <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
+                    onSuccess={(credentialResponse) =>
+                        handleGoogleSuccess(credentialResponse, nonce)
+                    }
                     onError={handleGoogleError}
                     nonce={nonce}
                     useOneTap={false}
@@ -146,65 +150,6 @@ export function GoogleOAuthButtonSmall() {
     const googleButtonRef = useRef<HTMLDivElement>(null);
     const [nonce] = useState(() => uuidv4());
 
-    const handleGoogleSuccess = (credentialResponse: {
-        credential?: string;
-    }) => {
-        if (!GOOGLE_CLIENT_NAME) {
-            console.error("Google Client Name is not configured");
-            alert(
-                "Google OAuth is not properly configured. Please check your environment variables."
-            );
-            return;
-        }
-
-        if (!credentialResponse.credential) {
-            console.error("No credential received from Google");
-            alert(
-                "Failed to receive credential from Google. Please try again."
-            );
-            return;
-        }
-
-        sessionStorage.setItem(
-            "google_id_token",
-            credentialResponse.credential
-        );
-
-        // Decode JWT to extract user's name
-        const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
-        const firstName = decoded.given_name || "";
-        const lastName = decoded.family_name || "";
-
-        db.auth
-            .signInWithIdToken({
-                clientName: GOOGLE_CLIENT_NAME,
-                idToken: credentialResponse.credential,
-                nonce,
-            })
-            .then(async (result) => {
-                if (result.user) {
-                    await updateUserProfileAfterOAuth({
-                        userId: result.user.id,
-                        firstName,
-                        lastName,
-                        plan: "free",
-                    });
-                }
-            })
-            .catch((err) => {
-                console.error("Error signing in with Google:", err);
-                sessionStorage.removeItem("google_id_token");
-                alert(
-                    "Failed to sign in with Google: " +
-                        (err.body?.message || err.message)
-                );
-            });
-    };
-
-    const handleGoogleError = () => {
-        alert("Google login failed. Please try again.");
-    };
-
     const handleGoogleButtonClick = () => {
         const googleButton = googleButtonRef.current?.querySelector(
             'div[role="button"], button'
@@ -221,7 +166,9 @@ export function GoogleOAuthButtonSmall() {
                 className="hidden"
             >
                 <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
+                    onSuccess={(credentialResponse) =>
+                        handleGoogleSuccess(credentialResponse, nonce)
+                    }
                     onError={handleGoogleError}
                     nonce={nonce}
                     useOneTap={false}
