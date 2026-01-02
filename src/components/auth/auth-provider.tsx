@@ -7,7 +7,27 @@ import { db } from "@/lib/db/db";
 import type { InstaQLEntity } from "@instantdb/react";
 import type { AppSchema } from "@/instant.schema";
 
-type UserData = InstaQLEntity<AppSchema, "$users"> | undefined;
+type OrganizationWithRelations = InstaQLEntity<
+    AppSchema,
+    "organizations",
+    {
+        owner: {};
+        orgStudents: {};
+        orgTeachers: {};
+        orgParents: {};
+        admins: {};
+        joinCodeEntity: {};
+        classes: {
+            owner: {};
+            classAdmins: {};
+            classTeachers: {};
+        };
+    }
+>;
+
+type OrgQueryResult = {
+    organizations: OrganizationWithRelations[];
+};
 
 interface AuthContextValue {
     user: {
@@ -26,6 +46,8 @@ interface AuthContextValue {
         plan: string;
     };
     isLoading: boolean;
+    organizations: OrganizationWithRelations[];
+    error: { message: string } | null | undefined;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -57,6 +79,43 @@ export default function AuthProvider({
 
     const userData = data?.$users?.[0];
 
+    const orgQuery = user
+        ? {
+              organizations: {
+                  $: {
+                      where: {
+                          or: [
+                              { "owner.id": user.id },
+                              { "admins.id": user.id },
+                              { "orgStudents.id": user.id },
+                              { "orgTeachers.id": user.id },
+                              { "orgParents.id": user.id },
+                          ],
+                      },
+                  },
+                  owner: {},
+                  orgStudents: {},
+                  orgTeachers: {},
+                  orgParents: {},
+                  admins: {},
+                  joinCodeEntity: {},
+                  classes: {
+                      owner: {},
+                      classAdmins: {},
+                      classTeachers: {},
+                  },
+              },
+          }
+        : null;
+
+    const {
+        data: orgData,
+        isLoading: orgLoading,
+        error: orgError,
+    } = db.useQuery(orgQuery);
+
+    const typedOrgData = (orgData as OrgQueryResult | undefined) ?? null;
+
     const value: AuthContextValue = {
         user: {
             created_at: userData?.created || "",
@@ -73,7 +132,9 @@ export default function AuthProvider({
             lastName: userData?.lastName || null,
             plan: userData?.plan || "free",
         },
-        isLoading: authLoading || dataLoading,
+        isLoading: authLoading || dataLoading || orgLoading,
+        organizations: typedOrgData?.organizations || [],
+        error: orgError,
     };
 
     return (

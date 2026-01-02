@@ -28,51 +28,17 @@ export function ClassHeader() {
     const router = useRouter();
     const organizationId = params.orgId as string;
     const classId = params.classId as string | undefined;
-    const { user } = useAuthContext();
-
+    const { user, isLoading, organizations, error } = useAuthContext();
     const [activeTab] = useQueryState("tab", parseAsString);
 
-    // Query all organizations the user is a member of and classes for the current org
-    const { data } = db.useQuery(
-        user
-            ? {
-                  organizations: {
-                      $: {
-                          where: {
-                              or: [
-                                  { "owner.id": user.id },
-                                  { "admins.id": user.id },
-                                  { "orgStudents.id": user.id },
-                                  { "orgTeachers.id": user.id },
-                                  { "orgParents.id": user.id },
-                              ],
-                          },
-                      },
-                  },
-                  classes: organizationId
-                      ? {
-                            $: { where: { organization: organizationId } },
-                            organization: {},
-                        }
-                      : {},
-              }
-            : null
-    );
+    if (isLoading) {
+        return null;
+    }
 
-    // Type assertion needed because useQuery with conditional null query
-    // causes TypeScript to infer data as 'never' for the null branch
-    const queryData = data as
-        | {
-              organizations?: Array<{ id: string; name: string }>;
-              classes?: Array<{ id: string; name: string }>;
-          }
-        | undefined
-        | null;
-    const allOrganizations = queryData?.organizations || [];
-    const currentOrganization = allOrganizations.find(
+    const currentOrganization = organizations.find(
         (org) => org.id === organizationId
     );
-    const organizationClasses = queryData?.classes || [];
+    const organizationClasses = currentOrganization?.classes || [];
     const currentClass = classId
         ? organizationClasses.find((c: { id: string }) => c.id === classId)
         : undefined;
@@ -114,9 +80,7 @@ export function ClassHeader() {
                             <Select
                                 value={organizationId || ""}
                                 onValueChange={handleOrganizationChange}
-                                disabled={
-                                    !user || allOrganizations.length === 0
-                                }
+                                disabled={!user || organizations.length === 0}
                             >
                                 <SelectTrigger className="h-auto border-none bg-transparent px-2 py-1 shadow-none hover:bg-accent focus:ring-0 focus:ring-offset-0 disabled:opacity-50 [&>svg]:opacity-50">
                                     <SelectValue>
@@ -125,7 +89,7 @@ export function ClassHeader() {
                                     </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {allOrganizations.map((org) => (
+                                    {organizations.map((org) => (
                                         <SelectItem
                                             key={org.id}
                                             value={org.id}

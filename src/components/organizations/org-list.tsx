@@ -18,13 +18,11 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import OrgCard, { OrgCardSkeleton } from "@/components/organizations/org-card";
 import CreateOrganizationDialog from "@/components/organizations/create-org-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { OrganizationWithRelations } from "@/lib/types/organizations";
 import {
     Empty,
     EmptyContent,
@@ -42,48 +40,7 @@ export default function OrgList() {
         searchQuery,
         searchQuery.trim() ? 100 : 25
     );
-    const { user, isLoading: isUserLoading } = useAuthContext();
-
-    const { data, isLoading, error } = db.useQuery(
-        user
-            ? {
-                  organizations: {
-                      $: {
-                          where: {
-                              or: [
-                                  { "owner.id": user.id },
-                                  { "admins.id": user.id },
-                                  { "orgStudents.id": user.id },
-                                  { "orgTeachers.id": user.id },
-                                  { "orgParents.id": user.id },
-                              ],
-                          },
-                      },
-                      owner: {},
-                      orgStudents: {},
-                      orgTeachers: {},
-                      orgParents: {},
-                      admins: {},
-                      joinCodeEntity: {},
-                      classes: {
-                          owner: {},
-                          classAdmins: {},
-                          classTeachers: {},
-                      },
-                  },
-              }
-            : null
-    );
-
-    // Type assertion needed because useQuery with conditional null query
-    // causes TypeScript to infer data as 'never' for the null branch
-    const organizations: OrganizationWithRelations[] =
-        (
-            data as
-                | { organizations: OrganizationWithRelations[] }
-                | undefined
-                | null
-        )?.organizations ?? [];
+    const { user, isLoading, organizations, error } = useAuthContext();
 
     // Filter organizations by search query
     // Use debounced value for smooth filtering (25ms when clearing, 100ms when typing)
@@ -96,7 +53,7 @@ export default function OrgList() {
     }, [organizations, debouncedSearchQuery]);
 
     // Loading state
-    if (isLoading || isUserLoading) {
+    if (isLoading) {
         return (
             <div className="space-y-6">
                 <OrgListHeader

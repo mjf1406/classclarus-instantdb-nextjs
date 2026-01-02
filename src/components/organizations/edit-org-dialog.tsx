@@ -25,6 +25,7 @@ import {
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
+import { db } from "@/lib/db/db";
 
 interface EditOrgDialogProps {
     organizationId: string;
