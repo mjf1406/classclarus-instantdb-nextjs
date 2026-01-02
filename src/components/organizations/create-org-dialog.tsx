@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,6 +69,7 @@ export default function CreateOrganizationDialog({
     const [memberError, setMemberError] = useState<string | null>(null);
     const [adminError, setAdminError] = useState<string | null>(null);
     const iconFieldRef = useRef<IconUploadFieldRef>(null);
+    const router = useRouter();
 
     const { user } = db.useAuth();
 
@@ -167,18 +169,23 @@ export default function CreateOrganizationDialog({
                 // Reset form and close dialog
                 resetForm();
                 setIsCreating(false);
+
+                // Redirect to the new organization
+                router.push(`/${orgId}`);
                 return; // Success - exit the retry loop
             } catch (err) {
                 lastError = err;
-                
+
                 // If it's a uniqueness error and we have retries left, try again
                 if (isUniquenessError(err) && attempt < maxRetries - 1) {
                     console.warn(
-                        `Join code collision detected (attempt ${attempt + 1}/${maxRetries}), retrying...`
+                        `Join code collision detected (attempt ${
+                            attempt + 1
+                        }/${maxRetries}), retrying...`
                     );
                     continue;
                 }
-                
+
                 // If it's not a uniqueness error, or we're out of retries, break
                 break;
             }

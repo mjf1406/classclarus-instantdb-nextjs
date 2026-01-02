@@ -47,6 +47,13 @@
 
 ## Change Log
 
+### 2026/01/02
+
+-   UX: new orgs and classes are no redirected to
+-   UI: added "What is an Organization" collapsible to the No Organizations card
+-   BE: updated login methods to updated $user.created
+-   DX: created the `AuthProvider` component to wrap app layout and provide auth context. Still need to fully implement
+
 ### 2026/01/01
 
 -   security: moved join codes to separate entities (`orgJoinCodes`, `classJoinCodes`) with restricted permissions so only owners/admins can view them

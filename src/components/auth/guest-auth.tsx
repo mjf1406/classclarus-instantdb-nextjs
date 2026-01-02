@@ -5,12 +5,24 @@ import { Button } from "../ui/button";
 import { db } from "@/lib/db/db";
 
 const handleGuestSignIn = () => {
-    db.auth.signInAsGuest().catch((err) => {
-        console.error("Error signing in as guest:", err);
-        alert(
-            "Failed to sign in as guest: " + (err.body?.message || err.message)
-        );
-    });
+    db.auth
+        .signInAsGuest()
+        .then(async (result) => {
+            if (result.user) {
+                db.transact(
+                    db.tx.$users[result.user.id].update({
+                        created: new Date(),
+                    })
+                );
+            }
+        })
+        .catch((err) => {
+            console.error("Error signing in as guest:", err);
+            alert(
+                "Failed to sign in as guest: " +
+                    (err.body?.message || err.message)
+            );
+        });
 };
 
 export default function TryAsGuestButton() {

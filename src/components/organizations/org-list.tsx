@@ -141,6 +141,9 @@ export default function OrgList() {
                             classes and members.
                         </EmptyDescription>
                     </EmptyHeader>
+                    <div className="px-6 pb-4 text-left">
+                        <WhatIsOrgCollapsible />
+                    </div>
                     <EmptyContent>
                         <CreateOrganizationDialog
                             trigger={
@@ -207,6 +210,63 @@ export default function OrgList() {
     );
 }
 
+// What is an Organization? collapsible component
+function WhatIsOrgCollapsible() {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <Collapsible
+            open={isOpen}
+            onOpenChange={setIsOpen}
+        >
+            <CollapsibleTrigger className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+                <ChevronDown
+                    className={`size-4 transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                    }`}
+                />
+                <HelpCircle />
+                <span className="group-hover:underline underline-offset-2">
+                    What is an Organization?
+                </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3 pb-1">
+                <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground max-w-2xl space-y-3">
+                    <p>
+                        An organization is a flexible container for grouping
+                        your classes. It could represent:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 ml-1">
+                        <li>
+                            A <strong>school district</strong> containing
+                            multiple schools and their classes, in which case
+                            your district admin would invite you to their
+                            organization.
+                        </li>
+                        <li>
+                            A <strong>single school</strong> with all its
+                            classes, in which case your school admin would
+                            invite you to their organization.
+                        </li>
+                        <li>
+                            A <strong>personal workspace</strong> (e.g.,
+                            &ldquo;My Classes&rdquo;) if your institution
+                            isn&apos;t on ClassClarus yet.
+                        </li>
+                    </ul>
+                    <p>
+                        If your school or district isn&apos;t already on
+                        ClassClarus, we recommend creating an organization with
+                        any name and adding all your classes there. Another
+                        option is to create a separate organization for each
+                        school year to keep things tidy.
+                    </p>
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
+    );
+}
+
 // Header component with count, search, and create button
 function OrgListHeader({
     count,
@@ -223,8 +283,6 @@ function OrgListHeader({
 }) {
     const showSearch = count > 0 || (searchQuery && searchQuery.length > 0);
     const isFiltered = searchQuery && searchQuery.trim().length > 0;
-
-    const [isWhatIsOrgOpen, setIsWhatIsOrgOpen] = useState(false);
 
     return (
         <div className="space-y-4">
@@ -268,55 +326,7 @@ function OrgListHeader({
                 </div>
             </div>
             {/* What is an Organization? collapsible */}
-            <Collapsible
-                open={isWhatIsOrgOpen}
-                onOpenChange={setIsWhatIsOrgOpen}
-            >
-                <CollapsibleTrigger className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group">
-                    <ChevronDown
-                        className={`size-4 transition-transform duration-200 ${
-                            isWhatIsOrgOpen ? "rotate-180" : ""
-                        }`}
-                    />
-                    <HelpCircle />
-                    <span className="group-hover:underline underline-offset-2">
-                        What is an Organization?
-                    </span>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3 pb-1">
-                    <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground max-w-2xl space-y-3">
-                        <p>
-                            An organization is a flexible container for grouping
-                            your classes. It could represent:
-                        </p>
-                        <ul className="list-disc list-inside space-y-1 ml-1">
-                            <li>
-                                A <strong>school district</strong> containing
-                                multiple schools and their classes, in which
-                                case your district admin would invite you to
-                                their organization.
-                            </li>
-                            <li>
-                                A <strong>single school</strong> with all its
-                                classes, in which case your school admin would
-                                invite you to their organization.
-                            </li>
-                            <li>
-                                A <strong>personal workspace</strong> (e.g.,
-                                &ldquo;My Classes&rdquo;) if your institution
-                                isn&apos;t on ClassClarus yet.
-                            </li>
-                        </ul>
-                        <p>
-                            If your school or district isn&apos;t already on
-                            ClassClarus, we recommend creating an organization
-                            with any name and adding all your classes there.
-                            Another option is to create a separate organization
-                            for each school year to keep things tidy.
-                        </p>
-                    </div>
-                </CollapsibleContent>
-            </Collapsible>
+            <WhatIsOrgCollapsible />
             {/* Search bar */}
             {showSearch && onSearchChange && (
                 <div className="relative">

@@ -1,11 +1,12 @@
 /** @format */
 
+import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Toaster } from "@/components/ui/sonner";
+import AuthProvider from "@/components/auth/auth-provider";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -28,33 +29,35 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html
-            lang="en"
-            suppressHydrationWarning
+        <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
         >
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+            <html
+                lang="en"
+                suppressHydrationWarning
             >
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                    disableTransitionOnChange
-                    themes={["light", "dark", "classclarus"]}
+                <body
+                    className={`${geistSans.variable} ${geistMono.variable} antialiased`}
                 >
-                    <GoogleOAuthProvider
-                        clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="system"
+                        enableSystem
+                        disableTransitionOnChange
+                        themes={["light", "dark", "classclarus"]}
                     >
-                        <div
-                            vaul-drawer-wrapper=""
-                            className="bg-background"
-                        >
-                            {" "}
-                            {children} <Toaster richColors />
-                        </div>
-                    </GoogleOAuthProvider>
-                </ThemeProvider>
-            </body>
-        </html>
+                        <AuthProvider>
+                            <div
+                                vaul-drawer-wrapper=""
+                                className="bg-background"
+                            >
+                                {" "}
+                                {children} <Toaster richColors />
+                            </div>
+                        </AuthProvider>
+                    </ThemeProvider>
+                </body>
+            </html>
+        </GoogleOAuthProvider>
     );
 }

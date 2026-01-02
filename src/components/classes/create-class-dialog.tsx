@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -71,6 +72,7 @@ export default function CreateClassDialog({
     const [isCreating, setIsCreating] = useState(false);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const iconFieldRef = useRef<IconUploadFieldRef>(null);
+    const router = useRouter();
 
     const { user } = db.useAuth();
 
@@ -154,6 +156,9 @@ export default function CreateClassDialog({
                 // Reset form and close dialog
                 resetForm();
                 setIsCreating(false);
+                
+                // Redirect to the new class
+                router.push(`/${organizationId}/${classId}?tab=dashboard`);
                 return; // Success - exit the retry loop
             } catch (err) {
                 lastError = err;

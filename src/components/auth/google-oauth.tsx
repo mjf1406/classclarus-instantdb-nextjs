@@ -30,17 +30,12 @@ function handleGoogleSuccess(
 
     if (!credentialResponse.credential) {
         console.error("No credential received from Google");
-        alert(
-            "Failed to receive credential from Google. Please try again."
-        );
+        alert("Failed to receive credential from Google. Please try again.");
         return;
     }
 
     // Store JWT token temporarily
-    sessionStorage.setItem(
-        "google_id_token",
-        credentialResponse.credential
-    );
+    sessionStorage.setItem("google_id_token", credentialResponse.credential);
 
     // Decode JWT to extract user's name
     const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
@@ -55,14 +50,28 @@ function handleGoogleSuccess(
         })
         .then(async (result) => {
             if (result.user) {
+                // Check if created is null and set it if needed
+                const { data } = await db.queryOnce({
+                    $users: {
+                        $: { where: { id: result.user.id } },
+                    },
+                });
+                const userData = data?.$users?.[0];
+                const updateData: {
+                    firstName: string;
+                    lastName: string;
+                    plan: string;
+                    created?: Date;
+                } = {
+                    firstName,
+                    lastName,
+                    plan: "free",
+                };
+                if (userData && !userData.created) {
+                    updateData.created = new Date();
+                }
                 // Update user profile directly using client-side transaction
-                db.transact(
-                    db.tx.$users[result.user.id].update({
-                        firstName,
-                        lastName,
-                        plan: "free",
-                    })
-                );
+                db.transact(db.tx.$users[result.user.id].update(updateData));
             }
         })
         .catch((err) => {

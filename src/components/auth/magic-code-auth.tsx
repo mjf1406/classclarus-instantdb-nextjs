@@ -177,7 +177,23 @@ function CodeStep({
         setIsLoading(true);
         db.auth
             .signInWithMagicCode({ email: sentEmail, code: trimmedCode })
-            .then(() => {
+            .then(async (result) => {
+                if (result.user) {
+                    // Check if created is null and set it if needed
+                    const { data } = await db.queryOnce({
+                        $users: {
+                            $: { where: { id: result.user.id } },
+                        },
+                    });
+                    const userData = data?.$users?.[0];
+                    if (userData && !userData.created) {
+                        db.transact(
+                            db.tx.$users[result.user.id].update({
+                                created: new Date(),
+                            })
+                        );
+                    }
+                }
                 setIsLoading(false);
                 onSuccess();
             })
