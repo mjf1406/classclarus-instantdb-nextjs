@@ -13,8 +13,10 @@ import {
     InputOTP,
     InputOTPGroup,
     InputOTPSlot,
+    InputOTPSeparator,
 } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
     lookupJoinCode,
     joinOrganization,
@@ -231,7 +233,7 @@ export default function JoinPage() {
     return (
         <>
             <AppNavbar />
-            <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen flex flex-col items-center justify-start p-4">
                 <div className="w-full max-w-md space-y-6">
                     <div className="text-center space-y-2">
                         <h1 className="text-3xl font-bold">Join with Code</h1>
@@ -243,28 +245,48 @@ export default function JoinPage() {
 
                     {state === "idle" && (
                         <div className="space-y-4">
-                            <div className="flex justify-center">
-                                <InputOTP
-                                    maxLength={8}
-                                    value={code}
-                                    onChange={(value) => {
-                                        setCode(value);
-                                        if (value.length === 8) {
-                                            handleCodeComplete(value);
-                                        }
-                                    }}
-                                >
-                                    <InputOTPGroup>
-                                        {Array.from({ length: 8 }).map(
-                                            (_, i) => (
-                                                <InputOTPSlot
-                                                    key={i}
-                                                    index={i}
-                                                />
-                                            )
-                                        )}
-                                    </InputOTPGroup>
-                                </InputOTP>
+                            <div className="flex flex-col items-center space-y-2">
+                                <Card className="p-8">
+                                    <div className="flex justify-center">
+                                        <InputOTP
+                                            maxLength={8}
+                                            value={code}
+                                            onChange={(value) => {
+                                                setCode(value);
+                                                if (value.length === 8) {
+                                                    handleCodeComplete(value);
+                                                }
+                                            }}
+                                        >
+                                            <InputOTPGroup>
+                                                {Array.from({ length: 4 }).map(
+                                                    (_, i) => (
+                                                        <InputOTPSlot
+                                                            key={i}
+                                                            index={i}
+                                                            className="h-16 w-16 text-2xl"
+                                                        />
+                                                    )
+                                                )}
+                                            </InputOTPGroup>
+                                            <InputOTPSeparator className="mx-2 [&>svg]:size-8" />
+                                            <InputOTPGroup>
+                                                {Array.from({ length: 4 }).map(
+                                                    (_, i) => (
+                                                        <InputOTPSlot
+                                                            key={i + 4}
+                                                            index={i + 4}
+                                                            className="h-16 w-16 text-2xl"
+                                                        />
+                                                    )
+                                                )}
+                                            </InputOTPGroup>
+                                        </InputOTP>
+                                    </div>
+                                </Card>
+                                <p className="text-sm text-muted-foreground">
+                                    The hyphen is only for readability
+                                </p>
                             </div>
                         </div>
                     )}

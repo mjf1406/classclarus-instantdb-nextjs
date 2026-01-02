@@ -263,7 +263,7 @@ function OrgListHeader({
                         asChild
                         variant={"outline"}
                     >
-                        <Link href="/join">Join Org</Link>
+                        <Link href="/join">Join Org/Class</Link>
                     </Button>
                 </div>
             </div>
