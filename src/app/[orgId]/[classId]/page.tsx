@@ -28,6 +28,7 @@ import { db } from "@/lib/db/db";
 import { Logo } from "@/components/brand/logo";
 import { NavUserNavbar } from "@/components/navbar/nav-user-navbar";
 import { ThemeSwitch } from "@/components/theme/theme-switch";
+import { ClassWithRelations } from "@/lib/types/class";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,6 +71,26 @@ interface ClassPageProps {
 
 type JoinCodeType = "student" | "teacher" | "parent";
 
+// Type for class query result - extracted from the actual query
+type ClassQueryShape = {
+    classes: {
+        owner: {};
+        classAdmins: {};
+        classTeachers: {};
+        classStudents: {};
+        classParents: {};
+        joinCodeEntity: {};
+        organization: {
+            owner: {};
+            admins: {};
+        };
+    };
+};
+
+type ClassQueryResult = NonNullable<
+    ReturnType<typeof db.useQuery<ClassQueryShape>>["data"]
+>["classes"][number];
+
 const codeLabels: Record<JoinCodeType, string> = {
     student: "Student",
     teacher: "Teacher",
@@ -108,7 +129,7 @@ export default function ClassPage({ params }: ClassPageProps) {
         },
     });
 
-    const classData = data?.classes?.[0];
+    const classData = data?.classes?.[0] as ClassQueryResult | undefined;
     const organization = classData?.organization;
 
     // Determine if user can edit this class
@@ -118,21 +139,19 @@ export default function ClassPage({ params }: ClassPageProps) {
         // Class owner
         if (classData.owner?.id === user.id) return true;
 
-        // Class admins (use linked relation if available, fall back to JSON array during migration)
-        const linkedClassAdmins = classData.classAdmins ?? [];
-        const classAdmins = Array.isArray(linkedClassAdmins)
-            ? linkedClassAdmins.map((admin: any) => admin.id ?? admin)
-            : (Array.isArray(classData.admins) ? classData.admins : []);
+        // Class admins
+        const classAdmins = (classData.classAdmins ?? []).map(
+            (admin: any) => admin.id ?? admin
+        );
         if (classAdmins.includes(user.id)) return true;
 
         // Organization owner
         if (organization?.owner?.id === user.id) return true;
 
-        // Organization admins (use linked relation if available, fall back to JSON array during migration)
-        const linkedOrgAdmins = organization?.admins ?? [];
-        const orgAdmins = Array.isArray(linkedOrgAdmins)
-            ? linkedOrgAdmins.map((admin: any) => admin.id ?? admin)
-            : (Array.isArray(organization?.adminIds) ? organization.adminIds : []);
+        // Organization admins
+        const orgAdmins = (organization?.admins ?? []).map(
+            (admin: any) => admin.id ?? admin
+        );
         if (orgAdmins.includes(user.id)) return true;
 
         return false;
@@ -180,7 +199,9 @@ export default function ClassPage({ params }: ClassPageProps) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>${escapeHtml(label)} Join Code - ${escapeHtml(classData.name)}</title>
+    <title>${escapeHtml(label)} Join Code - ${escapeHtml(
+            classData.name
+        )}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -426,7 +447,8 @@ export default function ClassPage({ params }: ClassPageProps) {
                                     <p
                                         className="font-bold font-mono tracking-[0.15em] text-center"
                                         style={{
-                                            fontSize: "clamp(3rem, 10vw, 12rem)",
+                                            fontSize:
+                                                "clamp(3rem, 10vw, 12rem)",
                                         }}
                                     >
                                         {joinCodes[selectedCodeType]}
@@ -444,9 +466,10 @@ export default function ClassPage({ params }: ClassPageProps) {
                                         <span
                                             className={cn(
                                                 "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                                selectedCodeType === "student" &&
-                                                    "bg-blue-500",
-                                                selectedCodeType === "teacher" &&
+                                                selectedCodeType ===
+                                                    "student" && "bg-blue-500",
+                                                selectedCodeType ===
+                                                    "teacher" &&
                                                     "bg-emerald-500",
                                                 selectedCodeType === "parent" &&
                                                     "bg-amber-500"
@@ -470,9 +493,10 @@ export default function ClassPage({ params }: ClassPageProps) {
                                         <span
                                             className={cn(
                                                 "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                                selectedCodeType === "student" &&
-                                                    "bg-blue-500",
-                                                selectedCodeType === "teacher" &&
+                                                selectedCodeType ===
+                                                    "student" && "bg-blue-500",
+                                                selectedCodeType ===
+                                                    "teacher" &&
                                                     "bg-emerald-500",
                                                 selectedCodeType === "parent" &&
                                                     "bg-amber-500"
@@ -488,9 +512,10 @@ export default function ClassPage({ params }: ClassPageProps) {
                                         <span
                                             className={cn(
                                                 "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                                selectedCodeType === "student" &&
-                                                    "bg-blue-500",
-                                                selectedCodeType === "teacher" &&
+                                                selectedCodeType ===
+                                                    "student" && "bg-blue-500",
+                                                selectedCodeType ===
+                                                    "teacher" &&
                                                     "bg-emerald-500",
                                                 selectedCodeType === "parent" &&
                                                     "bg-amber-500"
@@ -510,9 +535,10 @@ export default function ClassPage({ params }: ClassPageProps) {
                                         <span
                                             className={cn(
                                                 "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                                selectedCodeType === "student" &&
-                                                    "bg-blue-500",
-                                                selectedCodeType === "teacher" &&
+                                                selectedCodeType ===
+                                                    "student" && "bg-blue-500",
+                                                selectedCodeType ===
+                                                    "teacher" &&
                                                     "bg-emerald-500",
                                                 selectedCodeType === "parent" &&
                                                     "bg-amber-500"
@@ -554,19 +580,7 @@ export default function ClassPage({ params }: ClassPageProps) {
     );
 }
 
-// Type helper for class data
-type ClassDataType = NonNullable<
-    Awaited<
-        ReturnType<
-            typeof db.queryOnce<{
-                classes: {
-                    owner: {};
-                    organization: { owner: {} };
-                };
-            }>
-        >
-    >["data"]["classes"]
->[0];
+// Use ClassWithRelations type from class.ts directly
 
 // Class hero component
 function ClassHero({
@@ -581,7 +595,7 @@ function ClassHero({
     onOpenFullscreen,
     onOpenInNewWindow,
 }: {
-    classData: ClassDataType;
+    classData: ClassQueryResult;
     canEdit: boolean;
     copied: JoinCodeType | null;
     selectedCodeType: JoinCodeType;
@@ -774,7 +788,7 @@ function ClassHero({
                                                     )}
                                                 >
                                                     {
-                                                        joinCodes[
+                                                        joinCodes?.[
                                                             selectedCodeType
                                                         ]
                                                     }
@@ -940,7 +954,7 @@ function ClassHero({
 }
 
 // Class stats component with collapsible member lists
-function ClassStats({ classData }: { classData: ClassDataType }) {
+function ClassStats({ classData }: { classData: ClassQueryResult }) {
     // Use linked relations if available
     const linkedStudents = (classData.classStudents ?? []) as StatMember[];
     const linkedTeachers = (classData.classTeachers ?? []) as StatMember[];
