@@ -18,6 +18,7 @@ import { NavRandom } from "./nav-random";
 import { NavStudentFacing } from "./nav-student-facing";
 import { OrganizationSwitcher } from "./sidebar-header";
 import { NavUser } from "./nav-user";
+import { Logo } from "../brand/logo";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
@@ -26,19 +27,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {...props}
         >
             <SidebarHeader>
-                <Link
-                    href="/"
-                    className="flex items-center justify-center mb-4 hover:opacity-80 transition-opacity"
-                >
-                    <Image
-                        src="/classclarus-logo.webp"
-                        alt="ClassClarus Logo"
-                        width={217}
-                        height={53}
-                        className="h-auto w-auto"
-                        priority
-                    />
-                </Link>
+                <Logo />
                 <OrganizationSwitcher />
             </SidebarHeader>
             <SidebarContent>

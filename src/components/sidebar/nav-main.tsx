@@ -3,8 +3,6 @@
 "use client";
 
 import {
-    ChevronRight,
-    type LucideIcon,
     LayoutDashboard,
     Coins,
     Clock,
@@ -13,19 +11,11 @@ import {
 import { useQueryState, parseAsString } from "nuqs";
 
 import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
     SidebarGroup,
     // SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSub,
-    SidebarMenuSubButton,
-    SidebarMenuSubItem,
     useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -77,29 +67,20 @@ export function NavMain() {
                     const isActive =
                         activeTab === itemTab || (!activeTab && item.isActive);
 
-                    // If item has sub-items, render as collapsible
                     return (
-                        <Collapsible
-                            key={item.title}
-                            asChild
-                            defaultOpen={isActive}
-                            className="group/collapsible"
-                        >
-                            <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton
-                                        tooltip={item.title}
-                                        onClick={() => {
-                                            handleNavigationClick();
-                                        }}
-                                    >
-                                        {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
-                                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                            </SidebarMenuItem>
-                        </Collapsible>
+                        <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                                tooltip={item.title}
+                                isActive={isActive}
+                                onClick={() => {
+                                    setActiveTab(itemTab);
+                                    handleNavigationClick();
+                                }}
+                            >
+                                {item.icon && <item.icon />}
+                                <span>{item.title}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     );
                 })}
             </SidebarMenu>
