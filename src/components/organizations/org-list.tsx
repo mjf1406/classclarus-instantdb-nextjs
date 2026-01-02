@@ -22,6 +22,7 @@ import OrgCard, { OrgCardSkeleton } from "@/components/organizations/org-card";
 import CreateOrganizationDialog from "@/components/organizations/create-org-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { OrganizationWithRelations } from "@/lib/types/organizations";
 import {
     Empty,
     EmptyContent,
@@ -36,38 +37,49 @@ export default function OrgList() {
     const [searchQuery, setSearchQuery] = useState("");
     const { user, isLoading: isUserLoading } = db.useAuth();
 
-    const query = user
-        ? {
-              organizations: {
-                  $: {
-                      where: {
-                          or: [
-                              { "owner.id": user.id },
-                              { "admins.id": user.id },
-                              { "orgStudents.id": user.id },
-                              { "orgTeachers.id": user.id },
-                              { "orgParents.id": user.id },
-                          ],
+    // Query for organizations where the user is a member in any role
+    // Note: InstantDB's TypeScript types don't fully support the 'or' operator
+    // with nested relation paths, but the query works correctly at runtime
+    const { data, isLoading, error } = db.useQuery(
+        user
+            ? {
+                  organizations: {
+                      $: {
+                          where: {
+                              or: [
+                                  { "owner.id": user.id },
+                                  { "admins.id": user.id },
+                                  { "orgStudents.id": user.id },
+                                  { "orgTeachers.id": user.id },
+                                  { "orgParents.id": user.id },
+                              ],
+                          },
+                      },
+                      owner: {},
+                      orgStudents: {},
+                      orgTeachers: {},
+                      orgParents: {},
+                      admins: {},
+                      joinCodeEntity: {},
+                      classes: {
+                          owner: {},
+                          classAdmins: {},
+                          classTeachers: {},
                       },
                   },
-                  owner: {},
-                  orgStudents: {},
-                  orgTeachers: {},
-                  orgParents: {},
-                  admins: {},
-                  joinCodeEntity: {},
-                  classes: {
-                      owner: {},
-                      classAdmins: {},
-                      classTeachers: {},
-                  },
-              },
-          }
-        : {};
+              }
+            : null
+    );
 
-    const { data, isLoading, error } = db.useQuery(query);
-
-    const organizations = data?.organizations ?? [];
+    // Type assertion needed because useQuery with conditional null query
+    // causes TypeScript to infer data as 'never' for the null branch
+    const organizations: OrganizationWithRelations[] =
+        (
+            data as
+                | { organizations: OrganizationWithRelations[] }
+                | undefined
+                | null
+        )?.organizations ?? [];
 
     // Filter organizations by search query
     const filteredOrganizations = useMemo(() => {

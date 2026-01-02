@@ -355,7 +355,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                             className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted flex-1 justify-between group/code relative overflow-hidden"
                                         >
                                             <span className="text-muted-foreground">
-                                                Join Code
+                                                Teacher Join Code
                                             </span>
                                             <span className="flex items-center gap-2 font-mono font-semibold relative">
                                                 <span
