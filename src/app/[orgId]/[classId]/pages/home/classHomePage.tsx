@@ -235,7 +235,11 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
     if (error) {
         return (
             <ClassErrorState
-                error={error}
+                error={
+                    error instanceof Error
+                        ? error
+                        : new Error(error.message || "Unknown error")
+                }
                 orgId={orgId}
             />
         );
