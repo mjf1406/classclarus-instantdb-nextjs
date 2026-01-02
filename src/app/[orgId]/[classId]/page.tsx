@@ -17,18 +17,21 @@ import {
     ExternalLink,
     Fullscreen,
     GraduationCap,
-    Maximize2,
     MoreVertical,
     Settings,
     ShieldCheck,
     Trash2,
-    UserCog,
     Users,
 } from "lucide-react";
 
 import { db } from "@/lib/db/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+    CollapsibleStatsCards,
+    CollapsibleStatsCardsSkeleton,
+    type StatMember,
+} from "@/components/stats/collapsible-stats-cards";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -56,7 +59,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, escapeHtml } from "@/lib/utils";
 
 interface ClassPageProps {
     params: Promise<{ orgId: string; classId: string }>;
@@ -93,6 +96,7 @@ export default function ClassPage({ params }: ClassPageProps) {
             classAdmins: {},
             classTeachers: {},
             classStudents: {},
+            classParents: {},
             joinCodeEntity: {},
             organization: {
                 owner: {},
@@ -173,7 +177,7 @@ export default function ClassPage({ params }: ClassPageProps) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>${label} Join Code - ${classData.name}</title>
+    <title>${escapeHtml(label)} Join Code - ${escapeHtml(classData.name)}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -254,10 +258,10 @@ export default function ClassPage({ params }: ClassPageProps) {
 <body>
     <div class="container">
         <div class="code-section">
-            <h1>${classData.name}</h1>
-            <div class="code-type">${label} Code</div>
+            <h1>${escapeHtml(classData.name)}</h1>
+            <div class="code-type">${escapeHtml(label)} Code</div>
             <div class="code-label">Join Code</div>
-            <div class="code">${code}</div>
+            <div class="code">${escapeHtml(code)}</div>
         </div>
         <div class="steps">
             <h2>How to Join</h2>
@@ -397,50 +401,8 @@ export default function ClassPage({ params }: ClassPageProps) {
                     onOpenInNewWindow={handleOpenInNewWindow}
                 />
 
-                {/* Stats cards */}
+                {/* Stats cards with collapsible member lists */}
                 <ClassStats classData={classData} />
-
-                {/* People sections */}
-                <div className="grid gap-6 lg:grid-cols-2">
-                    <PeopleSection
-                        title="Students"
-                        icon={Users}
-                        iconColor="text-blue-500"
-                        bgColor="bg-blue-500/10"
-                        userIds={
-                            Array.isArray(classData.classStudents)
-                                ? classData.classStudents.map((student: any) => student.id ?? student)
-                                : (Array.isArray(classData.students) ? classData.students : [])
-                        }
-                        emptyMessage="No students enrolled yet"
-                    />
-                    <div className="space-y-6">
-                        <PeopleSection
-                            title="Teachers"
-                            icon={GraduationCap}
-                            iconColor="text-emerald-500"
-                            bgColor="bg-emerald-500/10"
-                            userIds={
-                                Array.isArray(classData.classTeachers)
-                                    ? classData.classTeachers.map((teacher: any) => teacher.id ?? teacher)
-                                    : (Array.isArray(classData.teachers) ? classData.teachers : [])
-                            }
-                            emptyMessage="No teachers assigned yet"
-                        />
-                        <PeopleSection
-                            title="Admins"
-                            icon={ShieldCheck}
-                            iconColor="text-violet-500"
-                            bgColor="bg-violet-500/10"
-                            userIds={
-                                Array.isArray(classData.classAdmins)
-                                    ? classData.classAdmins.map((admin: any) => admin.id ?? admin)
-                                    : (Array.isArray(classData.admins) ? classData.admins : [])
-                            }
-                            emptyMessage="No class admins yet"
-                        />
-                    </div>
-                </div>
             </main>
 
             {/* Fullscreen Join Code Dialog */}
@@ -964,145 +926,58 @@ function ClassHero({
     );
 }
 
-// Class stats component
+// Class stats component with collapsible member lists
 function ClassStats({ classData }: { classData: ClassDataType }) {
-    // Use linked relations if available, fall back to JSON arrays during migration
-    const linkedStudents = classData.classStudents ?? [];
-    const linkedTeachers = classData.classTeachers ?? [];
-    const linkedAdmins = classData.classAdmins ?? [];
-    
-    const studentCount = Array.isArray(linkedStudents)
-        ? linkedStudents.length
-        : (Array.isArray(classData.students) ? classData.students.length : 0);
-    const teacherCount = Array.isArray(linkedTeachers)
-        ? linkedTeachers.length
-        : (Array.isArray(classData.teachers) ? classData.teachers.length : 0);
-    const adminCount = Array.isArray(linkedAdmins)
-        ? linkedAdmins.length
-        : (Array.isArray(classData.admins) ? classData.admins.length : 0);
+    // Use linked relations if available
+    const linkedStudents = (classData.classStudents ?? []) as StatMember[];
+    const linkedTeachers = (classData.classTeachers ?? []) as StatMember[];
+    const linkedParents = (classData.classParents ?? []) as StatMember[];
+    const linkedAdmins = (classData.classAdmins ?? []) as StatMember[];
 
     const stats = [
         {
+            key: "students",
             label: "Students",
-            value: studentCount,
+            singularLabel: "student",
+            members: linkedStudents,
             icon: Users,
             color: "text-blue-500",
             bgColor: "bg-blue-500/10",
+            hoverBorder: "hover:border-blue-500/30",
         },
         {
+            key: "teachers",
             label: "Teachers",
-            value: teacherCount,
+            singularLabel: "teacher",
+            members: linkedTeachers,
             icon: GraduationCap,
             color: "text-emerald-500",
             bgColor: "bg-emerald-500/10",
+            hoverBorder: "hover:border-emerald-500/30",
         },
         {
+            key: "parents",
+            label: "Parents",
+            singularLabel: "parent",
+            members: linkedParents,
+            icon: Users,
+            color: "text-amber-500",
+            bgColor: "bg-amber-500/10",
+            hoverBorder: "hover:border-amber-500/30",
+        },
+        {
+            key: "admins",
             label: "Admins",
-            value: adminCount,
+            singularLabel: "admin",
+            members: linkedAdmins,
             icon: ShieldCheck,
             color: "text-violet-500",
             bgColor: "bg-violet-500/10",
+            hoverBorder: "hover:border-violet-500/30",
         },
     ];
 
-    return (
-        <section className="mb-8">
-            <div className="grid gap-4 sm:grid-cols-3">
-                {stats.map((stat) => (
-                    <div
-                        key={stat.label}
-                        className="rounded-xl border bg-card p-5 transition-colors hover:bg-muted/50"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div
-                                className={cn(
-                                    "flex size-10 items-center justify-center rounded-lg",
-                                    stat.bgColor
-                                )}
-                            >
-                                <stat.icon
-                                    className={cn("size-5", stat.color)}
-                                />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold tabular-nums">
-                                    {stat.value}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                    {stat.label}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </section>
-    );
-}
-
-// People section component
-function PeopleSection({
-    title,
-    icon: Icon,
-    iconColor,
-    bgColor,
-    userIds,
-    emptyMessage,
-}: {
-    title: string;
-    icon: React.ComponentType<{ className?: string }>;
-    iconColor: string;
-    bgColor: string;
-    userIds: string[];
-    emptyMessage: string;
-}) {
-    // Query users by their IDs
-    // Note: This shows user IDs/emails for now. In production, you might want to resolve these to actual user data
-
-    return (
-        <section className="rounded-xl border bg-card">
-            <div className="flex items-center gap-3 border-b p-4">
-                <div
-                    className={cn(
-                        "flex size-8 items-center justify-center rounded-lg",
-                        bgColor
-                    )}
-                >
-                    <Icon className={cn("size-4", iconColor)} />
-                </div>
-                <h3 className="font-semibold">{title}</h3>
-                <span className="ml-auto rounded-full bg-muted px-2.5 py-0.5 text-sm font-medium tabular-nums">
-                    {userIds.length}
-                </span>
-            </div>
-
-            <div className="p-4">
-                {userIds.length === 0 ? (
-                    <p className="text-sm text-muted-foreground/60 italic text-center py-4">
-                        {emptyMessage}
-                    </p>
-                ) : (
-                    <ul className="space-y-2">
-                        {userIds.map((userId) => (
-                            <li
-                                key={userId}
-                                className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2"
-                            >
-                                <Avatar className="size-8">
-                                    <AvatarFallback className="text-xs">
-                                        {userId.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <span className="text-sm truncate flex-1 font-mono text-muted-foreground">
-                                    {userId}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
-        </section>
-    );
+    return <CollapsibleStatsCards stats={stats} />;
 }
 
 // Loading skeleton
@@ -1139,25 +1014,7 @@ function ClassPageSkeleton() {
                 </section>
 
                 {/* Stats skeleton */}
-                <section className="mb-8">
-                    <div className="grid gap-4 sm:grid-cols-3">
-                        {[1, 2, 3].map((i) => (
-                            <Skeleton
-                                key={i}
-                                className="h-20 rounded-xl"
-                            />
-                        ))}
-                    </div>
-                </section>
-
-                {/* People sections skeleton */}
-                <div className="grid gap-6 lg:grid-cols-2">
-                    <Skeleton className="h-64 rounded-xl" />
-                    <div className="space-y-6">
-                        <Skeleton className="h-48 rounded-xl" />
-                        <Skeleton className="h-48 rounded-xl" />
-                    </div>
-                </div>
+                <CollapsibleStatsCardsSkeleton />
             </main>
         </div>
     );

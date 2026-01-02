@@ -418,7 +418,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                     )}
 
                     {/* Stats section */}
-                    <div className="mt-5 grid grid-cols-3 gap-2">
+                    <div className="mt-5 grid grid-cols-4 gap-2">
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
@@ -460,7 +460,7 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
-                                    <ShieldCheck className="size-4 text-amber-500 mb-1" />
+                                    <Users className="size-4 text-amber-500 mb-1" />
                                     <span className="text-base font-semibold tabular-nums">
                                         {parentCount}
                                     </span>
@@ -473,6 +473,25 @@ export default function OrgCard({ organization, isOwner }: OrgCardProps) {
                                 {parentCount === 1
                                     ? "1 parent"
                                     : `${parentCount} parents`}
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
+                                    <ShieldCheck className="size-4 text-violet-500 mb-1" />
+                                    <span className="text-base font-semibold tabular-nums">
+                                        {adminCount}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Admins
+                                    </span>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {adminCount === 1
+                                    ? "1 admin"
+                                    : `${adminCount} admins`}
                             </TooltipContent>
                         </Tooltip>
                     </div>

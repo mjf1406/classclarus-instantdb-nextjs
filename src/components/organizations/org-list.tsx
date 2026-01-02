@@ -37,9 +37,6 @@ export default function OrgList() {
     const [searchQuery, setSearchQuery] = useState("");
     const { user, isLoading: isUserLoading } = db.useAuth();
 
-    // Query for organizations where the user is a member in any role
-    // Note: InstantDB's TypeScript types don't fully support the 'or' operator
-    // with nested relation paths, but the query works correctly at runtime
     const { data, isLoading, error } = db.useQuery(
         user
             ? {

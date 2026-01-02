@@ -25,6 +25,11 @@ import { db } from "@/lib/db/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
+    CollapsibleStatsCards,
+    CollapsibleStatsCardsSkeleton,
+    type StatMember,
+} from "@/components/stats/collapsible-stats-cards";
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -353,91 +358,62 @@ function OrgHero({
     );
 }
 
-// Organization stats component
+// Organization stats component with collapsible member lists
 function OrgStats({
     organization,
 }: {
     organization: NonNullable<ReturnType<typeof useOrgData>>;
 }) {
     // Use linked role arrays
-    const linkedStudents = organization.orgStudents ?? [];
-    const linkedTeachers = organization.orgTeachers ?? [];
-    const linkedParents = organization.orgParents ?? [];
-    const linkedAdmins = organization.admins ?? [];
-
-    const studentCount = Array.isArray(linkedStudents)
-        ? linkedStudents.length
-        : 0;
-    const teacherCount = Array.isArray(linkedTeachers)
-        ? linkedTeachers.length
-        : 0;
-    const parentCount = Array.isArray(linkedParents) ? linkedParents.length : 0;
-    const adminCount = Array.isArray(linkedAdmins) ? linkedAdmins.length : 0;
+    const linkedStudents = (organization.orgStudents ?? []) as StatMember[];
+    const linkedTeachers = (organization.orgTeachers ?? []) as StatMember[];
+    const linkedParents = (organization.orgParents ?? []) as StatMember[];
+    const linkedAdmins = (organization.admins ?? []) as StatMember[];
 
     const stats = [
         {
+            key: "students",
             label: "Students",
-            value: studentCount,
+            singularLabel: "student",
+            members: linkedStudents,
             icon: Users,
             color: "text-blue-500",
             bgColor: "bg-blue-500/10",
+            hoverBorder: "hover:border-blue-500/30",
         },
         {
+            key: "teachers",
             label: "Teachers",
-            value: teacherCount,
+            singularLabel: "teacher",
+            members: linkedTeachers,
             icon: GraduationCap,
             color: "text-emerald-500",
             bgColor: "bg-emerald-500/10",
+            hoverBorder: "hover:border-emerald-500/30",
         },
         {
+            key: "parents",
             label: "Parents",
-            value: parentCount,
+            singularLabel: "parent",
+            members: linkedParents,
             icon: Users,
             color: "text-amber-500",
             bgColor: "bg-amber-500/10",
+            hoverBorder: "hover:border-amber-500/30",
         },
         {
+            key: "admins",
             label: "Admins",
-            value: adminCount,
+            singularLabel: "admin",
+            members: linkedAdmins,
             icon: ShieldCheck,
             color: "text-violet-500",
             bgColor: "bg-violet-500/10",
+            hoverBorder: "hover:border-violet-500/30",
         },
     ];
 
-    return (
-        <section className="mb-8">
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-                {stats.map((stat) => (
-                    <div
-                        key={stat.label}
-                        className="rounded-xl border bg-card p-5 transition-colors hover:bg-muted/50"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div
-                                className={cn(
-                                    "flex size-10 items-center justify-center rounded-lg",
-                                    stat.bgColor
-                                )}
-                            >
-                                <stat.icon
-                                    className={cn("size-5", stat.color)}
-                                />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold tabular-nums">
-                                    {stat.value}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                    {stat.label}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </section>
-    );
+    return <CollapsibleStatsCards stats={stats} />;
 }
 
 // Loading skeleton
@@ -473,16 +449,7 @@ function OrgPageSkeleton() {
                 </section>
 
                 {/* Stats skeleton */}
-                <section className="mb-8">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {[1, 2].map((i) => (
-                            <Skeleton
-                                key={i}
-                                className="h-20 rounded-xl"
-                            />
-                        ))}
-                    </div>
-                </section>
+                <CollapsibleStatsCardsSkeleton />
 
                 {/* Classes section skeleton */}
                 <section>

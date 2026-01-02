@@ -52,7 +52,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, escapeHtml } from "@/lib/utils";
 import { db } from "@/lib/db/db";
 import { EditClassDialog } from "@/components/classes/edit-class-dialog";
 
@@ -238,7 +238,7 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>${label} Join Code - ${name}</title>
+    <title>${escapeHtml(label)} Join Code - ${escapeHtml(name)}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -319,10 +319,10 @@ export default function ClassCard({ classData, canEdit }: ClassCardProps) {
 <body>
     <div class="container">
         <div class="code-section">
-            <h1>${name}</h1>
-            <div class="code-type">${label} Code</div>
+            <h1>${escapeHtml(name)}</h1>
+            <div class="code-type">${escapeHtml(label)} Code</div>
             <div class="code-label">Join Code</div>
-            <div class="code">${code}</div>
+            <div class="code">${escapeHtml(code)}</div>
         </div>
         <div class="steps">
             <h2>How to Join</h2>
