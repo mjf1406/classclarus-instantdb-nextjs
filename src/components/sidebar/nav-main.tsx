@@ -2,7 +2,14 @@
 
 "use client";
 
-import { ChevronRight, type LucideIcon, LayoutDashboard, Coins, Clock } from "lucide-react";
+import {
+    ChevronRight,
+    type LucideIcon,
+    LayoutDashboard,
+    Coins,
+    Clock,
+    Home,
+} from "lucide-react";
 import { useQueryState, parseAsString } from "nuqs";
 
 import {
@@ -24,10 +31,15 @@ import {
 
 const items = [
     {
+        title: "Home",
+        url: "#",
+        icon: Home,
+        isActive: true,
+    },
+    {
         title: "Dashboard",
         url: "#",
         icon: LayoutDashboard,
-        isActive: true,
     },
     {
         title: "Points",
@@ -64,32 +76,6 @@ export function NavMain() {
                     const itemTab = normalizeTab(item.title);
                     const isActive =
                         activeTab === itemTab || (!activeTab && item.isActive);
-                    const hasSubItems = item.items && item.items.length > 0;
-
-                    // If item has no sub-items, render as direct link
-                    if (!hasSubItems) {
-                        return (
-                            <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton
-                                    tooltip={item.title}
-                                    isActive={isActive}
-                                    onClick={() => {
-                                        setActiveTab(itemTab);
-                                        handleNavigationClick();
-                                    }}
-                                    asChild
-                                >
-                                    <a
-                                        href="#"
-                                        onClick={(e) => e.preventDefault()}
-                                    >
-                                        {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
-                                    </a>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        );
-                    }
 
                     // If item has sub-items, render as collapsible
                     return (
@@ -104,11 +90,6 @@ export function NavMain() {
                                     <SidebarMenuButton
                                         tooltip={item.title}
                                         onClick={() => {
-                                            // If it has sub-items, set the first one as active
-                                            const firstSubItem = item.items![0];
-                                            setActiveTab(
-                                                normalizeTab(firstSubItem.title)
-                                            );
                                             handleNavigationClick();
                                         }}
                                     >
@@ -117,47 +98,6 @@ export function NavMain() {
                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        {item.items?.map((subItem) => {
-                                            const subItemTab = normalizeTab(
-                                                subItem.title
-                                            );
-                                            const isSubActive =
-                                                activeTab === subItemTab;
-
-                                            return (
-                                                <SidebarMenuSubItem
-                                                    key={subItem.title}
-                                                >
-                                                    <SidebarMenuSubButton
-                                                        asChild
-                                                        isActive={isSubActive}
-                                                        onClick={() => {
-                                                            if (subItemTab) {
-                                                                setActiveTab(
-                                                                    subItemTab
-                                                                );
-                                                            }
-                                                            handleNavigationClick();
-                                                        }}
-                                                    >
-                                                        <a
-                                                            href="#"
-                                                            onClick={(e) =>
-                                                                e.preventDefault()
-                                                            }
-                                                        >
-                                                            <span>
-                                                                {subItem.title}
-                                                            </span>
-                                                        </a>
-                                                    </SidebarMenuSubButton>
-                                                </SidebarMenuSubItem>
-                                            );
-                                        })}
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
                             </SidebarMenuItem>
                         </Collapsible>
                     );

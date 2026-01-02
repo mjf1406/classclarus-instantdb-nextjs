@@ -55,13 +55,19 @@ type CreateClassFormData = z.infer<typeof createClassSchema>;
 interface CreateClassDialogProps {
     organizationId: string;
     trigger?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 export default function CreateClassDialog({
     organizationId,
     trigger,
+    open: controlledOpen,
+    onOpenChange: controlledOnOpenChange,
 }: CreateClassDialogProps) {
-    const [open, setOpen] = useState(false);
+    const [internalOpen, setInternalOpen] = useState(false);
+    const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+    const setOpen = controlledOnOpenChange || setInternalOpen;
     const [isCreating, setIsCreating] = useState(false);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const iconFieldRef = useRef<IconUploadFieldRef>(null);

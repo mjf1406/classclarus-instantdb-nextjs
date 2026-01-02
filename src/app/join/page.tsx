@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { db } from "@/lib/db/db";
@@ -29,7 +29,7 @@ import { StudentSelection } from "@/components/join-codes";
 
 type PageState = "idle" | "loading" | "studentSelection" | "success" | "error";
 
-export default function JoinPage() {
+function JoinPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, isLoading: isUserLoading } = db.useAuth();
@@ -359,5 +359,19 @@ export default function JoinPage() {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function JoinPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen flex items-center justify-center">
+                    <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                </div>
+            }
+        >
+            <JoinPageContent />
+        </Suspense>
     );
 }

@@ -4,13 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import { NavMain } from "@/components/navigation/nav-main";
-import { NavRandom } from "@/components/navigation/nav-random";
-import { NavClassManagement } from "@/components/navigation/nav-class-management";
-import { NavStudentFacing } from "@/components/navigation/nav-student-facing";
-import { NavUser } from "@/components/navigation/nav-user";
-import { GuestUpgradeCard } from "@/components/guest-upgrade-card";
-import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import {
     Sidebar,
     SidebarContent,
@@ -18,6 +11,13 @@ import {
     SidebarHeader,
     SidebarRail,
 } from "@/components/ui/sidebar";
+import GuestUpgradeCard from "../guest/guest-upgrade-card";
+import { NavClassManagement } from "./nav-class-management";
+import { NavMain } from "./nav-main";
+import { NavRandom } from "./nav-random";
+import { NavStudentFacing } from "./nav-student-facing";
+import { OrganizationSwitcher } from "./sidebar-header";
+import { NavUser } from "./nav-user";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (

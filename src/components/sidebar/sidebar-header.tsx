@@ -25,7 +25,7 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar";
 import { db } from "@/lib/db/db";
-import { CreateClassDialog } from "@/components/class/create-class-dialog";
+import CreateClassDialog from "../classes/create-class-dialog";
 
 export function OrganizationSwitcher() {
     const { isMobile } = useSidebar();
@@ -176,11 +176,13 @@ export function OrganizationSwitcher() {
                 </DropdownMenu>
             </SidebarMenuItem>
             <db.SignedIn>
-                <CreateClassDialog
-                    open={isCreateDialogOpen}
-                    onOpenChange={setIsCreateDialogOpen}
-                    myOrg={selectedOrgForCreate}
-                />
+                {selectedOrgForCreate && (
+                    <CreateClassDialog
+                        open={isCreateDialogOpen}
+                        onOpenChange={setIsCreateDialogOpen}
+                        organizationId={selectedOrgForCreate.id}
+                    />
+                )}
             </db.SignedIn>
         </SidebarMenu>
     );
