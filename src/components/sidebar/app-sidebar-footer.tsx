@@ -7,6 +7,7 @@ import { useAuthContext } from "../auth/auth-provider";
 import GuestUpgradeCard from "../guest/guest-upgrade-card";
 import { SidebarFooter } from "../ui/sidebar";
 import { NavUser } from "./nav-user";
+import { OrganizationSwitcher } from "./sidebar-header";
 
 export default function AppSidebarFooter() {
     const { user, isLoading } = useAuthContext();
@@ -22,6 +23,7 @@ export default function AppSidebarFooter() {
     return (
         <SidebarFooter>
             {user?.isGuest && <GuestUpgradeCard />}
+            <OrganizationSwitcher />
             <NavUser />
         </SidebarFooter>
     );

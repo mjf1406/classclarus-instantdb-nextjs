@@ -125,7 +125,10 @@ interface ClassCardProps {
     canEdit?: boolean;
 }
 
-const ClassCard = React.memo(function ClassCard({ classData, canEdit }: ClassCardProps) {
+const ClassCard = React.memo(function ClassCard({
+    classData,
+    canEdit,
+}: ClassCardProps) {
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
     const [showFullscreen, setShowFullscreen] = React.useState(false);
@@ -375,7 +378,7 @@ const ClassCard = React.memo(function ClassCard({ classData, canEdit }: ClassCar
     return (
         <>
             <Link
-                href={`/${organizationId}/${id}`}
+                href={`/${organizationId}/${id}/home`}
                 className="group block"
             >
                 <article
@@ -593,7 +596,8 @@ const ClassCard = React.memo(function ClassCard({ classData, canEdit }: ClassCar
                                                 }
                                                 className="h-9 w-9"
                                             >
-                                                {copiedLink === selectedCodeType ? (
+                                                {copiedLink ===
+                                                selectedCodeType ? (
                                                     <Check className="size-4 text-green-500" />
                                                 ) : (
                                                     <Link2 className="size-4" />

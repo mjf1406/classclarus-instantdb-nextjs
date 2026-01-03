@@ -31,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 >
                     <Logo />
                 </Link>
-                <OrganizationSwitcher />
+                {/* <OrganizationSwitcher /> */}
             </SidebarHeader>
             <SidebarContent>
                 <NavMain />

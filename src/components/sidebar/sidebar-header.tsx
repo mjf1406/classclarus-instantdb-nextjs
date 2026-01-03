@@ -24,36 +24,50 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { db } from "@/lib/db/db";
 import CreateClassDialog from "../classes/create-class-dialog";
+import { useAuthContext } from "../auth/auth-provider";
 
 export function OrganizationSwitcher() {
     const { isMobile } = useSidebar();
     const params = useParams();
     const router = useRouter();
     const organizationId = params.organizationId as string | undefined;
+    const { user, organizations, isLoading, error } = useAuthContext();
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [selectedOrgForCreate, setSelectedOrgForCreate] = useState<{
         id: string;
     } | null>(null);
 
-    // Query all organizations and their classes from InstantDB
-    const { data } = db.useQuery({
-        organizations: {
-            classes: {},
-        },
-    });
-
-    const organizations = data?.organizations || [];
     const selectedOrganization = organizationId
         ? organizations.find((org) => org.id === organizationId)
         : organizations[0] || null;
 
-    // Use selectedOrganization or fallback to first organization
     const displayOrganization = selectedOrganization || organizations[0];
 
     if (!displayOrganization || organizations.length === 0) {
         return null;
+    }
+
+    if (isLoading) {
+        return (
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        size="lg"
+                        className="pointer-events-none"
+                    >
+                        <Skeleton className="size-8 rounded-lg" />
+                        <div className="grid flex-1 text-left text-sm leading-tight gap-1.5">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-20" />
+                        </div>
+                        <Skeleton className="ml-auto size-4" />
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        );
     }
 
     // Get classes for the selected organization

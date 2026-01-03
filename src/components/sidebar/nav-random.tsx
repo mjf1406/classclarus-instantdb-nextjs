@@ -3,7 +3,8 @@
 "use client";
 
 import { Users, Calendar, Dice6 } from "lucide-react";
-import { useQueryState, parseAsString } from "nuqs";
+import Link from "next/link";
+import { usePathname, useParams } from "next/navigation";
 
 import {
     SidebarGroup,
@@ -17,28 +18,33 @@ import {
 const items = [
     {
         title: "Assigners",
-        url: "#",
+        path: "assigners",
         icon: Users,
     },
     {
         title: "Random Event",
-        url: "#",
+        path: "random-event",
         icon: Calendar,
     },
     {
         title: "Randomizer",
-        url: "#",
+        path: "randomizer",
         icon: Dice6,
     },
 ];
 
 export function NavRandom() {
-    const [activeTab, setActiveTab] = useQueryState("tab", parseAsString);
+    const pathname = usePathname();
+    const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
 
-    // Normalize tab value for comparison (lowercase, no spaces)
-    const normalizeTab = (title: string) =>
-        title.toLowerCase().replace(/\s+/g, "-");
+    const orgId = params.orgId as string;
+    const classId = params.classId as string | undefined;
+
+    // Don't render navigation if we're not in a class context
+    if (!classId) {
+        return null;
+    }
 
     // Close mobile sidebar when navigation item is clicked
     const handleNavigationClick = () => {
@@ -52,27 +58,24 @@ export function NavRandom() {
             <SidebarGroupLabel>Random</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => {
-                    const itemTab = normalizeTab(item.title);
-                    const isActive = activeTab === itemTab;
+                    const href = `/${orgId}/${classId}/${item.path}`;
+                    const isActive = pathname === href;
 
                     return (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
                                 tooltip={item.title}
                                 isActive={isActive}
-                                onClick={() => {
-                                    setActiveTab(itemTab);
-                                    handleNavigationClick();
-                                }}
                                 asChild
                             >
-                                <a
-                                    href="#"
-                                    onClick={(e) => e.preventDefault()}
+                                <Link
+                                    href={href}
+                                    prefetch={true}
+                                    onClick={handleNavigationClick}
                                 >
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>
-                                </a>
+                                </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     );

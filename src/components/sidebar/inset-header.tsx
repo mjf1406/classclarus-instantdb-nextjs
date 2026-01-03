@@ -2,8 +2,7 @@
 
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useQueryState, parseAsString } from "nuqs";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import {
     Breadcrumb,
     BreadcrumbList,
@@ -26,10 +25,10 @@ import { useAuthContext } from "@/components/auth/auth-provider";
 export function ClassHeader() {
     const params = useParams();
     const router = useRouter();
+    const pathname = usePathname();
     const organizationId = params.orgId as string;
     const classId = params.classId as string | undefined;
     const { user, isLoading, organizations, error } = useAuthContext();
-    const [activeTab] = useQueryState("tab", parseAsString);
 
     if (isLoading) {
         return null;
@@ -43,11 +42,18 @@ export function ClassHeader() {
         ? organizationClasses.find((c: { id: string }) => c.id === classId)
         : undefined;
 
-    // Convert tab slug back to readable name
-    const getTabName = (tabSlug: string | null) => {
-        if (!tabSlug) return "TAB NAME";
-        // Convert "history" -> "History", "get-started" -> "Get Started"
-        return tabSlug
+    // Extract tab name from pathname
+    // Pathname format: /{orgId}/{classId}/{tab}
+    const getTabName = () => {
+        if (!classId) return null;
+        const pathSegments = pathname.split("/");
+        const tabSegment = pathSegments[pathSegments.length - 1];
+        
+        // If we're on the base class route, return null (no tab shown)
+        if (tabSegment === classId) return null;
+        
+        // Convert "class-time" -> "Class Time", "student-dashboards" -> "Student Dashboards"
+        return tabSegment
             .split("-")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
@@ -58,10 +64,12 @@ export function ClassHeader() {
         router.push(`/${newOrgId}`);
     };
 
-    // Handle class selection - navigate to new class with dashboard tab
+    // Handle class selection - navigate to new class with home tab
     const handleClassChange = (newClassId: string) => {
-        router.push(`/${organizationId}/${newClassId}?tab=dashboard`);
+        router.push(`/${organizationId}/${newClassId}/home`);
     };
+
+    const activeTab = getTabName();
 
     // Only show class-related breadcrumb items when we're on a class route
     const showClassBreadcrumb = !!classId;
