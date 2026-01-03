@@ -17,6 +17,7 @@ import {
     codeLabels,
     codeColors,
 } from "../home/types";
+import BlankBackgroundLoader from "@/components/loaders/blank-background-loader";
 
 interface JoinCodesPageProps {
     params: Promise<{ orgId: string; classId: string }>;
@@ -38,14 +39,7 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
     });
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen w-full bg-radial from-foreground/30 to-background flex items-center justify-center">
-                <Loader2
-                    className="animate-spin"
-                    size={64}
-                />
-            </div>
-        );
+        <BlankBackgroundLoader />;
     }
 
     const classData = data?.classes?.[0] as ClassQueryResult | undefined;

@@ -30,6 +30,7 @@ import {
     codeLabels,
 } from "./types";
 import { Loader2 } from "lucide-react";
+import BlankBackgroundLoader from "@/components/loaders/blank-background-loader";
 
 interface ClassHomePageProps {
     params: Promise<{ orgId: string; classId: string }>;
@@ -64,14 +65,7 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
     });
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen w-full bg-radial from-foreground/30 to-background flex items-center justify-center">
-                <Loader2
-                    className="animate-spin"
-                    size={64}
-                />
-            </div>
-        );
+        <BlankBackgroundLoader />;
     }
 
     const classData = data?.classes?.[0] as ClassQueryResult | undefined;
