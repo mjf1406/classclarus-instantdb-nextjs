@@ -2,12 +2,7 @@
 
 "use client";
 
-import {
-    LayoutDashboard,
-    Coins,
-    Clock,
-    Home,
-} from "lucide-react";
+import { LayoutDashboard, Coins, Clock, Home, Merge } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -40,6 +35,11 @@ const items = [
         title: "Class Time",
         path: "class-time",
         icon: Clock,
+    },
+    {
+        title: "Join Class",
+        path: "join-codes",
+        icon: Merge,
     },
 ];
 

@@ -17,20 +17,11 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ClassQueryResult, JoinCodeType } from "../types";
-import { JoinCodeSection } from "./join-code-section";
+import { ClassQueryResult } from "../types";
 
 interface ClassHeroProps {
     classData: ClassQueryResult;
     canEdit: boolean;
-    copied: JoinCodeType | null;
-    selectedCodeType: JoinCodeType;
-    isRevealed: boolean;
-    onSelectCodeType: (type: JoinCodeType) => void;
-    onRevealCode: () => void;
-    onCopyJoinCode: (codeType: JoinCodeType) => void;
-    onOpenFullscreen: () => void;
-    onOpenInNewWindow: (codeType: JoinCodeType) => void;
     onEdit: () => void;
     onDelete: () => void;
 }
@@ -38,14 +29,6 @@ interface ClassHeroProps {
 export function ClassHero({
     classData,
     canEdit,
-    copied,
-    selectedCodeType,
-    isRevealed,
-    onSelectCodeType,
-    onRevealCode,
-    onCopyJoinCode,
-    onOpenFullscreen,
-    onOpenInNewWindow,
     onEdit,
     onDelete,
 }: ClassHeroProps) {
@@ -56,17 +39,8 @@ export function ClassHero({
         owner,
         created,
         updated,
-        joinCodeEntity,
         organization,
     } = classData;
-
-    const joinCodes = joinCodeEntity
-        ? {
-              student: joinCodeEntity.studentCode,
-              teacher: joinCodeEntity.teacherCode,
-              parent: joinCodeEntity.parentCode,
-          }
-        : null;
 
     const getInitials = (className: string) => {
         return className
@@ -148,19 +122,6 @@ export function ClassHero({
                                 </p>
                             )}
                         </div>
-
-                        {/* Join codes section */}
-                        <JoinCodeSection
-                            joinCodes={joinCodes}
-                            selectedCodeType={selectedCodeType}
-                            isRevealed={isRevealed}
-                            copied={copied}
-                            onSelectCodeType={onSelectCodeType}
-                            onRevealCode={onRevealCode}
-                            onCopyJoinCode={onCopyJoinCode}
-                            onOpenFullscreen={onOpenFullscreen}
-                            onOpenInNewWindow={onOpenInNewWindow}
-                        />
 
                         {/* Meta info */}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">

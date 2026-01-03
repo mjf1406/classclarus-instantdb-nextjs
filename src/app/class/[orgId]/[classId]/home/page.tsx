@@ -10,7 +10,6 @@ import { escapeHtml } from "@/lib/utils";
 import { ClassHero } from "./components/class-hero";
 import { ClassStats } from "./components/class-stats";
 import { JoinCodeDialog } from "./components/join-code-dialog";
-import { ClassPageSkeleton } from "./components/class-page-skeleton";
 import { ClassErrorState } from "./components/class-error-state";
 import { ClassNotFoundState } from "./components/class-not-found-state";
 import { EditClassDialog } from "@/components/classes/edit-class-dialog";
@@ -38,7 +37,7 @@ interface ClassHomePageProps {
 export default function ClassHomePage({ params }: ClassHomePageProps) {
     const { orgId, classId } = use(params);
     const router = useRouter();
-    const { user, isLoading: isUserLoading } = useAuthContext();
+    const { user } = useAuthContext();
     const [copied, setCopied] = useState<JoinCodeType | null>(null);
     const [showFullscreen, setShowFullscreen] = useState(false);
     const [selectedCodeType, setSelectedCodeType] =
@@ -248,11 +247,6 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
         }
     };
 
-    // Loading state
-    if (isLoading || isUserLoading) {
-        return <ClassPageSkeleton />;
-    }
-
     // Error state
     if (error) {
         return (
@@ -279,14 +273,6 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
                 <ClassHero
                     classData={classData}
                     canEdit={canEdit}
-                    copied={copied}
-                    selectedCodeType={selectedCodeType}
-                    isRevealed={isRevealed}
-                    onSelectCodeType={setSelectedCodeType}
-                    onRevealCode={handleRevealCode}
-                    onCopyJoinCode={handleCopyJoinCode}
-                    onOpenFullscreen={handleOpenFullscreen}
-                    onOpenInNewWindow={handleOpenInNewWindow}
                     onEdit={() => setShowEditDialog(true)}
                     onDelete={() => setShowDeleteDialog(true)}
                 />
