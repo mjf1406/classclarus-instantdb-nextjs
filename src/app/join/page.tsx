@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PasteCodeButton } from "@/components/ui/paste-code-button";
 import {
     lookupJoinCode,
     joinOrganization,
@@ -42,6 +43,8 @@ function JoinPageContent() {
         Array<{ id: string; email?: string }>
     >([]);
     const [hasProcessedUrlCode, setHasProcessedUrlCode] = useState(false);
+    const [joinToken, setJoinToken] = useState<string | null>(null);
+    const [joinCode, setJoinCode] = useState<string | null>(null);
 
     const handleCodeComplete = useCallback(
         async (value: string) => {
@@ -59,8 +62,18 @@ function JoinPageContent() {
             setError(null);
 
             try {
+                // Early guest check - prevent server action call entirely for guests
+                if (user?.isGuest) {
+                    setError(
+                        "Guest users cannot join organizations or classes. Please sign in with a full account."
+                    );
+                    setState("error");
+                    setCode("");
+                    return;
+                }
+
                 // Lookup the join code
-                const lookupResult = await lookupJoinCode(value);
+                const lookupResult = await lookupJoinCode(value, user.id);
 
                 if (!lookupResult.success || !lookupResult.data) {
                     setError(lookupResult.error || "Invalid join code");
@@ -74,10 +87,23 @@ function JoinPageContent() {
                     entityId,
                     organizationId,
                     classId: lookupClassId,
+                    token,
                 } = lookupResult.data;
+
+                if (!token) {
+                    setError("Failed to generate join token");
+                    setState("error");
+                    setCode("");
+                    return;
+                }
+
+                // Store token and code for later use
+                setJoinToken(token);
+                setJoinCode(value);
 
                 // Handle parent join code - show student selection
                 if (type === "classParent") {
+
                     if (!lookupClassId) {
                         setError("Class not found");
                         setState("error");
@@ -108,11 +134,26 @@ function JoinPageContent() {
                 // Handle other join code types - join immediately
                 let joinResult;
                 if (type === "organization") {
-                    joinResult = await joinOrganization(user.id, entityId);
+                    joinResult = await joinOrganization(
+                        user.id,
+                        entityId,
+                        value,
+                        token
+                    );
                 } else if (type === "classStudent") {
-                    joinResult = await joinClassAsStudent(user.id, entityId);
+                    joinResult = await joinClassAsStudent(
+                        user.id,
+                        entityId,
+                        value,
+                        token
+                    );
                 } else if (type === "classTeacher") {
-                    joinResult = await joinClassAsTeacher(user.id, entityId);
+                    joinResult = await joinClassAsTeacher(
+                        user.id,
+                        entityId,
+                        value,
+                        token
+                    );
                 } else {
                     setError("Unknown join code type");
                     setState("error");
@@ -140,12 +181,12 @@ function JoinPageContent() {
                 setCode("");
             }
         },
-        [user?.id, router]
+        [user?.id, user?.isGuest, router]
     );
 
     const handleStudentSelection = useCallback(
         async (selectedStudentIds: string[]) => {
-            if (!user?.id || !classId) {
+            if (!user?.id || !classId || !joinToken || !joinCode) {
                 setError("Missing required information");
                 setState("error");
                 return;
@@ -157,7 +198,9 @@ function JoinPageContent() {
                 const joinResult = await joinClassAsParent(
                     user.id,
                     classId,
-                    selectedStudentIds
+                    selectedStudentIds,
+                    joinCode,
+                    joinToken
                 );
 
                 if (!joinResult.success) {
@@ -178,7 +221,7 @@ function JoinPageContent() {
                 setState("error");
             }
         },
-        [user?.id, classId, router]
+        [user?.id, classId, joinToken, joinCode, router]
     );
 
     const handleReset = () => {
@@ -188,6 +231,8 @@ function JoinPageContent() {
         setClassId(null);
         setStudents([]);
         setHasProcessedUrlCode(false);
+        setJoinToken(null);
+        setJoinCode(null);
         // Clear query parameter
         router.replace("/join");
     };
@@ -290,6 +335,17 @@ function JoinPageContent() {
                                         </InputOTP>
                                     </div>
                                 </Card>
+                                <PasteCodeButton
+                                    onPaste={(pastedCode) => {
+                                        setCode(pastedCode);
+                                        if (pastedCode.length === 8) {
+                                            handleCodeComplete(pastedCode);
+                                        }
+                                    }}
+                                    codeLength={8}
+                                    codeType="alphanumeric"
+                                    disabled={state !== "idle"}
+                                />
                                 <p className="text-sm text-muted-foreground">
                                     The hyphen is only for readability
                                 </p>

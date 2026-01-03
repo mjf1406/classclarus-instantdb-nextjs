@@ -8,6 +8,7 @@ import { Mail } from "lucide-react";
 import { db } from "@/lib/db/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasteCodeButton } from "@/components/ui/paste-code-button";
 import {
     InputOTP,
     InputOTPGroup,
@@ -182,7 +183,6 @@ function CodeStep({
             .signInWithMagicCode({ email: sentEmail, code: trimmedCode })
             .then(async (result) => {
                 if (result.user) {
-                    // Check if created is null and set it if needed
                     const { data } = await db.queryOnce({
                         $users: {
                             $: { where: { id: result.user.id } },
@@ -232,6 +232,12 @@ function CodeStep({
                     </InputOTPGroup>
                 </InputOTP>
             </div>
+            <PasteCodeButton
+                onPaste={setCode}
+                codeLength={6}
+                codeType="numeric"
+                disabled={isLoading}
+            />
             <div className="flex gap-2">
                 <Button
                     type="button"

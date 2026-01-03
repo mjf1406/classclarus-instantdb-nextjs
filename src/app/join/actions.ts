@@ -67,14 +67,16 @@ async function validateJoinToken(
         };
     }
     // Convert expiresAt to Date object - admin SDK may return string/number
+    // Check type first to avoid TypeScript error with instanceof
+    const expiresAtValue = joinToken.expiresAt as unknown;
     let expiresAtDate: Date;
-    if (joinToken.expiresAt instanceof Date) {
-        expiresAtDate = joinToken.expiresAt;
+    if (expiresAtValue instanceof Date) {
+        expiresAtDate = expiresAtValue;
     } else if (
-        typeof joinToken.expiresAt === "string" ||
-        typeof joinToken.expiresAt === "number"
+        typeof expiresAtValue === "string" ||
+        typeof expiresAtValue === "number"
     ) {
-        expiresAtDate = new Date(joinToken.expiresAt);
+        expiresAtDate = new Date(expiresAtValue);
     } else {
         return {
             success: false,
@@ -295,6 +297,9 @@ export async function lookupJoinCode(
     }
 
     try {
+        // Early guest check for class codes (student/teacher/parent) to prevent token creation
+        // Organization codes are checked later in joinOrganization
+        // We'll check class codes here since we need to know the type before creating token
         // Check organization join codes
         const orgCodeData = await dbAdmin.query({
             orgJoinCodes: {
@@ -357,6 +362,15 @@ export async function lookupJoinCode(
                     type = "classParent";
                 }
 
+                // Early guest check for class codes - prevent token creation
+                const guestValidation = await validateGuestUser(userId, "classes");
+                if (!guestValidation.success) {
+                    return {
+                        success: false,
+                        error: guestValidation.error,
+                    };
+                }
+
                 const tokenId = await createJoinToken(
                     code,
                     type,
@@ -395,6 +409,18 @@ export async function joinOrganization(
     token: string
 ): Promise<JoinResult> {
     try {
+        // Early guest check - prevent unnecessary processing
+        const guestValidation = await validateGuestUser(
+            userId,
+            "organizations"
+        );
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
+            };
+        }
+
         // Validate code
         const codeValidation = await validateOrgJoinCode(code, orgId);
         if (!codeValidation.success) {
@@ -420,18 +446,6 @@ export async function joinOrganization(
         }
 
         const joinToken = tokenValidation.token;
-
-        // Check if joining user is a guest
-        const guestValidation = await validateGuestUser(
-            userId,
-            "organizations"
-        );
-        if (!guestValidation.success) {
-            return {
-                success: false,
-                error: guestValidation.error,
-            };
-        }
 
         // Check if organization exists and get owner
         const data = await dbAdmin.query({
@@ -513,6 +527,15 @@ export async function joinClassAsStudent(
     token: string
 ): Promise<JoinResult> {
     try {
+        // Early guest check - prevent unnecessary processing
+        const guestValidation = await validateGuestUser(userId, "classes");
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
+            };
+        }
+
         // Validate code
         const codeValidation = await validateClassJoinCode(
             code,
@@ -542,15 +565,6 @@ export async function joinClassAsStudent(
         }
 
         const joinToken = tokenValidation.token;
-
-        // Check if joining user is a guest
-        const guestValidation = await validateGuestUser(userId, "classes");
-        if (!guestValidation.success) {
-            return {
-                success: false,
-                error: guestValidation.error,
-            };
-        }
 
         // Check if class exists and get owner and organization owner
         const data = await dbAdmin.query({
@@ -626,6 +640,15 @@ export async function joinClassAsTeacher(
     token: string
 ): Promise<JoinResult> {
     try {
+        // Early guest check - prevent unnecessary processing
+        const guestValidation = await validateGuestUser(userId, "classes");
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
+            };
+        }
+
         // Validate code
         const codeValidation = await validateClassJoinCode(
             code,
@@ -655,15 +678,6 @@ export async function joinClassAsTeacher(
         }
 
         const joinToken = tokenValidation.token;
-
-        // Check if joining user is a guest
-        const guestValidation = await validateGuestUser(userId, "classes");
-        if (!guestValidation.success) {
-            return {
-                success: false,
-                error: guestValidation.error,
-            };
-        }
 
         // Check if class exists and get owner and organization owner
         const data = await dbAdmin.query({
@@ -786,6 +800,15 @@ export async function joinClassAsParent(
     }
 
     try {
+        // Early guest check - prevent unnecessary processing
+        const guestValidation = await validateGuestUser(userId, "classes");
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
+            };
+        }
+
         // Validate code
         const codeValidation = await validateClassJoinCode(
             code,
@@ -815,15 +838,6 @@ export async function joinClassAsParent(
         }
 
         const joinToken = tokenValidation.token;
-
-        // Check if joining user is a guest
-        const guestValidation = await validateGuestUser(userId, "classes");
-        if (!guestValidation.success) {
-            return {
-                success: false,
-                error: guestValidation.error,
-            };
-        }
 
         // Check if class exists and get owner and organization owner
         const data = await dbAdmin.query({
