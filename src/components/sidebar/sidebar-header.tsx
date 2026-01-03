@@ -29,12 +29,35 @@ import { db } from "@/lib/db/db";
 import CreateClassDialog from "../classes/create-class-dialog";
 import { useAuthContext } from "../auth/auth-provider";
 
-export function OrganizationSwitcher() {
+type User = {
+    created_at: Date | null | string;
+    email: string;
+    id: string;
+    imageURL: string | null;
+    avatarURL: string | null;
+    isGuest: boolean;
+    polarCustomerId: string | null;
+    refresh_token: string | null;
+    updated_at: Date | null | string;
+    type: string;
+    firstName: string | null;
+    lastName: string | null;
+    plan: string;
+} | null | undefined;
+
+export function OrganizationSwitcher({
+    user,
+    isLoading: isLoadingProp,
+}: {
+    user?: User;
+    isLoading?: boolean;
+}) {
     const { isMobile } = useSidebar();
     const params = useParams();
     const router = useRouter();
     const organizationId = params.organizationId as string | undefined;
-    const { user, organizations, isLoading, error } = useAuthContext();
+    const { organizations, isLoading: orgLoading } = useAuthContext();
+    const isLoading = isLoadingProp ?? orgLoading;
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [selectedOrgForCreate, setSelectedOrgForCreate] = useState<{
         id: string;

@@ -45,17 +45,63 @@ import { useAuthContext } from "../auth/auth-provider";
 import GuestDescription from "@/components/guest/guest-description";
 import GuestUpgradeCard from "@/components/guest/guest-upgrade-card";
 import { ThemeSwitch } from "@/components/theme/theme-switch";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const GOOGLE_CLIENT_NAME = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_NAME || "";
 
-export function NavUser() {
+type User = {
+    created_at: Date | null | string;
+    email: string;
+    id: string;
+    imageURL: string | null;
+    avatarURL: string | null;
+    isGuest: boolean;
+    polarCustomerId: string | null;
+    refresh_token: string | null;
+    updated_at: Date | null | string;
+    type: string;
+    firstName: string | null;
+    lastName: string | null;
+    plan: string;
+} | null | undefined;
+
+export function NavUser({
+    user: userProp,
+    isLoading: isLoadingProp,
+}: {
+    user?: User;
+    isLoading?: boolean;
+}) {
     const { isMobile } = useSidebar();
     const [nonce] = useState(() => uuidv4());
+    const { user: contextUser, isLoading: contextLoading } = useAuthContext();
+    const user = userProp ?? contextUser;
+    const isLoading = isLoadingProp ?? contextLoading;
+
+    if (isLoading) {
+        return (
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        size="lg"
+                        className="pointer-events-none"
+                    >
+                        <Skeleton className="size-8 rounded-lg" />
+                        <div className="grid flex-1 text-left text-sm leading-tight gap-1.5">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-3 w-16" />
+                        </div>
+                        <Skeleton className="ml-auto size-4" />
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        );
+    }
 
     return (
         <SidebarMenu>
             <db.SignedIn>
-                <NavUserSignedIn isMobile={isMobile} />
+                <NavUserSignedIn isMobile={isMobile} user={user} />
             </db.SignedIn>
             <db.SignedOut>
                 <NavUserSignedOut nonce={nonce} />
@@ -64,8 +110,15 @@ export function NavUser() {
     );
 }
 
-function NavUserSignedIn({ isMobile }: { isMobile: boolean }) {
-    const { user, isLoading } = useAuthContext();
+function NavUserSignedIn({
+    isMobile,
+    user: userProp,
+}: {
+    isMobile: boolean;
+    user?: User;
+}) {
+    const { user: contextUser } = useAuthContext();
+    const user = userProp ?? contextUser;
     const displayName =
         user?.firstName && user?.lastName
             ? `${user.firstName} ${user.lastName}`
