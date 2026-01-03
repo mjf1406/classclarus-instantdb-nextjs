@@ -286,4 +286,3 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
         </div>
     );
 }
-
