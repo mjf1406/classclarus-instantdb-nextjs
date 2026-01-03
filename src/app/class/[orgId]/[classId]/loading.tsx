@@ -1,17 +1,11 @@
+/** @format */
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { CollapsibleStatsCardsSkeleton } from "@/components/stats/collapsible-stats-cards";
 
 export default function Loading() {
     return (
         <div className="min-h-screen bg-linear-to-b from-muted/30 to-background">
-            {/* Header skeleton */}
-            <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
-                <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-                    <Skeleton className="h-5 w-48" />
-                    <Skeleton className="size-8 rounded-md" />
-                </div>
-            </header>
-
             <main className="mx-auto max-w-6xl px-4 py-8">
                 {/* Hero skeleton */}
                 <section className="mb-8">
@@ -39,4 +33,3 @@ export default function Loading() {
         </div>
     );
 }
-
