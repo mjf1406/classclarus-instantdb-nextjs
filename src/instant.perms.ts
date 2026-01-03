@@ -115,6 +115,15 @@ const rules = {
         },
         bind: dataBind,
     },
+    joinTokens: {
+        allow: {
+            create: "false",
+            view: "isAuthenticated && isOwner",
+            update: "false",
+            delete: "false",
+        },
+        bind: dataBind,
+    },
 } satisfies InstantRules;
 
 export default rules;

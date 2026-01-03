@@ -48,6 +48,16 @@ const _schema = i.schema({
             teacherCode: i.string().unique().indexed(),
             parentCode: i.string().unique().indexed(),
         }),
+        joinTokens: i.entity({
+            token: i.string().unique().indexed(),
+            code: i.string().indexed(),
+            type: i.string().indexed(),
+            entityId: i.string().indexed(),
+            owner: i.string().indexed(),
+            expiresAt: i.date().indexed(),
+            used: i.boolean(),
+            created: i.date(),
+        }),
     },
     links: {
         userClasses: {

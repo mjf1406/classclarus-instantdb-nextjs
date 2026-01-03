@@ -2,15 +2,9 @@
 
 "use server";
 
+import { id } from "@instantdb/admin";
 import dbAdmin from "@/lib/db/db-admin";
 
-// Server actions are automatically secure - no need for secret validation
-
-/**
- * Check if a user is a guest by querying their user entity
- * @param userId - The user ID to check
- * @returns true if the user is a guest, false otherwise
- */
 async function isGuestUser(userId: string): Promise<boolean> {
     try {
         const userData = await dbAdmin.query({
@@ -21,17 +15,247 @@ async function isGuestUser(userId: string): Promise<boolean> {
 
         const user = userData?.$users?.[0];
         if (!user) {
-            // If user doesn't exist, treat as guest for safety
             return true;
         }
 
-        // Check if user type is "guest" or if they don't have an email (guests typically don't have emails)
         return user.type === "guest" || !user.email;
     } catch (err) {
         console.error("Error checking if user is guest:", err);
-        // On error, treat as guest for safety
         return true;
     }
+}
+
+interface TokenValidationResult {
+    success: boolean;
+    token?: any;
+    error?: string;
+}
+
+async function validateJoinToken(
+    token: string,
+    userId: string,
+    code: string,
+    entityId: string,
+    expectedType: JoinCodeType
+): Promise<TokenValidationResult> {
+    const tokenData = await dbAdmin.query({
+        joinTokens: {
+            $: { where: { token: token } },
+        },
+    });
+
+    const joinToken = tokenData?.joinTokens?.[0];
+    if (!joinToken) {
+        return {
+            success: false,
+            error: "Join token not found",
+        };
+    }
+
+    if (joinToken.used) {
+        return {
+            success: false,
+            error: "Join token already used",
+        };
+    }
+
+    const now = new Date();
+    if (!joinToken.expiresAt) {
+        return {
+            success: false,
+            error: "Join token has no expiration date",
+        };
+    }
+    // Convert expiresAt to Date object - admin SDK may return string/number
+    let expiresAtDate: Date;
+    if (joinToken.expiresAt instanceof Date) {
+        expiresAtDate = joinToken.expiresAt;
+    } else if (
+        typeof joinToken.expiresAt === "string" ||
+        typeof joinToken.expiresAt === "number"
+    ) {
+        expiresAtDate = new Date(joinToken.expiresAt);
+    } else {
+        return {
+            success: false,
+            error: "Invalid expiration date format",
+        };
+    }
+    if (expiresAtDate <= now) {
+        return {
+            success: false,
+            error: "Join token expired. Please enter the code again",
+        };
+    }
+
+    if (joinToken.owner !== userId) {
+        return {
+            success: false,
+            error: "Join token does not match",
+        };
+    }
+
+    if (joinToken.code !== code) {
+        return {
+            success: false,
+            error: "Join token does not match",
+        };
+    }
+
+    if (joinToken.entityId !== entityId) {
+        return {
+            success: false,
+            error: "Join token does not match",
+        };
+    }
+
+    if (joinToken.type !== expectedType) {
+        return {
+            success: false,
+            error: "Join token does not match",
+        };
+    }
+
+    return {
+        success: true,
+        token: joinToken,
+    };
+}
+
+interface CodeValidationResult {
+    success: boolean;
+    error?: string;
+}
+
+async function validateOrgJoinCode(
+    code: string,
+    orgId: string
+): Promise<CodeValidationResult> {
+    const orgCodeData = await dbAdmin.query({
+        orgJoinCodes: {
+            $: { where: { code: code } },
+            organization: {},
+        },
+    });
+
+    const orgCode = orgCodeData?.orgJoinCodes?.[0];
+    if (!orgCode || orgCode.organization?.id !== orgId) {
+        return {
+            success: false,
+            error: "Invalid join code for this organization",
+        };
+    }
+
+    return { success: true };
+}
+
+async function validateClassJoinCode(
+    code: string,
+    classId: string,
+    codeField: "studentCode" | "teacherCode" | "parentCode"
+): Promise<CodeValidationResult> {
+    // Query by the specific code field, then verify it belongs to the correct class
+    let classCodeData;
+    if (codeField === "studentCode") {
+        classCodeData = await dbAdmin.query({
+            classJoinCodes: {
+                $: {
+                    where: { studentCode: code },
+                },
+                class: {},
+            },
+        });
+    } else if (codeField === "teacherCode") {
+        classCodeData = await dbAdmin.query({
+            classJoinCodes: {
+                $: {
+                    where: { teacherCode: code },
+                },
+                class: {},
+            },
+        });
+    } else {
+        classCodeData = await dbAdmin.query({
+            classJoinCodes: {
+                $: {
+                    where: { parentCode: code },
+                },
+                class: {},
+            },
+        });
+    }
+
+    const classCode = classCodeData?.classJoinCodes?.[0];
+    if (!classCode || !classCode.class || classCode.class.id !== classId) {
+        return {
+            success: false,
+            error: "Invalid join code for this class",
+        };
+    }
+
+    return { success: true };
+}
+
+async function validateGuestUser(
+    userId: string,
+    context: "organizations" | "classes"
+): Promise<CodeValidationResult> {
+    if (await isGuestUser(userId)) {
+        return {
+            success: false,
+            error: `Guest users cannot join ${context}. Please sign in with a full account.`,
+        };
+    }
+
+    return { success: true };
+}
+
+async function validateClassOwners(
+    classEntity: any
+): Promise<CodeValidationResult> {
+    const classOwnerId = classEntity.owner?.id;
+    if (classOwnerId && (await isGuestUser(classOwnerId))) {
+        return {
+            success: false,
+            error: "This class is owned by a guest account and cannot accept new members.",
+        };
+    }
+
+    const orgOwnerId = classEntity.organization?.owner?.id;
+    if (orgOwnerId && (await isGuestUser(orgOwnerId))) {
+        return {
+            success: false,
+            error: "This class's organization is owned by a guest account and cannot accept new members.",
+        };
+    }
+
+    return { success: true };
+}
+
+async function createJoinToken(
+    code: string,
+    type: JoinCodeType,
+    entityId: string,
+    userId: string
+): Promise<string> {
+    const tokenId = id();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutes from now
+
+    await dbAdmin.transact(
+        dbAdmin.tx.joinTokens[tokenId].create({
+            token: tokenId,
+            code: code,
+            type: type,
+            entityId: entityId,
+            owner: userId,
+            expiresAt: expiresAt,
+            used: false,
+            created: new Date(),
+        })
+    );
+
+    return tokenId;
 }
 
 type JoinCodeType =
@@ -46,6 +270,7 @@ interface LookupResult {
     entityName: string;
     organizationId?: string;
     classId?: string;
+    token?: string;
 }
 
 interface JoinResult {
@@ -58,10 +283,15 @@ interface JoinResult {
 }
 
 export async function lookupJoinCode(
-    code: string
+    code: string,
+    userId: string
 ): Promise<{ success: boolean; data?: LookupResult; error?: string }> {
     if (!code || code.length !== 8) {
         return { success: false, error: "Invalid join code format" };
+    }
+
+    if (!userId) {
+        return { success: false, error: "User ID is required" };
     }
 
     try {
@@ -77,12 +307,20 @@ export async function lookupJoinCode(
             const orgCode = orgCodeData.orgJoinCodes[0];
             const org = orgCode.organization;
             if (org) {
+                const tokenId = await createJoinToken(
+                    code,
+                    "organization",
+                    org.id,
+                    userId
+                );
+
                 return {
                     success: true,
                     data: {
                         type: "organization",
                         entityId: org.id,
                         entityName: org.name,
+                        token: tokenId,
                     },
                 };
             }
@@ -119,6 +357,13 @@ export async function lookupJoinCode(
                     type = "classParent";
                 }
 
+                const tokenId = await createJoinToken(
+                    code,
+                    type,
+                    classEntity.id,
+                    userId
+                );
+
                 return {
                     success: true,
                     data: {
@@ -127,6 +372,7 @@ export async function lookupJoinCode(
                         entityName: classEntity.name,
                         organizationId: classEntity.organization?.id,
                         classId: classEntity.id,
+                        token: tokenId,
                     },
                 };
             }
@@ -144,14 +390,46 @@ export async function lookupJoinCode(
 
 export async function joinOrganization(
     userId: string,
-    orgId: string
+    orgId: string,
+    code: string,
+    token: string
 ): Promise<JoinResult> {
     try {
-        // Check if joining user is a guest
-        if (await isGuestUser(userId)) {
+        // Validate code
+        const codeValidation = await validateOrgJoinCode(code, orgId);
+        if (!codeValidation.success) {
             return {
                 success: false,
-                error: "Guest users cannot join organizations. Please sign in with a full account.",
+                error: codeValidation.error,
+            };
+        }
+
+        // Validate token
+        const tokenValidation = await validateJoinToken(
+            token,
+            userId,
+            code,
+            orgId,
+            "organization"
+        );
+        if (!tokenValidation.success) {
+            return {
+                success: false,
+                error: tokenValidation.error,
+            };
+        }
+
+        const joinToken = tokenValidation.token;
+
+        // Check if joining user is a guest
+        const guestValidation = await validateGuestUser(
+            userId,
+            "organizations"
+        );
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
             };
         }
 
@@ -208,13 +486,16 @@ export async function joinOrganization(
 
         // When joining via org code, add as student by default
         // (This could be made configurable in the future)
-        await dbAdmin.transact(
-            dbAdmin.tx.organizations[orgId].link({ orgStudents: userId })
-        );
+        const transactions: any[] = [
+            dbAdmin.tx.organizations[orgId].link({ orgStudents: userId }),
+            dbAdmin.tx.joinTokens[joinToken.id].update({ used: true }),
+        ];
+
+        await dbAdmin.transact(transactions);
 
         return {
             success: true,
-            redirectUrl: `/${orgId}`,
+            redirectUrl: `/org/${orgId}`,
         };
     } catch (err) {
         console.error("Error joining organization:", err);
@@ -227,14 +508,47 @@ export async function joinOrganization(
 
 export async function joinClassAsStudent(
     userId: string,
-    classId: string
+    classId: string,
+    code: string,
+    token: string
 ): Promise<JoinResult> {
     try {
-        // Check if joining user is a guest
-        if (await isGuestUser(userId)) {
+        // Validate code
+        const codeValidation = await validateClassJoinCode(
+            code,
+            classId,
+            "studentCode"
+        );
+        if (!codeValidation.success) {
             return {
                 success: false,
-                error: "Guest users cannot join classes. Please sign in with a full account.",
+                error: codeValidation.error,
+            };
+        }
+
+        // Validate token
+        const tokenValidation = await validateJoinToken(
+            token,
+            userId,
+            code,
+            classId,
+            "classStudent"
+        );
+        if (!tokenValidation.success) {
+            return {
+                success: false,
+                error: tokenValidation.error,
+            };
+        }
+
+        const joinToken = tokenValidation.token;
+
+        // Check if joining user is a guest
+        const guestValidation = await validateGuestUser(userId, "classes");
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
             };
         }
 
@@ -255,21 +569,12 @@ export async function joinClassAsStudent(
             return { success: false, error: "Class not found" };
         }
 
-        // Check if class owner is a guest
-        const classOwnerId = classEntity.owner?.id;
-        if (classOwnerId && (await isGuestUser(classOwnerId))) {
+        // Check if class/org owners are guests
+        const ownersValidation = await validateClassOwners(classEntity);
+        if (!ownersValidation.success) {
             return {
                 success: false,
-                error: "This class is owned by a guest account and cannot accept new members.",
-            };
-        }
-
-        // Check if organization owner is a guest
-        const orgOwnerId = classEntity.organization?.owner?.id;
-        if (orgOwnerId && (await isGuestUser(orgOwnerId))) {
-            return {
-                success: false,
-                error: "This class's organization is owned by a guest account and cannot accept new members.",
+                error: ownersValidation.error,
             };
         }
 
@@ -290,6 +595,7 @@ export async function joinClassAsStudent(
         // Link user as student to class and organization
         const transactions: any[] = [
             dbAdmin.tx.classes[classId].link({ classStudents: userId }),
+            dbAdmin.tx.joinTokens[joinToken.id].update({ used: true }),
         ];
 
         if (orgId) {
@@ -302,7 +608,7 @@ export async function joinClassAsStudent(
 
         return {
             success: true,
-            redirectUrl: `/${orgId}/${classId}`,
+            redirectUrl: `/class/${orgId}/${classId}/home`,
         };
     } catch (err) {
         console.error("Error joining class as student:", err);
@@ -315,14 +621,47 @@ export async function joinClassAsStudent(
 
 export async function joinClassAsTeacher(
     userId: string,
-    classId: string
+    classId: string,
+    code: string,
+    token: string
 ): Promise<JoinResult> {
     try {
-        // Check if joining user is a guest
-        if (await isGuestUser(userId)) {
+        // Validate code
+        const codeValidation = await validateClassJoinCode(
+            code,
+            classId,
+            "teacherCode"
+        );
+        if (!codeValidation.success) {
             return {
                 success: false,
-                error: "Guest users cannot join classes. Please sign in with a full account.",
+                error: codeValidation.error,
+            };
+        }
+
+        // Validate token
+        const tokenValidation = await validateJoinToken(
+            token,
+            userId,
+            code,
+            classId,
+            "classTeacher"
+        );
+        if (!tokenValidation.success) {
+            return {
+                success: false,
+                error: tokenValidation.error,
+            };
+        }
+
+        const joinToken = tokenValidation.token;
+
+        // Check if joining user is a guest
+        const guestValidation = await validateGuestUser(userId, "classes");
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
             };
         }
 
@@ -343,21 +682,12 @@ export async function joinClassAsTeacher(
             return { success: false, error: "Class not found" };
         }
 
-        // Check if class owner is a guest
-        const classOwnerId = classEntity.owner?.id;
-        if (classOwnerId && (await isGuestUser(classOwnerId))) {
+        // Check if class/org owners are guests
+        const ownersValidation = await validateClassOwners(classEntity);
+        if (!ownersValidation.success) {
             return {
                 success: false,
-                error: "This class is owned by a guest account and cannot accept new members.",
-            };
-        }
-
-        // Check if organization owner is a guest
-        const orgOwnerId = classEntity.organization?.owner?.id;
-        if (orgOwnerId && (await isGuestUser(orgOwnerId))) {
-            return {
-                success: false,
-                error: "This class's organization is owned by a guest account and cannot accept new members.",
+                error: ownersValidation.error,
             };
         }
 
@@ -378,6 +708,7 @@ export async function joinClassAsTeacher(
         // Link user as teacher to class and organization
         const transactions: any[] = [
             dbAdmin.tx.classes[classId].link({ classTeachers: userId }),
+            dbAdmin.tx.joinTokens[joinToken.id].update({ used: true }),
         ];
 
         if (orgId) {
@@ -390,7 +721,7 @@ export async function joinClassAsTeacher(
 
         return {
             success: true,
-            redirectUrl: `/${orgId}/${classId}`,
+            redirectUrl: `/class/${orgId}/${classId}/home`,
         };
     } catch (err) {
         console.error("Error joining class as teacher:", err);
@@ -443,7 +774,9 @@ export async function getClassStudents(classId: string): Promise<{
 export async function joinClassAsParent(
     userId: string,
     classId: string,
-    studentIds: string[]
+    studentIds: string[],
+    code: string,
+    token: string
 ): Promise<JoinResult> {
     if (!studentIds || studentIds.length === 0) {
         return {
@@ -453,11 +786,42 @@ export async function joinClassAsParent(
     }
 
     try {
-        // Check if joining user is a guest
-        if (await isGuestUser(userId)) {
+        // Validate code
+        const codeValidation = await validateClassJoinCode(
+            code,
+            classId,
+            "parentCode"
+        );
+        if (!codeValidation.success) {
             return {
                 success: false,
-                error: "Guest users cannot join classes. Please sign in with a full account.",
+                error: codeValidation.error,
+            };
+        }
+
+        // Validate token
+        const tokenValidation = await validateJoinToken(
+            token,
+            userId,
+            code,
+            classId,
+            "classParent"
+        );
+        if (!tokenValidation.success) {
+            return {
+                success: false,
+                error: tokenValidation.error,
+            };
+        }
+
+        const joinToken = tokenValidation.token;
+
+        // Check if joining user is a guest
+        const guestValidation = await validateGuestUser(userId, "classes");
+        if (!guestValidation.success) {
+            return {
+                success: false,
+                error: guestValidation.error,
             };
         }
 
@@ -478,21 +842,12 @@ export async function joinClassAsParent(
             return { success: false, error: "Class not found" };
         }
 
-        // Check if class owner is a guest
-        const classOwnerId = classEntity.owner?.id;
-        if (classOwnerId && (await isGuestUser(classOwnerId))) {
+        // Check if class/org owners are guests
+        const ownersValidation = await validateClassOwners(classEntity);
+        if (!ownersValidation.success) {
             return {
                 success: false,
-                error: "This class is owned by a guest account and cannot accept new members.",
-            };
-        }
-
-        // Check if organization owner is a guest
-        const orgOwnerId = classEntity.organization?.owner?.id;
-        if (orgOwnerId && (await isGuestUser(orgOwnerId))) {
-            return {
-                success: false,
-                error: "This class's organization is owned by a guest account and cannot accept new members.",
+                error: ownersValidation.error,
             };
         }
 
@@ -525,11 +880,16 @@ export async function joinClassAsParent(
             );
         }
 
+        // Mark token as used
+        transactions.push(
+            dbAdmin.tx.joinTokens[joinToken.id].update({ used: true })
+        );
+
         await dbAdmin.transact(transactions);
 
         return {
             success: true,
-            redirectUrl: `/${orgId}/${classId}`,
+            redirectUrl: `/class/${orgId}/${classId}/home`,
         };
     } catch (err) {
         console.error("Error joining class as parent:", err);
