@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronsUpDown, Plus, Building2 } from "lucide-react";
+import { ChevronsUpDown, Plus, Building2, ChevronRight } from "lucide-react";
 
 import {
     DropdownMenu,
@@ -29,33 +29,39 @@ import { db } from "@/lib/db/db";
 import CreateClassDialog from "../classes/create-class-dialog";
 import { useAuthContext } from "../auth/auth-provider";
 
-type User = {
-    created_at: Date | null | string;
-    email: string;
-    id: string;
-    imageURL: string | null;
-    avatarURL: string | null;
-    isGuest: boolean;
-    polarCustomerId: string | null;
-    refresh_token: string | null;
-    updated_at: Date | null | string;
-    type: string;
-    firstName: string | null;
-    lastName: string | null;
-    plan: string;
-} | null | undefined;
+type User =
+    | {
+          created_at: Date | null | string;
+          email: string;
+          id: string;
+          imageURL: string | null;
+          avatarURL: string | null;
+          isGuest: boolean;
+          polarCustomerId: string | null;
+          refresh_token: string | null;
+          updated_at: Date | null | string;
+          type: string;
+          firstName: string | null;
+          lastName: string | null;
+          plan: string;
+      }
+    | null
+    | undefined;
 
 export function OrganizationSwitcher({
     user,
     isLoading: isLoadingProp,
+    pathname,
 }: {
     user?: User;
     isLoading?: boolean;
+    pathname: string;
 }) {
     const { isMobile } = useSidebar();
     const params = useParams();
     const router = useRouter();
     const organizationId = params.organizationId as string | undefined;
+    const classId = params.classId as string | undefined;
     const { organizations, isLoading: orgLoading } = useAuthContext();
     const isLoading = isLoadingProp ?? orgLoading;
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -95,6 +101,9 @@ export function OrganizationSwitcher({
 
     // Get classes for the selected organization
     const organizationClasses = displayOrganization.classes || [];
+    const currentClass = classId
+        ? organizationClasses.find((c: { id: string }) => c.id === classId)
+        : undefined;
 
     const handleOrganizationClassSelect = (orgId: string, classId: string) => {
         router.push(`/class/${orgId}/${classId}/dashboard`);
@@ -118,8 +127,14 @@ export function OrganizationSwitcher({
                                 <Building2 className="size-4" />
                             </div>
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">
+                                <span className="truncate font-medium flex items-center gap-1.5">
                                     {displayOrganization.name}
+                                    {currentClass && (
+                                        <>
+                                            <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+                                            {currentClass.name}
+                                        </>
+                                    )}
                                 </span>
                                 <span className="truncate text-xs text-muted-foreground">
                                     {organizationClasses.length} class

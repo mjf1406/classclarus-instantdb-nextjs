@@ -16,7 +16,7 @@ import { NavClassManagement } from "./nav-class-management";
 import { NavMain } from "./nav-main";
 import { NavRandom } from "./nav-random";
 import { NavStudentFacing } from "./nav-student-facing";
-import { OrganizationSwitcher } from "./sidebar-header";
+import { OrganizationSwitcher } from "./organization-switcher";
 import { Logo } from "../brand/logo";
 import Link from "next/link";
 import { useAuthContext } from "../auth/auth-provider";
@@ -72,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuItem>
                     </SidebarMenu>
                 ) : (
-                    <OrganizationSwitcher user={user} isLoading={isLoading} />
+                    <OrganizationSwitcher user={user} isLoading={isLoading} pathname={pathname} />
                 )}
                 {isLoading ? (
                     <SidebarMenu>
