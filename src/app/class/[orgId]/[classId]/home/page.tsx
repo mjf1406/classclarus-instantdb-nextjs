@@ -29,6 +29,7 @@ import {
     JoinCodeType,
     codeLabels,
 } from "./types";
+import { Loader2 } from "lucide-react";
 
 interface ClassHomePageProps {
     params: Promise<{ orgId: string; classId: string }>;
@@ -46,7 +47,6 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-    // Query the class with related data
     const { data, isLoading, error } = db.useQuery({
         classes: {
             $: { where: { id: classId } },
@@ -62,6 +62,17 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
             },
         },
     });
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen w-full bg-radial from-foreground/30 to-background flex items-center justify-center">
+                <Loader2
+                    className="animate-spin"
+                    size={64}
+                />
+            </div>
+        );
+    }
 
     const classData = data?.classes?.[0] as ClassQueryResult | undefined;
     const organization = classData?.organization;
