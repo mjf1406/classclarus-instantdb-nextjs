@@ -11,9 +11,6 @@ import {
     Clock,
     GraduationCap,
     Crown,
-    MoreVertical,
-    Pencil,
-    Trash2,
     ChevronDown,
     Copy,
     Check,
@@ -29,13 +26,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { OrgActionMenu } from "@/components/organizations/org-action-menu";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -296,46 +287,12 @@ const OrgCard = React.memo(function OrgCard({ organization, isOwner }: OrgCardPr
                         </div>
 
                         {/* Actions menu */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <MoreVertical className="size-4" />
-                                    <span className="sr-only">
-                                        More options
-                                    </span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowEditDialog(true);
-                                    }}
-                                >
-                                    <Pencil className="size-4" />
-                                    Edit
-                                </DropdownMenuItem>
-                                {isOwner && (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowDeleteDialog(true);
-                                            }}
-                                        >
-                                            <Trash2 className="size-4" />
-                                            Delete Organization
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <OrgActionMenu
+                            variant="card"
+                            onEdit={() => setShowEditDialog(true)}
+                            onDelete={() => setShowDeleteDialog(true)}
+                            showDelete={isOwner}
+                        />
                     </div>
 
                     {/* Join code section */}

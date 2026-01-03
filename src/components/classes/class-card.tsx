@@ -9,9 +9,6 @@ import {
     Calendar,
     Clock,
     Crown,
-    MoreVertical,
-    Pencil,
-    Trash2,
     GraduationCap,
     Copy,
     Check,
@@ -29,13 +26,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ClassActionMenu } from "@/components/classes/class-action-menu";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -442,42 +433,11 @@ const ClassCard = React.memo(function ClassCard({
 
                             {/* Actions menu */}
                             {canEdit && (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            onClick={(e) => e.preventDefault()}
-                                        >
-                                            <MoreVertical className="size-4" />
-                                            <span className="sr-only">
-                                                More options
-                                            </span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setShowEditDialog(true);
-                                            }}
-                                        >
-                                            <Pencil className="size-4" />
-                                            Edit
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setShowDeleteDialog(true);
-                                            }}
-                                        >
-                                            <Trash2 className="size-4" />
-                                            Delete Class
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <ClassActionMenu
+                                    variant="card"
+                                    onEdit={() => setShowEditDialog(true)}
+                                    onDelete={() => setShowDeleteDialog(true)}
+                                />
                             )}
                         </div>
 

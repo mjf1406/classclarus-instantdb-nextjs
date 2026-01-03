@@ -2,8 +2,9 @@
 
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format, formatDistanceToNow } from "date-fns";
 import {
     ArrowLeft,
@@ -11,12 +12,8 @@ import {
     Calendar,
     Clock,
     Crown,
-    Edit,
     GraduationCap,
-    MoreVertical,
-    Settings,
     ShieldCheck,
-    Trash2,
     Users,
 } from "lucide-react";
 import ClassList from "@/components/classes/class-list";
@@ -26,6 +23,18 @@ import { ThemeSwitch } from "@/components/theme/theme-switch";
 
 import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
+import { EditOrgDialog } from "@/components/organizations/edit-org-dialog";
+import { OrgActionMenu } from "@/components/organizations/org-action-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,13 +42,6 @@ import {
     CollapsibleStatsCardsSkeleton,
     type StatMember,
 } from "@/components/stats/collapsible-stats-cards";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
     Tooltip,
     TooltipContent,
@@ -62,7 +64,10 @@ interface OrgPageProps {
 
 export default function OrgPage({ params }: OrgPageProps) {
     const { orgId } = use(params);
+    const router = useRouter();
     const { user, isLoading: isUserLoading } = useAuthContext();
+    const [showEditDialog, setShowEditDialog] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     // Query the organization with related data
     const { data, isLoading, error } = db.useQuery({
@@ -145,6 +150,8 @@ export default function OrgPage({ params }: OrgPageProps) {
                 <OrgHero
                     organization={organization}
                     isOwner={isOwner}
+                    onEdit={() => setShowEditDialog(true)}
+                    onDelete={() => setShowDeleteDialog(true)}
                 />
 
                 {/* Stats cards */}
@@ -153,6 +160,54 @@ export default function OrgPage({ params }: OrgPageProps) {
                 {/* Classes section */}
                 <ClassList organizationId={organization.id} />
             </main>
+
+            {/* Edit Organization Dialog */}
+            <EditOrgDialog
+                organizationId={organization.id}
+                initialName={organization.name}
+                initialDescription={organization.description}
+                initialIcon={organization.icon}
+                open={showEditDialog}
+                onOpenChange={setShowEditDialog}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Organization</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete{" "}
+                            <span className="font-semibold text-foreground">
+                                {organization.name}
+                            </span>
+                            ? This action cannot be undone. All classes and data
+                            associated with this organization will be
+                            permanently removed.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                db.transact(
+                                    db.tx.organizations[
+                                        organization.id
+                                    ].delete()
+                                );
+                                setShowDeleteDialog(false);
+                                router.push("/");
+                            }}
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -161,9 +216,13 @@ export default function OrgPage({ params }: OrgPageProps) {
 function OrgHero({
     organization,
     isOwner,
+    onEdit,
+    onDelete,
 }: {
     organization: NonNullable<ReturnType<typeof useOrgData>>;
     isOwner: boolean;
+    onEdit: () => void;
+    onDelete: () => void;
 }) {
     const { name, description, icon, owner, created, updated } = organization;
 
@@ -192,34 +251,10 @@ function OrgHero({
         <section className="mb-8">
             <div className="relative rounded-2xl border bg-card p-6 md:p-8">
                 {isOwner && (
-                    <div className="absolute top-4 right-4 z-10">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                >
-                                    <MoreVertical className="size-4" />
-                                    <span className="sr-only">Actions</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                    <Edit className="size-4" />
-                                    Edit organization
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Settings className="size-4" />
-                                    Settings
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                    <Trash2 className="size-4" />
-                                    Delete organization
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+                    <OrgActionMenu
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                    />
                 )}
                 <div className="flex flex-col gap-6 md:flex-row md:items-start">
                     {/* Organization icon */}

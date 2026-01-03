@@ -4,8 +4,8 @@
 
 ## To-do List
 
--   [ ] fetch orgs the user is owner, admin, or member of
--   [ ] fetch classes within the given org the user is owner, admin, or teacher of
+-   [x] fetch orgs the user is owner, admin, or member of
+-   [x] fetch classes within the given org the user is owner, admin, or teacher of
 -   [ ] organizations
     -   [x] create organization
     -   [x] edit organization
@@ -33,14 +33,6 @@
     -   [x] guest limitations section
     -   [x] guest upgrade card
     -   [ ] CRON job: once per day at midnight, delete all guest accounts that are older than 14 days
--   [ ] authentication
-    -   [x] magic code auth added
-        -   [ ] sets plan to free on signup
-    -   [x] Google auth added
-        -   [ ] Google Auth extracts first name, last name from Google nonce and adds it to the $users table
-        -   [ ] sets plan to free on signup
-    -   [ ] Guest to magic code upgrade flow added
-    -   [ ] Guest to Google upgrade flow added
 -   [ ] rate limiting in `proxy.ts`
     -   [ ] limit to 5 requests per 10 seconds per IP address
     -   [ ] limit to 60 requests per 1 minute per free authenticated user

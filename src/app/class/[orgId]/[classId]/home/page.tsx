@@ -3,6 +3,7 @@
 "use client";
 
 import { use, useState } from "react";
+import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import { escapeHtml } from "@/lib/utils";
@@ -12,6 +13,17 @@ import { JoinCodeDialog } from "./components/join-code-dialog";
 import { ClassPageSkeleton } from "./components/class-page-skeleton";
 import { ClassErrorState } from "./components/class-error-state";
 import { ClassNotFoundState } from "./components/class-not-found-state";
+import { EditClassDialog } from "@/components/classes/edit-class-dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
     ClassQueryShape,
     ClassQueryResult,
@@ -25,12 +37,15 @@ interface ClassHomePageProps {
 
 export default function ClassHomePage({ params }: ClassHomePageProps) {
     const { orgId, classId } = use(params);
+    const router = useRouter();
     const { user, isLoading: isUserLoading } = useAuthContext();
     const [copied, setCopied] = useState<JoinCodeType | null>(null);
     const [showFullscreen, setShowFullscreen] = useState(false);
     const [selectedCodeType, setSelectedCodeType] =
         useState<JoinCodeType>("student");
     const [isRevealed, setIsRevealed] = useState(false);
+    const [showEditDialog, setShowEditDialog] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     // Query the class with related data
     const { data, isLoading, error } = db.useQuery({
@@ -103,6 +118,13 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
     const handleOpenFullscreen = () => {
         if (!joinCodes) return;
         setShowFullscreen(true);
+    };
+
+    const handleDelete = () => {
+        if (!classData) return;
+        db.transact(db.tx.classes[classData.id].delete());
+        setShowDeleteDialog(false);
+        router.push(`/org/${orgId}`);
     };
 
     const handleOpenInNewWindow = (codeType: JoinCodeType) => {
@@ -265,6 +287,8 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
                     onCopyJoinCode={handleCopyJoinCode}
                     onOpenFullscreen={handleOpenFullscreen}
                     onOpenInNewWindow={handleOpenInNewWindow}
+                    onEdit={() => setShowEditDialog(true)}
+                    onDelete={() => setShowDeleteDialog(true)}
                 />
 
                 {/* Stats cards with collapsible member lists */}
@@ -282,6 +306,50 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
                     onCopyJoinCode={handleCopyJoinCode}
                     onOpenInNewWindow={handleOpenInNewWindow}
                 />
+            )}
+
+            {/* Edit Class Dialog */}
+            {classData && (
+                <EditClassDialog
+                    classId={classData.id}
+                    initialName={classData.name}
+                    initialDescription={classData.description}
+                    initialIcon={classData.icon}
+                    open={showEditDialog}
+                    onOpenChange={setShowEditDialog}
+                />
+            )}
+
+            {/* Delete Confirmation Dialog */}
+            {classData && (
+                <AlertDialog
+                    open={showDeleteDialog}
+                    onOpenChange={setShowDeleteDialog}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Class</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete{" "}
+                                <span className="font-semibold text-foreground">
+                                    {classData.name}
+                                </span>
+                                ? This action cannot be undone. All data
+                                associated with this class will be permanently
+                                removed.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleDelete}
+                                className="bg-destructive text-white hover:bg-destructive/90"
+                            >
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             )}
         </div>
     );

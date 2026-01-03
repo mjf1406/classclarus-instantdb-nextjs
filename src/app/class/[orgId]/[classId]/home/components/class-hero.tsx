@@ -9,20 +9,9 @@ import {
     Calendar,
     Clock,
     Crown,
-    Edit,
-    MoreVertical,
-    Settings,
-    Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ClassActionMenu } from "@/components/classes/class-action-menu";
 import {
     Tooltip,
     TooltipContent,
@@ -42,6 +31,8 @@ interface ClassHeroProps {
     onCopyJoinCode: (codeType: JoinCodeType) => void;
     onOpenFullscreen: () => void;
     onOpenInNewWindow: (codeType: JoinCodeType) => void;
+    onEdit: () => void;
+    onDelete: () => void;
 }
 
 export function ClassHero({
@@ -55,6 +46,8 @@ export function ClassHero({
     onCopyJoinCode,
     onOpenFullscreen,
     onOpenInNewWindow,
+    onEdit,
+    onDelete,
 }: ClassHeroProps) {
     const {
         name,
@@ -100,34 +93,10 @@ export function ClassHero({
         <section className="mb-8">
             <div className="relative rounded-2xl border bg-card p-6 md:p-8">
                 {canEdit && (
-                    <div className="absolute top-4 right-4 z-10">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                >
-                                    <MoreVertical className="size-4" />
-                                    <span className="sr-only">Actions</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                    <Edit className="size-4" />
-                                    Edit class
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Settings className="size-4" />
-                                    Settings
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                    <Trash2 className="size-4" />
-                                    Delete class
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+                    <ClassActionMenu
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                    />
                 )}
                 <div className="flex flex-col gap-6 md:flex-row md:items-start">
                     {/* Class icon */}
