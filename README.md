@@ -41,7 +41,7 @@
 
 ### 2026/01/02
 
--   BE: guests cannot joing orgs/classes
+-   BE: guests cannot joining orgs/classes
 -   BE: users cannot join orgs/classes that are owned by guests
 -   UX: user routed to / on logout
 -   UI: removed "Back to Organizations" text from org page and org layout, replaced with just "Back"
