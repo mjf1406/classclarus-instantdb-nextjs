@@ -121,8 +121,12 @@ export const IconUploadField = React.forwardRef<
             onRemove?.();
         };
 
-        const sizeClasses = size === "sm" ? "h-16 w-16" : "h-20 w-20";
-        const iconSize = size === "sm" ? "h-6 w-6" : "h-8 w-8";
+        const sizeClasses = size === "sm" 
+            ? "h-12 w-12 md:h-16 md:w-16" 
+            : "h-16 w-16 md:h-20 md:w-20";
+        const iconSize = size === "sm" 
+            ? "h-5 w-5 md:h-6 md:w-6" 
+            : "h-6 w-6 md:h-8 md:w-8";
 
         return (
             <div className="space-y-2">

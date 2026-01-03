@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 
 export default function GuestDataDeletionCountdown() {
     const { user } = useAuthContext();
-    const joined = user?.created_at || 0;
     const [timeRemaining, setTimeRemaining] = useState<string>("");
     const [isExpired, setIsExpired] = useState<boolean>(false);
 
@@ -40,7 +39,7 @@ export default function GuestDataDeletionCountdown() {
         const interval = setInterval(calculateTimeRemaining, 1000);
 
         return () => clearInterval(interval);
-    }, [joined]);
+    }, [user?.created_at]);
 
     return (
         <p className="text-xs font-mono mb-3">

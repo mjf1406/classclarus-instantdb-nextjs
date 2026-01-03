@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { id } from "@instantdb/react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, ChevronDown } from "lucide-react";
 
 import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
@@ -37,11 +37,17 @@ import {
     IconUploadField,
     type IconUploadFieldRef,
 } from "@/components/ui/icon-upload-field";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { uploadIcon } from "@/lib/hooks/use-icon-upload";
 import {
     generateUniqueJoinCodeClient,
     isUniquenessError,
 } from "@/lib/helpers/join-codes-client";
+import { cn } from "@/lib/utils";
 
 // Zod schema for form validation
 const createOrgSchema = z.object({
@@ -66,6 +72,7 @@ export default function CreateOrganizationDialog({
 }: CreateOrgDialogProps) {
     const [open, setOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
+    const [isInvitesOpen, setIsInvitesOpen] = useState(false);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const [memberEmails, setMemberEmails] = useState<string[]>([]);
     const [adminEmails, setAdminEmails] = useState<string[]>([]);
@@ -250,7 +257,7 @@ export default function CreateOrganizationDialog({
                     onSubmit={handleSubmit(onSubmit)}
                     className="flex flex-col flex-1 min-h-0"
                 >
-                    <CredenzaBody className="flex-1 overflow-y-auto">
+                    <CredenzaBody className="flex-1 overflow-y-auto space-y-3 md:space-y-6">
                         <FieldGroup>
                             {/* Name Field */}
                             <Field data-invalid={!!errors.name}>
@@ -265,7 +272,9 @@ export default function CreateOrganizationDialog({
                                     {...register("name")}
                                 />
                                 {errors.name && (
-                                    <FieldError>{errors.name.message}</FieldError>
+                                    <FieldError>
+                                        {errors.name.message}
+                                    </FieldError>
                                 )}
                             </Field>
 
@@ -300,25 +309,55 @@ export default function CreateOrganizationDialog({
                                 onFileChange={setIconFile}
                                 id="org-icon"
                             />
-
-                            {/* Members Email Input */}
-                            <EmailInput
-                                label="Members"
-                                emails={memberEmails}
-                                onChange={setMemberEmails}
-                                error={memberError ?? undefined}
-                                disabled={isCreating}
-                            />
-
-                            {/* Admins Email Input */}
-                            <EmailInput
-                                label="Admins"
-                                emails={adminEmails}
-                                onChange={setAdminEmails}
-                                error={adminError ?? undefined}
-                                disabled={isCreating}
-                            />
                         </FieldGroup>
+
+                        {/* Collapsible Email Invites Section - Mobile only */}
+                        <div className="md:block">
+                            <div className="hidden md:block text-sm font-medium text-muted-foreground mb-2">
+                                Invite Members & Admins (Optional)
+                            </div>
+                            <Collapsible
+                                open={isInvitesOpen}
+                                onOpenChange={setIsInvitesOpen}
+                            >
+                                <CollapsibleTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-medium transition-colors hover:bg-muted md:hidden"
+                                    >
+                                        <span>
+                                            Invite Members & Admins (You can do
+                                            this after creation, too)
+                                        </span>
+                                        <ChevronDown
+                                            className={cn(
+                                                "h-4 w-4 transition-transform duration-200",
+                                                isInvitesOpen && "rotate-180"
+                                            )}
+                                        />
+                                    </button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="space-y-4 pt-4 overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down md:animate-none md:block">
+                                    {/* Members Email Input */}
+                                    <EmailInput
+                                        label="Members"
+                                        emails={memberEmails}
+                                        onChange={setMemberEmails}
+                                        error={memberError ?? undefined}
+                                        disabled={isCreating}
+                                    />
+
+                                    {/* Admins Email Input */}
+                                    <EmailInput
+                                        label="Admins"
+                                        emails={adminEmails}
+                                        onChange={setAdminEmails}
+                                        error={adminError ?? undefined}
+                                        disabled={isCreating}
+                                    />
+                                </CollapsibleContent>
+                            </Collapsible>
+                        </div>
                     </CredenzaBody>
 
                     <CredenzaFooter className="shrink-0">
