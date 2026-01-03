@@ -17,10 +17,6 @@ import {
     Users,
 } from "lucide-react";
 import ClassList from "@/components/classes/class-list";
-import { Logo } from "@/components/brand/logo";
-import { NavUserNavbar } from "@/components/navbar/nav-user-navbar";
-import { ThemeSwitch } from "@/components/theme/theme-switch";
-
 import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import { EditOrgDialog } from "@/components/organizations/edit-org-dialog";
@@ -56,7 +52,6 @@ import {
     EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 interface OrgPageProps {
     params: Promise<{ orgId: string }>;

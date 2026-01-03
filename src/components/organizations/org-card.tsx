@@ -17,7 +17,6 @@ import {
     Link2,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -106,8 +105,10 @@ interface OrgCardProps {
     isOwner?: boolean;
 }
 
-const OrgCard = React.memo(function OrgCard({ organization, isOwner }: OrgCardProps) {
-    const router = useRouter();
+const OrgCard = React.memo(function OrgCard({
+    organization,
+    isOwner,
+}: OrgCardProps) {
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
     const [isClassesOpen, setIsClassesOpen] = React.useState(false);
@@ -212,24 +213,11 @@ const OrgCard = React.memo(function OrgCard({ organization, isOwner }: OrgCardPr
     const createdDate = parseDate(created);
     const updatedDate = parseDate(updated);
 
-    const handleCardClick = (e: React.MouseEvent) => {
-        // Only navigate if the click target is not an interactive element
-        const target = e.target as HTMLElement;
-        const isInteractive =
-            target.closest("button") ||
-            target.closest("a") ||
-            target.closest('[role="button"]');
-        if (!isInteractive) {
-            router.push(`/org/${id}`);
-        }
-    };
-
     return (
         <>
             <article
-                onClick={handleCardClick}
                 className={cn(
-                    "group relative overflow-hidden rounded-xl border bg-card transition-all duration-300 cursor-pointer",
+                    "group relative overflow-hidden rounded-xl border bg-card transition-all duration-300",
                     "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
                     "dark:hover:shadow-primary/10",
                     "hover:-translate-y-0.5"
@@ -243,25 +231,33 @@ const OrgCard = React.memo(function OrgCard({ organization, isOwner }: OrgCardPr
                     {/* Header section */}
                     <div className="flex items-start gap-4">
                         {/* Organization icon/avatar */}
-                        <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm">
-                            {icon ? (
-                                <AvatarImage
-                                    src={icon}
-                                    alt={`${name} logo`}
-                                    className="object-cover"
-                                />
-                            ) : null}
-                            <AvatarFallback className="rounded-xl bg-linear-to-br from-primary/20 to-primary/5 text-lg font-semibold text-primary">
-                                {getInitials(name)}
-                            </AvatarFallback>
-                        </Avatar>
+                        <Link
+                            href={`/org/${id}`}
+                            className="shrink-0"
+                        >
+                            <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm transition-transform hover:scale-105">
+                                {icon ? (
+                                    <AvatarImage
+                                        src={icon}
+                                        alt={`${name} logo`}
+                                        className="object-cover"
+                                    />
+                                ) : null}
+                                <AvatarFallback className="rounded-xl bg-linear-to-br from-primary/20 to-primary/5 text-lg font-semibold text-primary">
+                                    {getInitials(name)}
+                                </AvatarFallback>
+                            </Avatar>
+                        </Link>
 
                         {/* Title and description */}
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                                <h3 className="truncate text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                <Link
+                                    href={`/org/${id}`}
+                                    className="truncate text-lg font-semibold text-foreground hover:text-primary transition-colors"
+                                >
                                     {name}
-                                </h3>
+                                </Link>
                                 {isOwner && (
                                     <Tooltip>
                                         <TooltipTrigger asChild>

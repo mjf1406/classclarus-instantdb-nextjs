@@ -368,18 +368,14 @@ const ClassCard = React.memo(function ClassCard({
 
     return (
         <>
-            <Link
-                href={`/class/${organizationId}/${id}/home`}
-                className="group block"
+            <article
+                className={cn(
+                    "group relative overflow-hidden rounded-xl border bg-card transition-all duration-300",
+                    "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
+                    "dark:hover:shadow-primary/10",
+                    "hover:-translate-y-0.5"
+                )}
             >
-                <article
-                    className={cn(
-                        "relative overflow-hidden rounded-xl border bg-card transition-all duration-300",
-                        "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
-                        "dark:hover:shadow-primary/10",
-                        "hover:-translate-y-0.5"
-                    )}
-                >
                     {/* Gradient accent bar */}
                     <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-violet-500 via-violet-400 to-violet-300 opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -388,25 +384,30 @@ const ClassCard = React.memo(function ClassCard({
                         {/* Header section */}
                         <div className="flex items-start gap-4">
                             {/* Class icon/avatar */}
-                            <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm">
-                                {icon ? (
-                                    <AvatarImage
-                                        src={icon}
-                                        alt={`${name} icon`}
-                                        className="object-cover"
-                                    />
-                                ) : null}
-                                <AvatarFallback className="rounded-xl bg-linear-to-br from-violet-500/20 to-violet-500/5 text-lg font-semibold text-violet-600 dark:text-violet-400">
-                                    {getInitials(name)}
-                                </AvatarFallback>
-                            </Avatar>
+                            <Link href={`/class/${organizationId}/${id}/home`} className="flex-shrink-0">
+                                <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm transition-transform hover:scale-105">
+                                    {icon ? (
+                                        <AvatarImage
+                                            src={icon}
+                                            alt={`${name} icon`}
+                                            className="object-cover"
+                                        />
+                                    ) : null}
+                                    <AvatarFallback className="rounded-xl bg-linear-to-br from-violet-500/20 to-violet-500/5 text-lg font-semibold text-violet-600 dark:text-violet-400">
+                                        {getInitials(name)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </Link>
 
                             {/* Title and description */}
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="truncate text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                    <Link
+                                        href={`/class/${organizationId}/${id}/home`}
+                                        className="truncate text-lg font-semibold text-foreground hover:text-primary transition-colors"
+                                    >
                                         {name}
-                                    </h3>
+                                    </Link>
                                     {canEdit && (
                                         <Tooltip>
                                             <TooltipTrigger asChild>
@@ -753,7 +754,6 @@ const ClassCard = React.memo(function ClassCard({
                         </div>
                     </div>
                 </article>
-            </Link>
 
             {/* Edit Class Dialog */}
             <EditClassDialog

@@ -9,7 +9,7 @@ import { JoinCodeDialog } from "../home/components/join-code-dialog";
 import { ClassErrorState } from "../home/components/class-error-state";
 import { ClassNotFoundState } from "../home/components/class-not-found-state";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Fullscreen } from "lucide-react";
+import { Copy, ExternalLink, Fullscreen, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     ClassQueryResult,
@@ -36,6 +36,17 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
             joinCodeEntity: {},
         },
     });
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen w-full bg-radial from-foreground/30 to-background flex items-center justify-center">
+                <Loader2
+                    className="animate-spin"
+                    size={64}
+                />
+            </div>
+        );
+    }
 
     const classData = data?.classes?.[0] as ClassQueryResult | undefined;
 
@@ -239,7 +250,9 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
                                 (type) => (
                                     <button
                                         key={type}
-                                        onClick={() => setSelectedCodeType(type)}
+                                        onClick={() =>
+                                            setSelectedCodeType(type)
+                                        }
                                         className={cn(
                                             "px-4 py-3 text-sm font-medium rounded-md transition-all duration-200",
                                             selectedCodeType === type
@@ -442,4 +455,3 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
         </div>
     );
 }
-
