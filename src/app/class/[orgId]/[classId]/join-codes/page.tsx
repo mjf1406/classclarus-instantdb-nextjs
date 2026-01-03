@@ -39,7 +39,7 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
     });
 
     if (isLoading) {
-        <BlankBackgroundLoader />;
+        return <BlankBackgroundLoader />;
     }
 
     const classData = data?.classes?.[0] as ClassQueryResult | undefined;

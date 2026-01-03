@@ -65,7 +65,7 @@ export default function ClassHomePage({ params }: ClassHomePageProps) {
     });
 
     if (isLoading) {
-        <BlankBackgroundLoader />;
+        return <BlankBackgroundLoader />;
     }
 
     const classData = data?.classes?.[0] as ClassQueryResult | undefined;

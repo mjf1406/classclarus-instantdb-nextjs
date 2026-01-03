@@ -376,384 +376,374 @@ const ClassCard = React.memo(function ClassCard({
                     "hover:-translate-y-0.5"
                 )}
             >
-                    {/* Gradient accent bar */}
-                    <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-violet-500 via-violet-400 to-violet-300 opacity-0 transition-opacity group-hover:opacity-100" />
+                {/* Gradient accent bar */}
+                <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-violet-500 via-violet-400 to-violet-300 opacity-0 transition-opacity group-hover:opacity-100" />
 
-                    {/* Card content */}
-                    <div className="p-5">
-                        {/* Header section */}
-                        <div className="flex items-start gap-4">
-                            {/* Class icon/avatar */}
-                            <Link href={`/class/${organizationId}/${id}/home`} className="flex-shrink-0">
-                                <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm transition-transform hover:scale-105">
-                                    {icon ? (
-                                        <AvatarImage
-                                            src={icon}
-                                            alt={`${name} icon`}
-                                            className="object-cover"
-                                        />
-                                    ) : null}
-                                    <AvatarFallback className="rounded-xl bg-linear-to-br from-violet-500/20 to-violet-500/5 text-lg font-semibold text-violet-600 dark:text-violet-400">
-                                        {getInitials(name)}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </Link>
+                {/* Card content */}
+                <div className="p-5">
+                    {/* Header section */}
+                    <div className="flex items-start gap-4">
+                        {/* Class icon/avatar */}
+                        <Link
+                            href={`/class/${organizationId}/${id}/home`}
+                            className="shrink-0"
+                        >
+                            <Avatar className="size-14 rounded-xl border-2 border-border shadow-sm transition-transform hover:scale-105">
+                                {icon ? (
+                                    <AvatarImage
+                                        src={icon}
+                                        alt={`${name} icon`}
+                                        className="object-cover"
+                                    />
+                                ) : null}
+                                <AvatarFallback className="rounded-xl bg-linear-to-br from-violet-500/20 to-violet-500/5 text-lg font-semibold text-violet-600 dark:text-violet-400">
+                                    {getInitials(name)}
+                                </AvatarFallback>
+                            </Avatar>
+                        </Link>
 
-                            {/* Title and description */}
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <Link
-                                        href={`/class/${organizationId}/${id}/home`}
-                                        className="truncate text-lg font-semibold text-foreground hover:text-primary transition-colors"
-                                    >
-                                        {name}
-                                    </Link>
-                                    {canEdit && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <span className="flex items-center">
-                                                    <Crown className="size-4 text-amber-500" />
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                You can manage this class
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    )}
-                                </div>
-                                {description ? (
-                                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                                        {description}
-                                    </p>
-                                ) : (
-                                    <p className="mt-1 text-sm italic text-muted-foreground/60">
-                                        No description
-                                    </p>
+                        {/* Title and description */}
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href={`/class/${organizationId}/${id}/home`}
+                                    className="truncate text-lg font-semibold text-foreground hover:text-primary transition-colors"
+                                >
+                                    {name}
+                                </Link>
+                                {canEdit && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span className="flex items-center">
+                                                <Crown className="size-4 text-amber-500" />
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            You can manage this class
+                                        </TooltipContent>
+                                    </Tooltip>
                                 )}
                             </div>
-
-                            {/* Actions menu */}
-                            {canEdit && (
-                                <ClassActionMenu
-                                    variant="card"
-                                    onEdit={() => setShowEditDialog(true)}
-                                    onDelete={() => setShowDeleteDialog(true)}
-                                />
+                            {description ? (
+                                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                                    {description}
+                                </p>
+                            ) : (
+                                <p className="mt-1 text-sm italic text-muted-foreground/60">
+                                    No description
+                                </p>
                             )}
                         </div>
 
-                        {/* Join codes section - only visible to admins/owners */}
-                        {joinCodeEntity && (
-                            <div className="mt-4 space-y-2">
-                                {/* Code type tabs */}
-                                <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
-                                    {(
-                                        [
-                                            "student",
-                                            "teacher",
-                                            "parent",
-                                        ] as const
-                                    ).map((type) => (
-                                        <button
-                                            key={type}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                setSelectedCodeType(type);
-                                            }}
-                                            className={cn(
-                                                "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
-                                                selectedCodeType === type
-                                                    ? "bg-background shadow-sm"
-                                                    : "hover:bg-background/50 text-muted-foreground"
-                                            )}
-                                        >
-                                            <span className={codeColors[type]}>
-                                                {codeLabels[type]}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Actions menu */}
+                        {canEdit && (
+                            <ClassActionMenu
+                                variant="card"
+                                onEdit={() => setShowEditDialog(true)}
+                                onDelete={() => setShowDeleteDialog(true)}
+                            />
+                        )}
+                    </div>
 
-                                {/* Selected code display */}
-                                <div className="flex items-center gap-2">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <button
-                                                onClick={(e) => {
-                                                    if (!isRevealed) {
-                                                        handleRevealCode(e);
-                                                    } else {
-                                                        handleCopyJoinCode(
-                                                            e,
-                                                            selectedCodeType
-                                                        );
-                                                    }
-                                                }}
-                                                className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted flex-1 justify-between group/code relative overflow-hidden"
+                    {/* Join codes section - only visible to admins/owners */}
+                    {joinCodeEntity && (
+                        <div className="mt-4 space-y-2">
+                            {/* Code type tabs */}
+                            <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
+                                {(
+                                    ["student", "teacher", "parent"] as const
+                                ).map((type) => (
+                                    <button
+                                        key={type}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setSelectedCodeType(type);
+                                        }}
+                                        className={cn(
+                                            "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
+                                            selectedCodeType === type
+                                                ? "bg-background shadow-sm"
+                                                : "hover:bg-background/50 text-muted-foreground"
+                                        )}
+                                    >
+                                        <span className={codeColors[type]}>
+                                            {codeLabels[type]}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Selected code display */}
+                            <div className="flex items-center gap-2">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            onClick={(e) => {
+                                                if (!isRevealed) {
+                                                    handleRevealCode(e);
+                                                } else {
+                                                    handleCopyJoinCode(
+                                                        e,
+                                                        selectedCodeType
+                                                    );
+                                                }
+                                            }}
+                                            className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm transition-colors hover:bg-muted flex-1 justify-between group/code relative overflow-hidden"
+                                        >
+                                            <span
+                                                className={cn(
+                                                    "text-muted-foreground transition-colors",
+                                                    codeColors[selectedCodeType]
+                                                )}
                                             >
+                                                {codeLabels[selectedCodeType]}{" "}
+                                                Code
+                                            </span>
+                                            <span className="flex items-center gap-2 font-mono font-semibold relative">
                                                 <span
                                                     className={cn(
-                                                        "text-muted-foreground transition-colors",
-                                                        codeColors[
-                                                            selectedCodeType
-                                                        ]
+                                                        "transition-all duration-500 ease-out",
+                                                        !isRevealed &&
+                                                            "blur-sm select-none"
                                                     )}
                                                 >
                                                     {
-                                                        codeLabels[
+                                                        joinCodes[
                                                             selectedCodeType
                                                         ]
-                                                    }{" "}
-                                                    Code
+                                                    }
                                                 </span>
-                                                <span className="flex items-center gap-2 font-mono font-semibold relative">
-                                                    <span
-                                                        className={cn(
-                                                            "transition-all duration-500 ease-out",
-                                                            !isRevealed &&
-                                                                "blur-sm select-none"
-                                                        )}
-                                                    >
-                                                        {
-                                                            joinCodes[
-                                                                selectedCodeType
-                                                            ]
-                                                        }
+                                                {!isRevealed && (
+                                                    <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
+                                                        Click to reveal
                                                     </span>
-                                                    {!isRevealed && (
-                                                        <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
-                                                            Click to reveal
-                                                        </span>
-                                                    )}
-                                                    {isRevealed &&
-                                                        (copied ===
-                                                        selectedCodeType ? (
-                                                            <Check className="size-4 text-green-500" />
-                                                        ) : (
-                                                            <Copy className="size-4 text-muted-foreground group-hover/code:text-foreground transition-colors" />
-                                                        ))}
-                                                </span>
-                                            </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            {!isRevealed
-                                                ? "Click to reveal code"
-                                                : copied === selectedCodeType
-                                                ? "Copied!"
-                                                : "Click to copy join code"}
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={(e) =>
-                                                    handleCopyJoinLink(
-                                                        e,
-                                                        selectedCodeType
-                                                    )
-                                                }
-                                                className="h-9 w-9"
-                                            >
-                                                {copiedLink ===
-                                                selectedCodeType ? (
-                                                    <Check className="size-4 text-green-500" />
-                                                ) : (
-                                                    <Link2 className="size-4" />
                                                 )}
-                                                <span className="sr-only">
-                                                    Copy join link
-                                                </span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            {copiedLink === selectedCodeType
-                                                ? "Link copied!"
-                                                : "Copy join link"}
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={handleOpenFullscreen}
-                                                className="h-9 w-9"
-                                            >
-                                                <Maximize2 className="size-4" />
-                                                <span className="sr-only">
-                                                    Fullscreen
-                                                </span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            View in fullscreen
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={(e) =>
-                                                    handleOpenInNewWindow(
-                                                        e,
-                                                        selectedCodeType
-                                                    )
-                                                }
-                                                className="h-9 w-9"
-                                            >
-                                                <ExternalLink className="size-4" />
-                                                <span className="sr-only">
-                                                    Open in new window
-                                                </span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            Open in new window
-                                        </TooltipContent>
-                                    </Tooltip>
+                                                {isRevealed &&
+                                                    (copied ===
+                                                    selectedCodeType ? (
+                                                        <Check className="size-4 text-green-500" />
+                                                    ) : (
+                                                        <Copy className="size-4 text-muted-foreground group-hover/code:text-foreground transition-colors" />
+                                                    ))}
+                                            </span>
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {!isRevealed
+                                            ? "Click to reveal code"
+                                            : copied === selectedCodeType
+                                            ? "Copied!"
+                                            : "Click to copy join code"}
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) =>
+                                                handleCopyJoinLink(
+                                                    e,
+                                                    selectedCodeType
+                                                )
+                                            }
+                                            className="h-9 w-9"
+                                        >
+                                            {copiedLink === selectedCodeType ? (
+                                                <Check className="size-4 text-green-500" />
+                                            ) : (
+                                                <Link2 className="size-4" />
+                                            )}
+                                            <span className="sr-only">
+                                                Copy join link
+                                            </span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {copiedLink === selectedCodeType
+                                            ? "Link copied!"
+                                            : "Copy join link"}
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={handleOpenFullscreen}
+                                            className="h-9 w-9"
+                                        >
+                                            <Maximize2 className="size-4" />
+                                            <span className="sr-only">
+                                                Fullscreen
+                                            </span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        View in fullscreen
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) =>
+                                                handleOpenInNewWindow(
+                                                    e,
+                                                    selectedCodeType
+                                                )
+                                            }
+                                            className="h-9 w-9"
+                                        >
+                                            <ExternalLink className="size-4" />
+                                            <span className="sr-only">
+                                                Open in new window
+                                            </span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        Open in new window
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Stats section */}
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
+                                    <Users className="size-4 text-blue-500 mb-1" />
+                                    <span className="text-base font-semibold tabular-nums">
+                                        {studentList.length}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Students
+                                    </span>
                                 </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {studentList.length === 1
+                                    ? "1 student"
+                                    : `${studentList.length} students`}
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
+                                    <GraduationCap className="size-4 text-emerald-500 mb-1" />
+                                    <span className="text-base font-semibold tabular-nums">
+                                        {teacherList.length}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Teachers
+                                    </span>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {teacherList.length === 1
+                                    ? "1 teacher"
+                                    : `${teacherList.length} teachers`}
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
+                                    <ShieldCheck className="size-4 text-violet-500 mb-1" />
+                                    <span className="text-base font-semibold tabular-nums">
+                                        {adminList.length}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        Admins
+                                    </span>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {adminList.length === 1
+                                    ? "1 admin"
+                                    : `${adminList.length} admins`}
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
+
+                    {/* Footer section with dates and owner */}
+                    <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
+                        {/* Owner info */}
+                        {owner && (
+                            <div className="flex items-center gap-2">
+                                <Avatar className="size-6">
+                                    {owner.imageURL || owner.avatarURL ? (
+                                        <AvatarImage
+                                            src={
+                                                owner.imageURL ??
+                                                owner.avatarURL ??
+                                                undefined
+                                            }
+                                            alt={owner.email ?? "Owner"}
+                                        />
+                                    ) : null}
+                                    <AvatarFallback className="text-xs">
+                                        {owner.email?.[0]?.toUpperCase() ?? "?"}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs text-muted-foreground truncate max-w-24">
+                                    {owner.firstName && owner.lastName
+                                        ? `${owner.firstName} ${owner.lastName}`
+                                        : owner.email ?? "?"}
+                                </span>
                             </div>
                         )}
 
-                        {/* Stats section */}
-                        <div className="mt-3 grid grid-cols-3 gap-2">
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
-                                        <Users className="size-4 text-blue-500 mb-1" />
-                                        <span className="text-base font-semibold tabular-nums">
-                                            {studentList.length}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            Students
-                                        </span>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {studentList.length === 1
-                                        ? "1 student"
-                                        : `${studentList.length} students`}
-                                </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
-                                        <GraduationCap className="size-4 text-emerald-500 mb-1" />
-                                        <span className="text-base font-semibold tabular-nums">
-                                            {teacherList.length}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            Teachers
-                                        </span>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {teacherList.length === 1
-                                        ? "1 teacher"
-                                        : `${teacherList.length} teachers`}
-                                </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center rounded-lg bg-muted/50 px-2 py-2 transition-colors hover:bg-muted">
-                                        <ShieldCheck className="size-4 text-violet-500 mb-1" />
-                                        <span className="text-base font-semibold tabular-nums">
-                                            {adminList.length}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            Admins
-                                        </span>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {adminList.length === 1
-                                        ? "1 admin"
-                                        : `${adminList.length} admins`}
-                                </TooltipContent>
-                            </Tooltip>
-                        </div>
-
-                        {/* Footer section with dates and owner */}
-                        <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
-                            {/* Owner info */}
-                            {owner && (
-                                <div className="flex items-center gap-2">
-                                    <Avatar className="size-6">
-                                        {owner.imageURL || owner.avatarURL ? (
-                                            <AvatarImage
-                                                src={
-                                                    owner.imageURL ??
-                                                    owner.avatarURL ??
-                                                    undefined
-                                                }
-                                                alt={owner.email ?? "Owner"}
-                                            />
-                                        ) : null}
-                                        <AvatarFallback className="text-xs">
-                                            {owner.email?.[0]?.toUpperCase() ??
-                                                "?"}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-xs text-muted-foreground truncate max-w-24">
-                                        {owner.firstName && owner.lastName
-                                            ? `${owner.firstName} ${owner.lastName}`
-                                            : owner.email ?? "?"}
-                                    </span>
-                                </div>
+                        {/* Date info */}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            {createdDate && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="size-3" />
+                                            <span>
+                                                {createdDate.toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        Created {format(createdDate, "PPpp")}
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
 
-                            {/* Date info */}
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                {createdDate && (
+                            {updatedDate &&
+                                updatedDate.getTime() !==
+                                    createdDate?.getTime() && (
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div className="flex items-center gap-1">
-                                                <Calendar className="size-3" />
+                                                <Clock className="size-3" />
                                                 <span>
-                                                    {createdDate.toLocaleDateString()}
+                                                    {formatDistanceToNow(
+                                                        updatedDate,
+                                                        {
+                                                            addSuffix: true,
+                                                        }
+                                                    )}
                                                 </span>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            Created{" "}
-                                            {format(createdDate, "PPpp")}
+                                            Last updated{" "}
+                                            {format(updatedDate, "PPpp")}
                                         </TooltipContent>
                                     </Tooltip>
                                 )}
-
-                                {updatedDate &&
-                                    updatedDate.getTime() !==
-                                        createdDate?.getTime() && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className="flex items-center gap-1">
-                                                    <Clock className="size-3" />
-                                                    <span>
-                                                        {formatDistanceToNow(
-                                                            updatedDate,
-                                                            {
-                                                                addSuffix: true,
-                                                            }
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                Last updated{" "}
-                                                {format(updatedDate, "PPpp")}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    )}
-                            </div>
                         </div>
                     </div>
-                </article>
+                </div>
+            </article>
 
             {/* Edit Class Dialog */}
             <EditClassDialog

@@ -157,21 +157,23 @@ export default function CreateClassDialog({
                 // Reset form and close dialog
                 resetForm();
                 setIsCreating(false);
-                
+
                 // Redirect to the new class
-                router.push(`/class/${organizationId}/${classId}/dashboard`);
+                router.push(`/class/${organizationId}/${classId}/home`);
                 return; // Success - exit the retry loop
             } catch (err) {
                 lastError = err;
-                
+
                 // If it's a uniqueness error and we have retries left, try again
                 if (isUniquenessError(err) && attempt < maxRetries - 1) {
                     console.warn(
-                        `Join code collision detected (attempt ${attempt + 1}/${maxRetries}), retrying...`
+                        `Join code collision detected (attempt ${
+                            attempt + 1
+                        }/${maxRetries}), retrying...`
                     );
                     continue;
                 }
-                
+
                 // If it's not a uniqueness error, or we're out of retries, break
                 break;
             }
