@@ -29,7 +29,6 @@ export default function Home() {
 
                         <div className="flex items-center gap-3">
                             <NavUserNavbar />
-                            <ThemeSwitch />
                         </div>
                     </div>
                 </header>

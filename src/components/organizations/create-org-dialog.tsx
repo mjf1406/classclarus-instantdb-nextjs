@@ -239,8 +239,9 @@ export default function CreateOrganizationDialog({
             <CredenzaTrigger asChild>
                 {trigger || (
                     <Button variant="default">
-                        <Plus className="size-4" />
-                        Create Organization
+                        <Plus />
+                        Create{" "}
+                        <span className="hidden md:inline">Organization</span>
                     </Button>
                 )}
             </CredenzaTrigger>

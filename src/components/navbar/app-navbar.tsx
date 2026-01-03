@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Logo } from "../brand/logo";
-import { ThemeSwitch } from "../theme/theme-switch";
 import { NavUserNavbar } from "./nav-user-navbar";
 
 export default function AppNavbar() {
@@ -19,7 +18,6 @@ export default function AppNavbar() {
             </div>
             <div className="flex-1 flex justify-end items-center space-x-2">
                 <NavUserNavbar />
-                <ThemeSwitch />
             </div>
         </nav>
     );

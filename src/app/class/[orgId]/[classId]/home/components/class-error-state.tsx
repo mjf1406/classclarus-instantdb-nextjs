@@ -27,11 +27,10 @@ export function ClassErrorState({ error, orgId }: ClassErrorStateProps) {
                         className="mt-4"
                     >
                         <ArrowLeft className="size-4" />
-                        Back to Organization
+                        Back
                     </Button>
                 </Link>
             </div>
         </div>
     );
 }
-

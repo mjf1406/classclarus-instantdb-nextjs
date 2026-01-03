@@ -21,7 +21,7 @@ export default function OrgLayout({
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ArrowLeft className="size-4" />
-                        <span>Back to Organizations</span>
+                        <span>Back</span>
                     </Link>
 
                     <div className="absolute left-1/2 -translate-x-1/2">
@@ -30,7 +30,6 @@ export default function OrgLayout({
 
                     <div className="flex items-center gap-3">
                         <NavUserNavbar />
-                        <ThemeSwitch />
                     </div>
                 </div>
             </header>

@@ -101,7 +101,7 @@ export default function OrgPage({ params }: OrgPageProps) {
                             className="mt-4"
                         >
                             <ArrowLeft className="size-4" />
-                            Back to Organizations
+                            Back
                         </Button>
                     </Link>
                 </div>
@@ -129,7 +129,7 @@ export default function OrgPage({ params }: OrgPageProps) {
                         <Link href="/">
                             <Button>
                                 <ArrowLeft className="size-4" />
-                                Back to Organizations
+                                Back
                             </Button>
                         </Link>
                     </EmptyContent>

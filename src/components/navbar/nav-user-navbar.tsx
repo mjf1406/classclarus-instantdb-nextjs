@@ -3,6 +3,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles } from "lucide-react";
 
 import { db } from "@/lib/db/db";
@@ -18,9 +19,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import GuestUpgradeCard from "@/components/guest/guest-upgrade-card";
+import { ThemeSwitch } from "@/components/theme/theme-switch";
 
 export function NavUserNavbar() {
     const { user } = useAuthContext();
+    const router = useRouter();
 
     if (!user) {
         return null;
@@ -39,10 +42,13 @@ export function NavUserNavbar() {
             ? `${user.firstName[0]}${user.lastName[0]}`
             : user.email?.[0]?.toUpperCase() || "U";
 
-    const handleSignOut = () => {
-        db.auth.signOut().catch((err) => {
+    const handleSignOut = async () => {
+        try {
+            await db.auth.signOut();
+            router.push("/");
+        } catch (err) {
             console.error("Error signing out:", err);
-        });
+        }
     };
 
     return (
@@ -91,8 +97,8 @@ export function NavUserNavbar() {
                             </span>
                             {user.plan && (
                                 <span className="truncate text-xs text-muted-foreground">
-                                    {(user.plan).charAt(0).toUpperCase() +
-                                        (user.plan).slice(1)}
+                                    {user.plan.charAt(0).toUpperCase() +
+                                        user.plan.slice(1)}
                                 </span>
                             )}
                             {user.isGuest && (
@@ -103,6 +109,15 @@ export function NavUserNavbar() {
                         </div>
                     </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-muted-foreground">
+                            Theme
+                        </span>
+                        <ThemeSwitch />
+                    </div>
+                </div>
 
                 {/* Guest upgrade section */}
                 {user.isGuest && (

@@ -28,15 +28,15 @@ export function ClassNotFoundState({ orgId }: ClassNotFoundStateProps) {
                     </EmptyMedia>
                     <EmptyTitle>Class not found</EmptyTitle>
                     <EmptyDescription>
-                        The class you&apos;re looking for doesn&apos;t exist
-                        or you don&apos;t have access to it.
+                        The class you&apos;re looking for doesn&apos;t exist or
+                        you don&apos;t have access to it.
                     </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
                     <Link href={`/org/${orgId}`}>
                         <Button>
                             <ArrowLeft className="size-4" />
-                            Back to organization
+                            Back
                         </Button>
                     </Link>
                 </EmptyContent>
@@ -44,4 +44,3 @@ export function ClassNotFoundState({ orgId }: ClassNotFoundStateProps) {
         </div>
     );
 }
-

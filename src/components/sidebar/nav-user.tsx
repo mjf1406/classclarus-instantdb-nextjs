@@ -5,6 +5,7 @@
 import { useState, useRef, use } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
     BadgeCheck,
     Bell,
@@ -118,6 +119,7 @@ function NavUserSignedIn({
     user?: User;
 }) {
     const { user: contextUser } = useAuthContext();
+    const router = useRouter();
     const user = userProp ?? contextUser;
     const displayName =
         user?.firstName && user?.lastName
@@ -132,10 +134,13 @@ function NavUserSignedIn({
             ? `${user.firstName[0]}${user.lastName[0]}`
             : user?.email?.[0]?.toUpperCase() || "U";
 
-    const handleSignOut = () => {
-        db.auth.signOut().catch((err) => {
+    const handleSignOut = async () => {
+        try {
+            await db.auth.signOut();
+            router.push("/");
+        } catch (err) {
             console.error("Error signing out:", err);
-        });
+        }
     };
 
     return (

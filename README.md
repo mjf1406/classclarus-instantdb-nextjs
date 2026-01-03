@@ -41,6 +41,8 @@
 
 ### 2026/01/02
 
+-   UX: user routed to / on logout
+-   UI: removed "Back to Organizations" text from org page and org layout, replaced with just "Back"
 -   UX: Dialogs are now credenzas, but they are very long and I'm not sure about the UX for long drawers/dialogs. Is there another pattern we can use?
 -   UX: new orgs and classes are now redirected to
 -   UI: added "What is an Organization" collapsible to the No Organizations card
