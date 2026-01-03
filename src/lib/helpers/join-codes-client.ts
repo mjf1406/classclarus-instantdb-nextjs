@@ -1,11 +1,11 @@
 /** @format */
 
-// Generate a random join code (8 characters, alphanumeric, uppercase)
+// Generate a random join code (6 characters, alphanumeric, uppercase)
 export function generateJoinCode(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluded confusing chars: I, O, 0, 1
-    // An 8-character code has 32^8 = 1,099,511,627,776 (1+ trillion) possible combinations
+    // A 6-character code has 32^6 = 1,073,741,824 (1+ billion) possible combinations
     let code = "";
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 6; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;

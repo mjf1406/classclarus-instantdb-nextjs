@@ -54,7 +54,7 @@ function JoinPageContent() {
                 return;
             }
 
-            if (value.length !== 8) {
+            if (value.length !== 6) {
                 return;
             }
 
@@ -244,7 +244,7 @@ function JoinPageContent() {
         }
 
         const urlCode = searchParams.get("code");
-        if (urlCode && urlCode.length === 8) {
+        if (urlCode && urlCode.length === 6) {
             setCode(urlCode);
             setHasProcessedUrlCode(true);
             // Auto-trigger the join process
@@ -284,7 +284,7 @@ function JoinPageContent() {
                     <div className="text-center space-y-2">
                         <h1 className="text-3xl font-bold">Join with Code</h1>
                         <p className="text-muted-foreground">
-                            Enter an 8-character join code to join an
+                            Enter a 6-character join code to join an
                             organization or class
                         </p>
                     </div>
@@ -295,14 +295,14 @@ function JoinPageContent() {
                                 <Card className="p-8">
                                     <div className="flex justify-center">
                                         <InputOTP
-                                            maxLength={8}
+                                            maxLength={6}
                                             value={code}
                                             onChange={(value) => {
                                                 // Convert to uppercase (pattern prop handles alphanumeric filtering)
                                                 const upperValue =
                                                     value.toUpperCase();
                                                 setCode(upperValue);
-                                                if (upperValue.length === 8) {
+                                                if (upperValue.length === 6) {
                                                     handleCodeComplete(
                                                         upperValue
                                                     );
@@ -310,7 +310,7 @@ function JoinPageContent() {
                                             }}
                                         >
                                             <InputOTPGroup>
-                                                {Array.from({ length: 4 }).map(
+                                                {Array.from({ length: 3 }).map(
                                                     (_, i) => (
                                                         <InputOTPSlot
                                                             key={i}
@@ -322,11 +322,11 @@ function JoinPageContent() {
                                             </InputOTPGroup>
                                             <InputOTPSeparator className="mx-1 [&>svg]:size-4 sm:mx-2 sm:[&>svg]:size-6 md:[&>svg]:size-8" />
                                             <InputOTPGroup>
-                                                {Array.from({ length: 4 }).map(
+                                                {Array.from({ length: 3 }).map(
                                                     (_, i) => (
                                                         <InputOTPSlot
-                                                            key={i + 4}
-                                                            index={i + 4}
+                                                            key={i + 3}
+                                                            index={i + 3}
                                                             className="h-10 w-10 text-lg sm:h-12 sm:w-12 sm:text-xl md:h-16 md:w-16 md:text-2xl"
                                                         />
                                                     )
@@ -338,11 +338,11 @@ function JoinPageContent() {
                                 <PasteCodeButton
                                     onPaste={(pastedCode) => {
                                         setCode(pastedCode);
-                                        if (pastedCode.length === 8) {
+                                        if (pastedCode.length === 6) {
                                             handleCodeComplete(pastedCode);
                                         }
                                     }}
-                                    codeLength={8}
+                                    codeLength={6}
                                     codeType="alphanumeric"
                                     disabled={state !== "idle"}
                                 />

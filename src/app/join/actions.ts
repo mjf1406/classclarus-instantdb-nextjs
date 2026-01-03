@@ -288,7 +288,7 @@ export async function lookupJoinCode(
     code: string,
     userId: string
 ): Promise<{ success: boolean; data?: LookupResult; error?: string }> {
-    if (!code || code.length !== 8) {
+    if (!code || code.length !== 6) {
         return { success: false, error: "Invalid join code format" };
     }
 

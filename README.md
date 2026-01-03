@@ -39,6 +39,12 @@
 
 ## Change Log
 
+### 2026/01/03
+
+-   BE: changed join codes from 8 to 6 characters due to [the math](https://docs.google.com/spreadsheets/d/1b2ICoE1dsr3VMKftyfGpN8sAGM04QLoqnGSFdqcoVHI/edit?usp=sharing)
+-   UI: added paste code buttons to magic-auth and /join
+-   BE: refactored /join actions to reduce duplication and to send error to guests on the client, preventing unnecessary server action calls.
+
 ### 2026/01/02
 
 -   BE: guests cannot joining orgs/classes

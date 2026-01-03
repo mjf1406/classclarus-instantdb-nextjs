@@ -26,24 +26,24 @@ export function JoinCodeInput({
     disabled = false,
     error,
     label = "Join Code",
-    placeholder = "Enter 8-character code",
+    placeholder = "Enter 6-character code",
     description,
     className,
 }: JoinCodeInputProps) {
     const [localValue, setLocalValue] = useState(value);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        // Auto-uppercase and limit to 8 characters
+        // Auto-uppercase and limit to 6 characters
         const newValue = e.target.value
             .toUpperCase()
             .replace(/[^A-Z0-9]/g, "")
-            .slice(0, 8);
+            .slice(0, 6);
         setLocalValue(newValue);
         onChange(newValue);
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && onSubmit && localValue.length === 8) {
+        if (e.key === "Enter" && onSubmit && localValue.length === 6) {
             e.preventDefault();
             onSubmit();
         }
@@ -67,7 +67,7 @@ export function JoinCodeInput({
                 onKeyDown={handleKeyDown}
                 disabled={disabled}
                 placeholder={placeholder}
-                maxLength={8}
+                maxLength={6}
                 className={cn(
                     "font-mono tracking-widest text-center text-lg",
                     error && "aria-invalid"
