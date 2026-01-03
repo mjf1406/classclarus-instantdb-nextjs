@@ -29,8 +29,8 @@ export default function OrgLayout({
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <ThemeSwitch />
                         <NavUserNavbar />
+                        <ThemeSwitch />
                     </div>
                 </div>
             </header>

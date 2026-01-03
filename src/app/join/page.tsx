@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import AppNavbar from "@/components/navbar/app-navbar";
-import SignedOutNavbar from "@/components/navbar/signed-out-navbar";
+import { SignedOutNavbar } from "@/components/navbar/signed-out-navbar";
 import { SignedOutView } from "../page";
 import {
     InputOTP,

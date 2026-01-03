@@ -11,13 +11,14 @@ import {
     SidebarFooter,
     SidebarHeader,
     SidebarRail,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import { NavClassManagement } from "./nav-class-management";
 import { NavMain } from "./nav-main";
 import { NavRandom } from "./nav-random";
 import { NavStudentFacing } from "./nav-student-facing";
 import { OrganizationSwitcher } from "./organization-switcher";
-import { Logo } from "../brand/logo";
+import { Logo, Icon } from "../brand/logo";
 import Link from "next/link";
 import { useAuthContext } from "../auth/auth-provider";
 import GuestUpgradeCard from "../guest/guest-upgrade-card";
@@ -32,6 +33,7 @@ import {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname();
     const { user, isLoading } = useAuthContext();
+    const { state } = useSidebar();
 
     return (
         <Sidebar
@@ -43,7 +45,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     href="/"
                     prefetch={false}
                 >
-                    <Logo />
+                    {state === "collapsed" ? <Icon /> : <Logo />}
                 </Link>
                 {/* <OrganizationSwitcher /> */}
             </SidebarHeader>
