@@ -159,7 +159,7 @@ export default function CreateClassDialog({
                 setIsCreating(false);
                 
                 // Redirect to the new class
-                router.push(`/${organizationId}/${classId}?tab=dashboard`);
+                router.push(`/class/${organizationId}/${classId}/dashboard`);
                 return; // Success - exit the retry loop
             } catch (err) {
                 lastError = err;

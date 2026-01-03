@@ -74,7 +74,7 @@ export function OrganizationSwitcher() {
     const organizationClasses = displayOrganization.classes || [];
 
     const handleOrganizationClassSelect = (orgId: string, classId: string) => {
-        router.push(`/${orgId}/${classId}?tab=dashboard`);
+        router.push(`/class/${orgId}/${classId}/dashboard`);
     };
 
     const handleOpenCreateDialog = (org: { id: string }) => {

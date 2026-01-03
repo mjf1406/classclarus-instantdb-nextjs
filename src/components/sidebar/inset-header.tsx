@@ -60,12 +60,12 @@ export function ClassHeader() {
 
     // Handle organization selection - navigate to new organization
     const handleOrganizationChange = (newOrgId: string) => {
-        router.push(`/${newOrgId}`);
+        router.push(`/org/${newOrgId}`);
     };
 
     // Handle class selection - navigate to new class with home tab
     const handleClassChange = (newClassId: string) => {
-        router.push(`/${organizationId}/${newClassId}/home`);
+        router.push(`/class/${organizationId}/${newClassId}/home`);
     };
 
     const activeTab = getTabName();

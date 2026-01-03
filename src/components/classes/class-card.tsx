@@ -378,7 +378,7 @@ const ClassCard = React.memo(function ClassCard({
     return (
         <>
             <Link
-                href={`/${organizationId}/${id}/home`}
+                href={`/class/${organizationId}/${id}/home`}
                 className="group block"
             >
                 <article

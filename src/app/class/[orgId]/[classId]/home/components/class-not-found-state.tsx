@@ -33,7 +33,7 @@ export function ClassNotFoundState({ orgId }: ClassNotFoundStateProps) {
                     </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                    <Link href={`/${orgId}`}>
+                    <Link href={`/org/${orgId}`}>
                         <Button>
                             <ArrowLeft className="size-4" />
                             Back to organization

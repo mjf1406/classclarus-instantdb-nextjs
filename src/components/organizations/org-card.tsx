@@ -229,7 +229,7 @@ const OrgCard = React.memo(function OrgCard({ organization, isOwner }: OrgCardPr
             target.closest("a") ||
             target.closest('[role="button"]');
         if (!isInteractive) {
-            router.push(`/${id}`);
+            router.push(`/org/${id}`);
         }
     };
 
@@ -533,7 +533,7 @@ const OrgCard = React.memo(function OrgCard({ organization, isOwner }: OrgCardPr
                                     classes.map((cls) => (
                                         <Link
                                             key={cls.id}
-                                            href={`/${id}/${cls.id}`}
+                                            href={`/class/${id}/${cls.id}/home`}
                                             onClick={(e) => e.stopPropagation()}
                                             className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
                                         >

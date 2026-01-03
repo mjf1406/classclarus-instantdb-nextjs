@@ -172,7 +172,7 @@ export default function CreateOrganizationDialog({
                 setIsCreating(false);
 
                 // Redirect to the new organization
-                router.push(`/${orgId}`);
+                router.push(`/org/${orgId}`);
                 return; // Success - exit the retry loop
             } catch (err) {
                 lastError = err;

@@ -197,7 +197,7 @@ export function ClassHero({
                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                             {organization && (
                                 <Link
-                                    href={`/${organization.id}`}
+                                    href={`/org/${organization.id}`}
                                     className="flex items-center gap-2 hover:text-foreground transition-colors"
                                 >
                                     <Building2 className="size-4" />

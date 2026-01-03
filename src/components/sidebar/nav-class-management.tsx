@@ -4,7 +4,7 @@
 
 import { FileText, BookOpenCheck, CheckSquare, Target } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
     SidebarGroup,
@@ -38,8 +38,7 @@ const items = [
     },
 ];
 
-export function NavClassManagement() {
-    const pathname = usePathname();
+export function NavClassManagement({ pathname }: { pathname: string }) {
     const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
 
@@ -63,7 +62,7 @@ export function NavClassManagement() {
             <SidebarGroupLabel>Class Management</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => {
-                    const href = `/${orgId}/${classId}/${item.path}`;
+                    const href = `/class/${orgId}/${classId}/${item.path}`;
                     const isActive = pathname === href;
 
                     return (

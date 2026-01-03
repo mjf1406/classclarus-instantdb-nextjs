@@ -21,7 +21,7 @@ export function ClassErrorState({ error, orgId }: ClassErrorStateProps) {
                 <p className="mt-2 text-sm text-muted-foreground">
                     {error.message}
                 </p>
-                <Link href={`/${orgId}`}>
+                <Link href={`/org/${orgId}`}>
                     <Button
                         variant="outline"
                         className="mt-4"

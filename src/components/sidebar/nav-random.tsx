@@ -4,7 +4,7 @@
 
 import { Users, Calendar, Dice6 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
     SidebarGroup,
@@ -33,8 +33,7 @@ const items = [
     },
 ];
 
-export function NavRandom() {
-    const pathname = usePathname();
+export function NavRandom({ pathname }: { pathname: string }) {
     const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
 
@@ -58,7 +57,7 @@ export function NavRandom() {
             <SidebarGroupLabel>Random</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => {
-                    const href = `/${orgId}/${classId}/${item.path}`;
+                    const href = `/class/${orgId}/${classId}/${item.path}`;
                     const isActive = pathname === href;
 
                     return (

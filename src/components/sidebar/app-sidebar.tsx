@@ -1,6 +1,9 @@
 /** @format */
 
+"use client";
+
 import * as React from "react";
+import { usePathname } from "next/navigation";
 
 import {
     Sidebar,
@@ -19,6 +22,8 @@ import AppSidebarFooter from "./app-sidebar-footer";
 import Link from "next/link";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const pathname = usePathname();
+
     return (
         <Sidebar
             collapsible="icon"
@@ -34,10 +39,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 {/* <OrganizationSwitcher /> */}
             </SidebarHeader>
             <SidebarContent>
-                <NavMain />
-                <NavRandom />
-                <NavClassManagement />
-                <NavStudentFacing />
+                <NavMain pathname={pathname} />
+                <NavRandom pathname={pathname} />
+                <NavClassManagement pathname={pathname} />
+                <NavStudentFacing pathname={pathname} />
             </SidebarContent>
             <AppSidebarFooter />
             <SidebarRail />
