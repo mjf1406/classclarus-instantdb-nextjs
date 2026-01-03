@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
-import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 
 export function ClassHeader() {
@@ -48,10 +47,10 @@ export function ClassHeader() {
         if (!classId) return null;
         const pathSegments = pathname.split("/");
         const tabSegment = pathSegments[pathSegments.length - 1];
-        
+
         // If we're on the base class route, return null (no tab shown)
         if (tabSegment === classId) return null;
-        
+
         // Convert "class-time" -> "Class Time", "student-dashboards" -> "Student Dashboards"
         return tabSegment
             .split("-")
@@ -145,7 +144,7 @@ export function ClassHeader() {
                                         <BreadcrumbSeparator />
                                         <BreadcrumbItem>
                                             <BreadcrumbPage>
-                                                {getTabName(activeTab)}
+                                                {getTabName()}
                                             </BreadcrumbPage>
                                         </BreadcrumbItem>
                                     </>

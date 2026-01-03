@@ -6,18 +6,18 @@ import { use, useState } from "react";
 import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import { escapeHtml } from "@/lib/utils";
-import { ClassHero } from "../pages/home/components/class-hero";
-import { ClassStats } from "../pages/home/components/class-stats";
-import { JoinCodeDialog } from "../pages/home/components/join-code-dialog";
-import { ClassPageSkeleton } from "../pages/home/components/class-page-skeleton";
-import { ClassErrorState } from "../pages/home/components/class-error-state";
-import { ClassNotFoundState } from "../pages/home/components/class-not-found-state";
+import { ClassHero } from "./components/class-hero";
+import { ClassStats } from "./components/class-stats";
+import { JoinCodeDialog } from "./components/join-code-dialog";
+import { ClassPageSkeleton } from "./components/class-page-skeleton";
+import { ClassErrorState } from "./components/class-error-state";
+import { ClassNotFoundState } from "./components/class-not-found-state";
 import {
     ClassQueryShape,
     ClassQueryResult,
     JoinCodeType,
     codeLabels,
-} from "../pages/home/components/types";
+} from "./types";
 
 interface ClassHomePageProps {
     params: Promise<{ orgId: string; classId: string }>;
