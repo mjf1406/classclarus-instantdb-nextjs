@@ -6,6 +6,34 @@ import dbAdmin from "@/lib/db/db-admin";
 
 // Server actions are automatically secure - no need for secret validation
 
+/**
+ * Check if a user is a guest by querying their user entity
+ * @param userId - The user ID to check
+ * @returns true if the user is a guest, false otherwise
+ */
+async function isGuestUser(userId: string): Promise<boolean> {
+    try {
+        const userData = await dbAdmin.query({
+            $users: {
+                $: { where: { id: userId } },
+            },
+        });
+
+        const user = userData?.$users?.[0];
+        if (!user) {
+            // If user doesn't exist, treat as guest for safety
+            return true;
+        }
+
+        // Check if user type is "guest" or if they don't have an email (guests typically don't have emails)
+        return user.type === "guest" || !user.email;
+    } catch (err) {
+        console.error("Error checking if user is guest:", err);
+        // On error, treat as guest for safety
+        return true;
+    }
+}
+
 type JoinCodeType =
     | "organization"
     | "classStudent"
@@ -119,10 +147,19 @@ export async function joinOrganization(
     orgId: string
 ): Promise<JoinResult> {
     try {
-        // Check if organization exists
+        // Check if joining user is a guest
+        if (await isGuestUser(userId)) {
+            return {
+                success: false,
+                error: "Guest users cannot join organizations. Please sign in with a full account.",
+            };
+        }
+
+        // Check if organization exists and get owner
         const data = await dbAdmin.query({
             organizations: {
                 $: { where: { id: orgId } },
+                owner: {},
                 orgStudents: {},
                 orgTeachers: {},
                 orgParents: {},
@@ -132,6 +169,15 @@ export async function joinOrganization(
         const org = data?.organizations?.[0];
         if (!org) {
             return { success: false, error: "Organization not found" };
+        }
+
+        // Check if organization owner is a guest
+        const ownerId = org.owner?.id;
+        if (ownerId && (await isGuestUser(ownerId))) {
+            return {
+                success: false,
+                error: "This organization is owned by a guest account and cannot accept new members.",
+            };
         }
 
         // Check if user is already in any role
@@ -184,18 +230,47 @@ export async function joinClassAsStudent(
     classId: string
 ): Promise<JoinResult> {
     try {
-        // Check if user is already a student
+        // Check if joining user is a guest
+        if (await isGuestUser(userId)) {
+            return {
+                success: false,
+                error: "Guest users cannot join classes. Please sign in with a full account.",
+            };
+        }
+
+        // Check if class exists and get owner and organization owner
         const data = await dbAdmin.query({
             classes: {
                 $: { where: { id: classId } },
+                owner: {},
                 classStudents: {},
-                organization: {},
+                organization: {
+                    owner: {},
+                },
             },
         });
 
         const classEntity = data?.classes?.[0];
         if (!classEntity) {
             return { success: false, error: "Class not found" };
+        }
+
+        // Check if class owner is a guest
+        const classOwnerId = classEntity.owner?.id;
+        if (classOwnerId && (await isGuestUser(classOwnerId))) {
+            return {
+                success: false,
+                error: "This class is owned by a guest account and cannot accept new members.",
+            };
+        }
+
+        // Check if organization owner is a guest
+        const orgOwnerId = classEntity.organization?.owner?.id;
+        if (orgOwnerId && (await isGuestUser(orgOwnerId))) {
+            return {
+                success: false,
+                error: "This class's organization is owned by a guest account and cannot accept new members.",
+            };
         }
 
         const existingStudents = classEntity.classStudents ?? [];
@@ -243,18 +318,47 @@ export async function joinClassAsTeacher(
     classId: string
 ): Promise<JoinResult> {
     try {
-        // Check if user is already a teacher
+        // Check if joining user is a guest
+        if (await isGuestUser(userId)) {
+            return {
+                success: false,
+                error: "Guest users cannot join classes. Please sign in with a full account.",
+            };
+        }
+
+        // Check if class exists and get owner and organization owner
         const data = await dbAdmin.query({
             classes: {
                 $: { where: { id: classId } },
+                owner: {},
                 classTeachers: {},
-                organization: {},
+                organization: {
+                    owner: {},
+                },
             },
         });
 
         const classEntity = data?.classes?.[0];
         if (!classEntity) {
             return { success: false, error: "Class not found" };
+        }
+
+        // Check if class owner is a guest
+        const classOwnerId = classEntity.owner?.id;
+        if (classOwnerId && (await isGuestUser(classOwnerId))) {
+            return {
+                success: false,
+                error: "This class is owned by a guest account and cannot accept new members.",
+            };
+        }
+
+        // Check if organization owner is a guest
+        const orgOwnerId = classEntity.organization?.owner?.id;
+        if (orgOwnerId && (await isGuestUser(orgOwnerId))) {
+            return {
+                success: false,
+                error: "This class's organization is owned by a guest account and cannot accept new members.",
+            };
         }
 
         const existingTeachers = classEntity.classTeachers ?? [];
@@ -349,18 +453,47 @@ export async function joinClassAsParent(
     }
 
     try {
-        // Check if user is already a parent
+        // Check if joining user is a guest
+        if (await isGuestUser(userId)) {
+            return {
+                success: false,
+                error: "Guest users cannot join classes. Please sign in with a full account.",
+            };
+        }
+
+        // Check if class exists and get owner and organization owner
         const data = await dbAdmin.query({
             classes: {
                 $: { where: { id: classId } },
+                owner: {},
                 classParents: {},
-                organization: {},
+                organization: {
+                    owner: {},
+                },
             },
         });
 
         const classEntity = data?.classes?.[0];
         if (!classEntity) {
             return { success: false, error: "Class not found" };
+        }
+
+        // Check if class owner is a guest
+        const classOwnerId = classEntity.owner?.id;
+        if (classOwnerId && (await isGuestUser(classOwnerId))) {
+            return {
+                success: false,
+                error: "This class is owned by a guest account and cannot accept new members.",
+            };
+        }
+
+        // Check if organization owner is a guest
+        const orgOwnerId = classEntity.organization?.owner?.id;
+        if (orgOwnerId && (await isGuestUser(orgOwnerId))) {
+            return {
+                success: false,
+                error: "This class's organization is owned by a guest account and cannot accept new members.",
+            };
         }
 
         const existingParents = classEntity.classParents ?? [];

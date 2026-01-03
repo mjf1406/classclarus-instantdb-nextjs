@@ -219,6 +219,8 @@ function CodeStep({
                     onChange={setCode}
                     disabled={isLoading}
                     autoFocus
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                 >
                     <InputOTPGroup>
                         <InputOTPSlot index={0} />

@@ -56,6 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavStudentFacing pathname={pathname} />
             </SidebarContent>
             <SidebarFooter>
+                <Link href={"/join"}>Join Org/Class</Link>
                 {user?.isGuest && <GuestUpgradeCard />}
                 {isLoading ? (
                     <SidebarMenu>
@@ -74,7 +75,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuItem>
                     </SidebarMenu>
                 ) : (
-                    <OrganizationSwitcher user={user} isLoading={isLoading} pathname={pathname} />
+                    <OrganizationSwitcher
+                        user={user}
+                        isLoading={isLoading}
+                        pathname={pathname}
+                    />
                 )}
                 {isLoading ? (
                     <SidebarMenu>
@@ -93,7 +98,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuItem>
                     </SidebarMenu>
                 ) : (
-                    <NavUser user={user} isLoading={isLoading} />
+                    <NavUser
+                        user={user}
+                        isLoading={isLoading}
+                    />
                 )}
             </SidebarFooter>
             <SidebarRail />

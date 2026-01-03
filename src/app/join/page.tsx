@@ -253,9 +253,14 @@ function JoinPageContent() {
                                             maxLength={8}
                                             value={code}
                                             onChange={(value) => {
-                                                setCode(value);
-                                                if (value.length === 8) {
-                                                    handleCodeComplete(value);
+                                                // Convert to uppercase (pattern prop handles alphanumeric filtering)
+                                                const upperValue =
+                                                    value.toUpperCase();
+                                                setCode(upperValue);
+                                                if (upperValue.length === 8) {
+                                                    handleCodeComplete(
+                                                        upperValue
+                                                    );
                                                 }
                                             }}
                                         >
@@ -265,19 +270,19 @@ function JoinPageContent() {
                                                         <InputOTPSlot
                                                             key={i}
                                                             index={i}
-                                                            className="h-16 w-16 text-2xl"
+                                                            className="h-10 w-10 text-lg sm:h-12 sm:w-12 sm:text-xl md:h-16 md:w-16 md:text-2xl"
                                                         />
                                                     )
                                                 )}
                                             </InputOTPGroup>
-                                            <InputOTPSeparator className="mx-2 [&>svg]:size-8" />
+                                            <InputOTPSeparator className="mx-1 [&>svg]:size-4 sm:mx-2 sm:[&>svg]:size-6 md:[&>svg]:size-8" />
                                             <InputOTPGroup>
                                                 {Array.from({ length: 4 }).map(
                                                     (_, i) => (
                                                         <InputOTPSlot
                                                             key={i + 4}
                                                             index={i + 4}
-                                                            className="h-16 w-16 text-2xl"
+                                                            className="h-10 w-10 text-lg sm:h-12 sm:w-12 sm:text-xl md:h-16 md:w-16 md:text-2xl"
                                                         />
                                                     )
                                                 )}
