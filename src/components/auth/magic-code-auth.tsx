@@ -14,12 +14,13 @@ import {
     InputOTPSlot,
 } from "@/components/ui/input-otp";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    Credenza,
+    CredenzaBody,
+    CredenzaContent,
+    CredenzaDescription,
+    CredenzaHeader,
+    CredenzaTitle,
+} from "@/components/ui/credenza";
 
 interface MagicCodeAuthProps {
     trigger?: React.ReactNode;
@@ -55,45 +56,47 @@ export function MagicCodeAuth({ trigger, onSuccess }: MagicCodeAuthProps) {
                     Sign in with Email
                 </Button>
             )}
-            <Dialog
+            <Credenza
                 open={open}
                 onOpenChange={handleOpenChange}
             >
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>
+                <CredenzaContent className="sm:max-w-md">
+                    <CredenzaHeader>
+                        <CredenzaTitle>
                             {!sentEmail
                                 ? "Sign in with Email"
                                 : "Enter your code"}
-                        </DialogTitle>
-                        <DialogDescription>
+                        </CredenzaTitle>
+                        <CredenzaDescription>
                             {!sentEmail
                                 ? "Enter your email, and we'll send you a verification code. We'll create an account for you too if you don't already have one."
                                 : `We sent an email to ${sentEmail}. Check your email, and paste the code you see.`}
-                        </DialogDescription>
-                    </DialogHeader>
-                    {!sentEmail ? (
-                        <EmailStep
-                            onSendEmail={(email) => {
-                                setSentEmail(email);
-                            }}
-                            isLoading={isLoading}
-                            setIsLoading={setIsLoading}
-                        />
-                    ) : (
-                        <CodeStep
-                            sentEmail={sentEmail}
-                            onBack={() => setSentEmail("")}
-                            onSuccess={() => {
-                                setOpen(false);
-                                onSuccess?.();
-                            }}
-                            isLoading={isLoading}
-                            setIsLoading={setIsLoading}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+                        </CredenzaDescription>
+                    </CredenzaHeader>
+                    <CredenzaBody>
+                        {!sentEmail ? (
+                            <EmailStep
+                                onSendEmail={(email) => {
+                                    setSentEmail(email);
+                                }}
+                                isLoading={isLoading}
+                                setIsLoading={setIsLoading}
+                            />
+                        ) : (
+                            <CodeStep
+                                sentEmail={sentEmail}
+                                onBack={() => setSentEmail("")}
+                                onSuccess={() => {
+                                    setOpen(false);
+                                    onSuccess?.();
+                                }}
+                                isLoading={isLoading}
+                                setIsLoading={setIsLoading}
+                            />
+                        )}
+                    </CredenzaBody>
+                </CredenzaContent>
+            </Credenza>
         </>
     );
 }

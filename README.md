@@ -41,7 +41,8 @@
 
 ### 2026/01/02
 
--   UX: new orgs and classes are no redirected to
+-   UX: Dialogs are now credenzas, but they are very long and I'm not sure about the UX for long drawers/dialogs. Is there another pattern we can use?
+-   UX: new orgs and classes are now redirected to
 -   UI: added "What is an Organization" collapsible to the No Organizations card
 -   BE: updated login methods to updated $user.created
 -   DX: created the `AuthProvider` component to wrap app layout and provide auth context. Still need to fully implement

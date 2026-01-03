@@ -14,14 +14,16 @@ import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+    Credenza,
+    CredenzaBody,
+    CredenzaClose,
+    CredenzaContent,
+    CredenzaDescription,
+    CredenzaFooter,
+    CredenzaHeader,
+    CredenzaTitle,
+    CredenzaTrigger,
+} from "@/components/ui/credenza";
 import { Input } from "@/components/ui/input";
 import {
     Field,
@@ -223,109 +225,112 @@ export default function CreateOrganizationDialog({
     };
 
     return (
-        <Dialog
+        <Credenza
             open={open}
             onOpenChange={handleOpenChange}
         >
-            <DialogTrigger asChild>
+            <CredenzaTrigger asChild>
                 {trigger || (
                     <Button variant="default">
                         <Plus className="size-4" />
                         Create Organization
                     </Button>
                 )}
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Create New Organization</DialogTitle>
-                    <DialogDescription>
+            </CredenzaTrigger>
+            <CredenzaContent className="max-h-[90vh] flex flex-col sm:max-w-lg">
+                <CredenzaHeader>
+                    <CredenzaTitle>Create New Organization</CredenzaTitle>
+                    <CredenzaDescription>
                         Create a new organization and invite members.
                         You&apos;ll be the owner and an admin automatically.
-                    </DialogDescription>
-                </DialogHeader>
+                    </CredenzaDescription>
+                </CredenzaHeader>
 
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="space-y-6"
+                    className="flex flex-col flex-1 min-h-0"
                 >
-                    <FieldGroup>
-                        {/* Name Field */}
-                        <Field data-invalid={!!errors.name}>
-                            <FieldLabel htmlFor="org-name">
-                                Organization Name *
-                            </FieldLabel>
-                            <Input
-                                id="org-name"
-                                placeholder="e.g., Acme Corporation"
+                    <CredenzaBody className="flex-1 overflow-y-auto">
+                        <FieldGroup>
+                            {/* Name Field */}
+                            <Field data-invalid={!!errors.name}>
+                                <FieldLabel htmlFor="org-name">
+                                    Organization Name *
+                                </FieldLabel>
+                                <Input
+                                    id="org-name"
+                                    placeholder="e.g., Acme Corporation"
+                                    disabled={isCreating}
+                                    aria-invalid={!!errors.name}
+                                    {...register("name")}
+                                />
+                                {errors.name && (
+                                    <FieldError>{errors.name.message}</FieldError>
+                                )}
+                            </Field>
+
+                            {/* Description Field */}
+                            <Field data-invalid={!!errors.description}>
+                                <FieldLabel htmlFor="org-description">
+                                    Description
+                                </FieldLabel>
+                                <Input
+                                    id="org-description"
+                                    placeholder="What does your organization do?"
+                                    disabled={isCreating}
+                                    aria-invalid={!!errors.description}
+                                    {...register("description")}
+                                />
+                                <FieldDescription>
+                                    A brief description of your organization
+                                    (optional)
+                                </FieldDescription>
+                                {errors.description && (
+                                    <FieldError>
+                                        {errors.description.message}
+                                    </FieldError>
+                                )}
+                            </Field>
+
+                            {/* Icon/Logo Upload Field */}
+                            <IconUploadField
+                                ref={iconFieldRef}
+                                label="Logo"
                                 disabled={isCreating}
-                                aria-invalid={!!errors.name}
-                                {...register("name")}
+                                onFileChange={setIconFile}
+                                id="org-icon"
                             />
-                            {errors.name && (
-                                <FieldError>{errors.name.message}</FieldError>
-                            )}
-                        </Field>
 
-                        {/* Description Field */}
-                        <Field data-invalid={!!errors.description}>
-                            <FieldLabel htmlFor="org-description">
-                                Description
-                            </FieldLabel>
-                            <Input
-                                id="org-description"
-                                placeholder="What does your organization do?"
+                            {/* Members Email Input */}
+                            <EmailInput
+                                label="Members"
+                                emails={memberEmails}
+                                onChange={setMemberEmails}
+                                error={memberError ?? undefined}
                                 disabled={isCreating}
-                                aria-invalid={!!errors.description}
-                                {...register("description")}
                             />
-                            <FieldDescription>
-                                A brief description of your organization
-                                (optional)
-                            </FieldDescription>
-                            {errors.description && (
-                                <FieldError>
-                                    {errors.description.message}
-                                </FieldError>
-                            )}
-                        </Field>
 
-                        {/* Icon/Logo Upload Field */}
-                        <IconUploadField
-                            ref={iconFieldRef}
-                            label="Logo"
-                            disabled={isCreating}
-                            onFileChange={setIconFile}
-                            id="org-icon"
-                        />
+                            {/* Admins Email Input */}
+                            <EmailInput
+                                label="Admins"
+                                emails={adminEmails}
+                                onChange={setAdminEmails}
+                                error={adminError ?? undefined}
+                                disabled={isCreating}
+                            />
+                        </FieldGroup>
+                    </CredenzaBody>
 
-                        {/* Members Email Input */}
-                        <EmailInput
-                            label="Members"
-                            emails={memberEmails}
-                            onChange={setMemberEmails}
-                            error={memberError ?? undefined}
-                            disabled={isCreating}
-                        />
-
-                        {/* Admins Email Input */}
-                        <EmailInput
-                            label="Admins"
-                            emails={adminEmails}
-                            onChange={setAdminEmails}
-                            error={adminError ?? undefined}
-                            disabled={isCreating}
-                        />
-                    </FieldGroup>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleOpenChange(false)}
-                            disabled={isCreating}
-                        >
-                            Cancel
-                        </Button>
+                    <CredenzaFooter className="shrink-0">
+                        <CredenzaClose asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={isCreating}
+                            >
+                                Cancel
+                            </Button>
+                        </CredenzaClose>
                         <Button
                             type="submit"
                             disabled={isCreating}
@@ -339,10 +344,10 @@ export default function CreateOrganizationDialog({
                                 "Create Organization"
                             )}
                         </Button>
-                    </DialogFooter>
+                    </CredenzaFooter>
                 </form>
-            </DialogContent>
-        </Dialog>
+            </CredenzaContent>
+        </Credenza>
     );
 }
 

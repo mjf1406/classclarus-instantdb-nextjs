@@ -14,14 +14,16 @@ import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+    Credenza,
+    CredenzaBody,
+    CredenzaClose,
+    CredenzaContent,
+    CredenzaDescription,
+    CredenzaFooter,
+    CredenzaHeader,
+    CredenzaTitle,
+    CredenzaTrigger,
+} from "@/components/ui/credenza";
 import { Input } from "@/components/ui/input";
 import {
     Field,
@@ -206,94 +208,99 @@ export default function CreateClassDialog({
     };
 
     return (
-        <Dialog
+        <Credenza
             open={open}
             onOpenChange={handleOpenChange}
         >
-            <DialogTrigger asChild>
+            <CredenzaTrigger asChild>
                 {trigger || (
                     <Button size="sm">
                         <Plus className="size-4" />
                         Add Class
                     </Button>
                 )}
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+            </CredenzaTrigger>
+            <CredenzaContent className="max-h-[90vh] flex flex-col sm:max-w-lg">
+                <CredenzaHeader>
+                    <CredenzaTitle className="flex items-center gap-2">
                         <GraduationCap className="size-5" />
                         Create New Class
-                    </DialogTitle>
-                    <DialogDescription>
+                    </CredenzaTitle>
+                    <CredenzaDescription>
                         Create a new class for your organization. Unique join
                         codes will be generated for students, teachers, and
                         parents.
-                    </DialogDescription>
-                </DialogHeader>
+                    </CredenzaDescription>
+                </CredenzaHeader>
 
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="space-y-6"
+                    className="flex flex-col flex-1 min-h-0"
                 >
-                    <FieldGroup>
-                        {/* Name Field */}
-                        <Field data-invalid={!!errors.name}>
-                            <FieldLabel htmlFor="class-name">
-                                Class Name *
-                            </FieldLabel>
-                            <Input
-                                id="class-name"
-                                placeholder="e.g., Math 101, Biology A"
+                    <CredenzaBody className="flex-1 overflow-y-auto">
+                        <FieldGroup>
+                            {/* Name Field */}
+                            <Field data-invalid={!!errors.name}>
+                                <FieldLabel htmlFor="class-name">
+                                    Class Name *
+                                </FieldLabel>
+                                <Input
+                                    id="class-name"
+                                    placeholder="e.g., Math 101, Biology A"
+                                    disabled={isCreating}
+                                    aria-invalid={!!errors.name}
+                                    {...register("name")}
+                                />
+                                {errors.name && (
+                                    <FieldError>
+                                        {errors.name.message}
+                                    </FieldError>
+                                )}
+                            </Field>
+
+                            {/* Description Field */}
+                            <Field data-invalid={!!errors.description}>
+                                <FieldLabel htmlFor="class-description">
+                                    Description
+                                </FieldLabel>
+                                <Input
+                                    id="class-description"
+                                    placeholder="What is this class about?"
+                                    disabled={isCreating}
+                                    aria-invalid={!!errors.description}
+                                    {...register("description")}
+                                />
+                                <FieldDescription>
+                                    A brief description of the class (optional)
+                                </FieldDescription>
+                                {errors.description && (
+                                    <FieldError>
+                                        {errors.description.message}
+                                    </FieldError>
+                                )}
+                            </Field>
+
+                            {/* Icon/Logo Upload Field */}
+                            <IconUploadField
+                                ref={iconFieldRef}
+                                label="Icon"
                                 disabled={isCreating}
-                                aria-invalid={!!errors.name}
-                                {...register("name")}
+                                onFileChange={setIconFile}
+                                id="class-icon"
                             />
-                            {errors.name && (
-                                <FieldError>{errors.name.message}</FieldError>
-                            )}
-                        </Field>
+                        </FieldGroup>
+                    </CredenzaBody>
 
-                        {/* Description Field */}
-                        <Field data-invalid={!!errors.description}>
-                            <FieldLabel htmlFor="class-description">
-                                Description
-                            </FieldLabel>
-                            <Input
-                                id="class-description"
-                                placeholder="What is this class about?"
+                    <CredenzaFooter className="shrink-0">
+                        <CredenzaClose asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
                                 disabled={isCreating}
-                                aria-invalid={!!errors.description}
-                                {...register("description")}
-                            />
-                            <FieldDescription>
-                                A brief description of the class (optional)
-                            </FieldDescription>
-                            {errors.description && (
-                                <FieldError>
-                                    {errors.description.message}
-                                </FieldError>
-                            )}
-                        </Field>
-
-                        {/* Icon/Logo Upload Field */}
-                        <IconUploadField
-                            ref={iconFieldRef}
-                            label="Icon"
-                            disabled={isCreating}
-                            onFileChange={setIconFile}
-                            id="class-icon"
-                        />
-                    </FieldGroup>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleOpenChange(false)}
-                            disabled={isCreating}
-                        >
-                            Cancel
-                        </Button>
+                            >
+                                Cancel
+                            </Button>
+                        </CredenzaClose>
                         <Button
                             type="submit"
                             disabled={isCreating}
@@ -307,10 +314,10 @@ export default function CreateClassDialog({
                                 "Create Class"
                             )}
                         </Button>
-                    </DialogFooter>
+                    </CredenzaFooter>
                 </form>
-            </DialogContent>
-        </Dialog>
+            </CredenzaContent>
+        </Credenza>
     );
 }
 
