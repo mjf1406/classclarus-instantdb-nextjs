@@ -50,21 +50,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const GOOGLE_CLIENT_NAME = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_NAME || "";
 
-type User = {
-    created_at: Date | null | string;
-    email: string;
-    id: string;
-    imageURL: string | null;
-    avatarURL: string | null;
-    isGuest: boolean;
-    polarCustomerId: string | null;
-    refresh_token: string | null;
-    updated_at: Date | null | string;
-    type: string;
-    firstName: string | null;
-    lastName: string | null;
-    plan: string;
-} | null | undefined;
+type User =
+    | {
+          created_at: Date | null | string;
+          email: string;
+          id: string;
+          imageURL: string | null;
+          avatarURL: string | null;
+          isGuest: boolean;
+          polarCustomerId: string | null;
+          refresh_token: string | null;
+          updated_at: Date | null | string;
+          type: string;
+          firstName: string | null;
+          lastName: string | null;
+          plan: string;
+      }
+    | null
+    | undefined;
 
 export function NavUser({
     user: userProp,
@@ -102,7 +105,10 @@ export function NavUser({
     return (
         <SidebarMenu>
             <db.SignedIn>
-                <NavUserSignedIn isMobile={isMobile} user={user} />
+                <NavUserSignedIn
+                    isMobile={isMobile}
+                    user={user}
+                />
             </db.SignedIn>
             <db.SignedOut>
                 <NavUserSignedOut nonce={nonce} />
