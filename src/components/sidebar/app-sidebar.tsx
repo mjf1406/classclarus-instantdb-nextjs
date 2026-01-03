@@ -56,7 +56,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavStudentFacing pathname={pathname} />
             </SidebarContent>
             <SidebarFooter>
-                <Link href={"/join"}>Join Org/Class</Link>
                 {user?.isGuest && <GuestUpgradeCard />}
                 {isLoading ? (
                     <SidebarMenu>

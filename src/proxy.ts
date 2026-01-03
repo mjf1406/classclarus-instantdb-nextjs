@@ -12,7 +12,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
     redis: redis,
-    limiter: Ratelimit.slidingWindow(20, "10 s"), // 20 requests per 10 seconds
+    limiter: Ratelimit.slidingWindow(100, "60 s"), // 100 requests per 60 seconds
 });
 
 export default async function proxy(

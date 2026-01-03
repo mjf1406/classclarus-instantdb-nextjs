@@ -2,7 +2,14 @@
 
 "use client";
 
-import { LayoutDashboard, Coins, Clock, Home, Merge } from "lucide-react";
+import {
+    LayoutDashboard,
+    Coins,
+    Clock,
+    Home,
+    Merge,
+    UserPlus,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -37,9 +44,15 @@ const items = [
         icon: Clock,
     },
     {
-        title: "Join Class",
+        title: "Join Codes",
         path: "join-codes",
         icon: Merge,
+    },
+    {
+        title: "Join Org/Class",
+        path: "join",
+        icon: UserPlus,
+        isTopLevel: true,
     },
 ];
 
@@ -50,11 +63,6 @@ export function NavMain({ pathname }: { pathname: string }) {
     const orgId = params.orgId as string;
     const classId = params.classId as string | undefined;
 
-    // Don't render navigation if we're not in a class context
-    if (!classId) {
-        return null;
-    }
-
     // Close mobile sidebar when navigation item is clicked
     const handleNavigationClick = () => {
         if (isMobile) {
@@ -62,12 +70,29 @@ export function NavMain({ pathname }: { pathname: string }) {
         }
     };
 
+    // Filter items based on context
+    const visibleItems = items.filter((item) => {
+        // Always show top-level items
+        if (item.isTopLevel) {
+            return true;
+        }
+        // Only show class-specific items when in a class context
+        return !!classId;
+    });
+
+    // Don't render navigation if there are no visible items
+    if (visibleItems.length === 0) {
+        return null;
+    }
+
     return (
         <SidebarGroup>
             {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
             <SidebarMenu>
-                {items.map((item) => {
-                    const href = `/class/${orgId}/${classId}/${item.path}`;
+                {visibleItems.map((item) => {
+                    const href = item.isTopLevel 
+                        ? `/${item.path}` 
+                        : `/class/${orgId}/${classId}/${item.path}`;
                     const isActive = pathname === href;
 
                     return (
