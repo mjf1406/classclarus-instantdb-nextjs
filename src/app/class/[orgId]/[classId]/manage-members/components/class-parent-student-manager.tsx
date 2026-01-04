@@ -99,7 +99,11 @@ export function ClassParentStudentManager({
     };
 
     const handleAddChild = (parentId: string, studentId: string) => {
-        db.transact(db.tx.$users[parentId].link({ children: [studentId] }));
+        // Link parent to student AND ensure parent is added to the class
+        db.transact([
+            db.tx.$users[parentId].link({ children: [studentId] }),
+            db.tx.classes[classId].link({ classParents: parentId }),
+        ]);
         onChange?.();
     };
 

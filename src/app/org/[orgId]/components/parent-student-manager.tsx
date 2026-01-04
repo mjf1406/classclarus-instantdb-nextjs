@@ -63,17 +63,18 @@ export function ParentStudentManager({
         studentName: string;
     } | null>(null);
 
-    // Query to get parent-student relationships
+    // Query to get parent-student relationships and student's classes
     const { data } = db.useQuery({
         $users: {
             $: {
                 where: {
                     id: {
-                        $in: parents.map((p) => p.id),
+                        $in: [...parents.map((p) => p.id), ...students.map((s) => s.id)],
                     },
                 },
             },
             children: {},
+            studentClasses: {},
         },
     });
 
@@ -100,7 +101,19 @@ export function ParentStudentManager({
     };
 
     const handleAddChild = (parentId: string, studentId: string) => {
-        db.transact(db.tx.$users[parentId].link({ children: [studentId] }));
+        // Get the student's classes to add the parent to them
+        const studentData = data?.$users?.find((u) => u.id === studentId);
+        const studentClassIds = studentData?.studentClasses?.map((c) => c.id) || [];
+        
+        // Link parent to student AND add parent to all student's classes
+        const transactions = [
+            db.tx.$users[parentId].link({ children: [studentId] }),
+            ...studentClassIds.map((classId) =>
+                db.tx.classes[classId].link({ classParents: parentId })
+            ),
+        ];
+        
+        db.transact(transactions);
         onChange?.();
     };
 

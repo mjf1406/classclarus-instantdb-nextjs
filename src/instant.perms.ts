@@ -37,10 +37,16 @@ const dataBind = [
     "auth.id in newData.ref('orgStudents.id') || auth.id in newData.ref('orgTeachers.id') || auth.id in newData.ref('orgParents.id')",
     // User is a class member
     "isClassMember",
-    "auth.id in data.ref('classStudents.id') || auth.id in data.ref('classTeachers.id')",
+    "auth.id in data.ref('classStudents.id') || auth.id in data.ref('classTeachers.id') || auth.id in data.ref('classParents.id')",
     // User is still a class member
     "isStillClassMember",
-    "auth.id in newData.ref('classStudents.id') || auth.id in newData.ref('classTeachers.id')",
+    "auth.id in newData.ref('classStudents.id') || auth.id in newData.ref('classTeachers.id') || auth.id in newData.ref('classParents.id')",
+    // User is a class parent
+    "isClassParent",
+    "auth.id in data.ref('classParents.id')",
+    // User is still a class parent
+    "isStillClassParent",
+    "auth.id in newData.ref('classParents.id')",
     // User is an admin of the data (organization admins)
     "isAdmin",
     "auth.id in data.ref('admins.id')",
@@ -91,7 +97,7 @@ const rules = {
     classes: {
         allow: {
             create: "isAuthenticated",
-            view: "isAuthenticated && (isOwner || isClassAdmin || isClassMember)",
+            view: "isAuthenticated && (isOwner || isClassAdmin || isClassMember || isClassParent)",
             update: "isAuthenticated && (isOwner || isClassAdmin) && (isStillOwner || isStillClassAdmin)",
             delete: "isAuthenticated && isOwner",
         },
