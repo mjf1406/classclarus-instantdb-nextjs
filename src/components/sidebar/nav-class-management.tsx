@@ -2,7 +2,7 @@
 
 "use client";
 
-import { FileText, BookOpenCheck, CheckSquare, Target } from "lucide-react";
+import { FileText, BookOpenCheck, CheckSquare, Target, Users } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -35,6 +35,11 @@ const items = [
         title: "Expectations",
         path: "expectations",
         icon: Target,
+    },
+    {
+        title: "Manage Members",
+        path: "manage-members",
+        icon: Users,
     },
 ];
 
