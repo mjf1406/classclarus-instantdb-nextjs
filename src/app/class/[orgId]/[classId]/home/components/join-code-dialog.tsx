@@ -13,6 +13,12 @@ import {
 import { cn } from "@/lib/utils";
 import { JoinCodeType, codeLabels, codeColors } from "../types";
 
+// Format code with hyphen after first 3 characters for readability
+function formatCodeForDisplay(code: string): string {
+    if (code.length <= 3) return code;
+    return `${code.slice(0, 3)}-${code.slice(3)}`;
+}
+
 interface JoinCodeDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -76,9 +82,12 @@ export function JoinCodeDialog({
                                     fontSize: "clamp(3rem, 10vw, 12rem)",
                                 }}
                             >
-                                {joinCodes[selectedCodeType]}
+                                {formatCodeForDisplay(joinCodes[selectedCodeType])}
                             </p>
                         </div>
+                        <p className="text-sm text-muted-foreground mt-2">
+                            Note: The hyphen is for readability only
+                        </p>
                     </div>
 
                     {/* Procedure Steps */}

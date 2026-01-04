@@ -210,7 +210,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
 
             {/* Classes grid */}
             {filteredClasses.length > 0 && (
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {filteredClasses.map((cls) => (
                         <ClassCard
                             key={cls.id}

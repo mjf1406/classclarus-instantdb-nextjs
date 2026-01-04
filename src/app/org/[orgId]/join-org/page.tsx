@@ -5,22 +5,20 @@
 import { use, useState } from "react";
 import { db } from "@/lib/db/db";
 import { escapeHtml } from "@/lib/utils";
-import { JoinCodeDialog } from "../home/components/join-code-dialog";
-import { ClassErrorState } from "../home/components/class-error-state";
-import { ClassNotFoundState } from "../home/components/class-not-found-state";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Fullscreen, Loader2 } from "lucide-react";
+import { Copy, ExternalLink, Fullscreen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-    ClassQueryResult,
-    JoinCodeType,
-    codeLabels,
-    codeColors,
-} from "../home/types";
 import BlankBackgroundLoader from "@/components/loaders/blank-background-loader";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Building2 } from "lucide-react";
 
 interface JoinCodesPageProps {
-    params: Promise<{ orgId: string; classId: string }>;
+    params: Promise<{ orgId: string }>;
 }
 
 // Format code with hyphen after first 3 characters for readability
@@ -30,16 +28,14 @@ function formatCodeForDisplay(code: string): string {
 }
 
 export default function JoinCodesPage({ params }: JoinCodesPageProps) {
-    const { orgId, classId } = use(params);
-    const [selectedCodeType, setSelectedCodeType] =
-        useState<JoinCodeType>("student");
-    const [copied, setCopied] = useState<JoinCodeType | null>(null);
+    const { orgId } = use(params);
+    const [copied, setCopied] = useState(false);
     const [showFullscreen, setShowFullscreen] = useState(false);
 
-    // Query the class with related data
+    // Query the organization with join code
     const { data, isLoading, error } = db.useQuery({
-        classes: {
-            $: { where: { id: classId } },
+        organizations: {
+            $: { where: { id: orgId } },
             joinCodeEntity: {},
         },
     });
@@ -48,50 +44,33 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
         return <BlankBackgroundLoader />;
     }
 
-    const classData = data?.classes?.[0] as ClassQueryResult | undefined;
+    const organization = data?.organizations?.[0];
+    const joinCode = organization?.joinCodeEntity?.code;
 
-    const joinCodes = classData?.joinCodeEntity
-        ? {
-              student: classData.joinCodeEntity.studentCode,
-              teacher: classData.joinCodeEntity.teacherCode,
-              parent: classData.joinCodeEntity.parentCode,
-          }
-        : null;
-
-    const handleCopyJoinCode = async (codeType: JoinCodeType) => {
-        if (!joinCodes) return;
+    const handleCopyJoinCode = async () => {
+        if (!joinCode) return;
         try {
-            await navigator.clipboard.writeText(joinCodes[codeType]);
-            setCopied(codeType);
-            setTimeout(() => setCopied(null), 2000);
+            await navigator.clipboard.writeText(joinCode);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         } catch (err) {
             console.error("Failed to copy join code:", err);
         }
     };
 
     const handleOpenFullscreen = () => {
-        if (!joinCodes) return;
+        if (!joinCode) return;
         setShowFullscreen(true);
     };
 
-    const handleOpenInNewWindow = (codeType: JoinCodeType) => {
-        if (!classData || !joinCodes) return;
-        const code = joinCodes[codeType];
-        const formattedCode = formatCodeForDisplay(code);
-        const label = codeLabels[codeType];
-        const colorMap = {
-            student: "#3b82f6",
-            teacher: "#10b981",
-            parent: "#f59e0b",
-        };
-        const color = colorMap[codeType];
+    const handleOpenInNewWindow = () => {
+        if (!organization || !joinCode) return;
+        const formattedCode = formatCodeForDisplay(joinCode);
         const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>${escapeHtml(label)} Join Code - ${escapeHtml(
-            classData.name
-        )}</title>
+    <title>Join Code - ${escapeHtml(organization.name)}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -100,7 +79,7 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, ${color} 0%, ${color}99 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #6366f199 100%);
             color: white;
         }
         .container {
@@ -154,7 +133,7 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
             width: 2.5rem;
             height: 2.5rem;
             background: white;
-            color: ${color};
+            color: #6366f1;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -172,18 +151,18 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
 <body>
     <div class="container">
         <div class="code-section">
-            <h1>${escapeHtml(classData.name)}</h1>
-            <div class="code-type">${escapeHtml(label)} Code</div>
+            <h1>${escapeHtml(organization.name)}</h1>
+            <div class="code-type">Organization Code</div>
             <div class="code-label">Join Code</div>
             <div class="code">${escapeHtml(formattedCode)}</div>
-            <div style="font-size: 0.875rem; opacity: 0.8; margin-top: 1rem;">Note: The hyphen is for readability only</div>
+            <div style="font-size: 3rem; opacity: 0.8; margin-top: 1rem;">The hyphen is for readability only.</div>
         </div>
         <div class="steps">
             <h2>How to Join</h2>
             <ol>
                 <li>Go to <span class="url">app.classclarus.com/join</span></li>
                 <li>Input the code you see on the screen</li>
-                <li>Click the <strong>Join Class</strong> button</li>
+                <li>Click the <strong>Join Organization</strong> button</li>
                 <li>All done!</li>
             </ol>
         </div>
@@ -200,29 +179,42 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
     // Error state
     if (error) {
         return (
-            <ClassErrorState
-                error={
-                    error instanceof Error
-                        ? error
-                        : new Error(error.message || "Unknown error")
-                }
-                orgId={orgId}
-            />
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="w-full max-w-md rounded-xl border border-destructive/50 bg-destructive/10 p-6 text-center">
+                    <p className="text-destructive font-medium">
+                        Failed to load organization
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        {error.message}
+                    </p>
+                </div>
+            </div>
         );
     }
 
     // Not found state
-    if (!classData) {
-        return <ClassNotFoundState orgId={orgId} />;
+    if (!organization) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="w-full max-w-md rounded-xl border bg-card p-8 text-center">
+                    <Building2 className="size-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="font-semibold">Organization Not Found</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        The organization you&apos;re looking for doesn&apos;t
+                        exist.
+                    </p>
+                </div>
+            </div>
+        );
     }
 
-    if (!joinCodes) {
+    if (!joinCode) {
         return (
             <div className="min-h-screen bg-linear-to-b from-muted/30 to-background">
                 <main className="mx-auto max-w-6xl px-4 py-8">
                     <div className="rounded-2xl border bg-card p-8 text-center">
                         <p className="text-muted-foreground">
-                            No join codes available for this class.
+                            No join code available for this organization.
                         </p>
                     </div>
                 </main>
@@ -237,88 +229,45 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
                     {/* Page Header */}
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">
-                            Join Codes
+                            Join Code
                         </h1>
                         <p className="mt-2 text-muted-foreground">
-                            Share these codes with students, teachers, and
-                            parents to join this class
+                            Share this code with others to join this
+                            organization
                         </p>
-                    </div>
-
-                    {/* Full-width Tabs */}
-                    <div className="w-full rounded-lg border bg-card p-1">
-                        <div className="grid grid-cols-3 gap-1">
-                            {(["student", "teacher", "parent"] as const).map(
-                                (type) => (
-                                    <button
-                                        key={type}
-                                        onClick={() =>
-                                            setSelectedCodeType(type)
-                                        }
-                                        className={cn(
-                                            "px-4 py-3 text-sm font-medium rounded-md transition-all duration-200",
-                                            selectedCodeType === type
-                                                ? "bg-background shadow-sm"
-                                                : "hover:bg-background/50 text-muted-foreground"
-                                        )}
-                                    >
-                                        <span className={codeColors[type]}>
-                                            {codeLabels[type]}
-                                        </span>
-                                    </button>
-                                )
-                            )}
-                        </div>
                     </div>
 
                     {/* Join Code Display */}
                     <div className="rounded-2xl border bg-card p-8 md:p-12">
                         <div className="flex flex-col items-center space-y-6">
                             {/* Code Label */}
-                            <p
-                                className={cn(
-                                    "text-lg md:text-xl uppercase tracking-wider font-semibold",
-                                    codeColors[selectedCodeType]
-                                )}
-                            >
-                                {codeLabels[selectedCodeType]} Join Code
+                            <p className="text-lg md:text-xl uppercase tracking-wider font-semibold text-violet-500">
+                                Organization Join Code
                             </p>
 
                             {/* Code Display */}
-                            <div
-                                className={cn(
-                                    "rounded-2xl border-4 bg-muted/50 px-8 py-6 md:px-16 md:py-12 w-full max-w-2xl",
-                                    selectedCodeType === "student" &&
-                                        "border-blue-500",
-                                    selectedCodeType === "teacher" &&
-                                        "border-emerald-500",
-                                    selectedCodeType === "parent" &&
-                                        "border-amber-500"
-                                )}
-                            >
+                            <div className="rounded-2xl border-4 border-violet-500 bg-muted/50 px-8 py-6 md:px-16 md:py-12 w-full max-w-2xl">
                                 <p
                                     className="font-bold font-mono tracking-[0.15em] text-center"
                                     style={{
                                         fontSize: "clamp(2rem, 8vw, 6rem)",
                                     }}
                                 >
-                                    {formatCodeForDisplay(joinCodes[selectedCodeType])}
+                                    {formatCodeForDisplay(joinCode)}
                                 </p>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-2">
-                                Note: The hyphen is for readability only
+                            <p className="text-2xl text-muted-foreground mt-2">
+                                The hyphen is for readability only.
                             </p>
 
                             {/* Action Buttons */}
                             <div className="flex flex-wrap justify-center gap-3">
                                 <Button
-                                    onClick={() =>
-                                        handleCopyJoinCode(selectedCodeType)
-                                    }
+                                    onClick={handleCopyJoinCode}
                                     variant="outline"
                                     size="lg"
                                 >
-                                    {copied === selectedCodeType ? (
+                                    {copied ? (
                                         <>
                                             <Copy className="size-5 mr-2" />
                                             Copied!
@@ -331,9 +280,7 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
                                     )}
                                 </Button>
                                 <Button
-                                    onClick={() =>
-                                        handleOpenInNewWindow(selectedCodeType)
-                                    }
+                                    onClick={handleOpenInNewWindow}
                                     variant="outline"
                                     size="lg"
                                 >
@@ -359,43 +306,18 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
                         </p>
                         <ol className="space-y-4 text-base md:text-lg">
                             <li className="flex items-start gap-4">
-                                <span
-                                    className={cn(
-                                        "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                        selectedCodeType === "student" &&
-                                            "bg-blue-500",
-                                        selectedCodeType === "teacher" &&
-                                            "bg-emerald-500",
-                                        selectedCodeType === "parent" &&
-                                            "bg-amber-500"
-                                    )}
-                                >
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
                                     1
                                 </span>
                                 <span>
                                     Go to{" "}
-                                    <span
-                                        className={cn(
-                                            "font-mono font-semibold",
-                                            codeColors[selectedCodeType]
-                                        )}
-                                    >
+                                    <span className="font-mono font-semibold text-violet-500">
                                         app.classclarus.com/join
                                     </span>
                                 </span>
                             </li>
                             <li className="flex items-start gap-4">
-                                <span
-                                    className={cn(
-                                        "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                        selectedCodeType === "student" &&
-                                            "bg-blue-500",
-                                        selectedCodeType === "teacher" &&
-                                            "bg-emerald-500",
-                                        selectedCodeType === "parent" &&
-                                            "bg-amber-500"
-                                    )}
-                                >
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
                                     2
                                 </span>
                                 <span>
@@ -403,39 +325,19 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
                                 </span>
                             </li>
                             <li className="flex items-start gap-4">
-                                <span
-                                    className={cn(
-                                        "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                        selectedCodeType === "student" &&
-                                            "bg-blue-500",
-                                        selectedCodeType === "teacher" &&
-                                            "bg-emerald-500",
-                                        selectedCodeType === "parent" &&
-                                            "bg-amber-500"
-                                    )}
-                                >
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
                                     3
                                 </span>
                                 <span>
                                     Click the{" "}
                                     <span className="font-semibold">
-                                        Join Class
+                                        Join Organization
                                     </span>{" "}
                                     button
                                 </span>
                             </li>
                             <li className="flex items-start gap-4">
-                                <span
-                                    className={cn(
-                                        "shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl",
-                                        selectedCodeType === "student" &&
-                                            "bg-blue-500",
-                                        selectedCodeType === "teacher" &&
-                                            "bg-emerald-500",
-                                        selectedCodeType === "parent" &&
-                                            "bg-amber-500"
-                                    )}
-                                >
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
                                     4
                                 </span>
                                 <span>All done!</span>
@@ -446,17 +348,134 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
             </main>
 
             {/* Fullscreen Join Code Dialog */}
-            {classData && joinCodes && (
-                <JoinCodeDialog
+            {organization && joinCode && (
+                <OrgJoinCodeDialog
                     open={showFullscreen}
                     onOpenChange={setShowFullscreen}
-                    className={classData.name}
-                    selectedCodeType={selectedCodeType}
-                    joinCodes={joinCodes}
+                    organizationName={organization.name}
+                    joinCode={joinCode}
                     onCopyJoinCode={handleCopyJoinCode}
                     onOpenInNewWindow={handleOpenInNewWindow}
                 />
             )}
         </div>
+    );
+}
+
+// Fullscreen dialog component for org join code
+function OrgJoinCodeDialog({
+    open,
+    onOpenChange,
+    organizationName,
+    joinCode,
+    onCopyJoinCode,
+    onOpenInNewWindow,
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    organizationName: string;
+    joinCode: string;
+    onCopyJoinCode: () => void;
+    onOpenInNewWindow: () => void;
+}) {
+    return (
+        <Dialog
+            open={open}
+            onOpenChange={onOpenChange}
+        >
+            <DialogContent className="max-w-none! w-screen! h-screen! m-0! rounded-none! top-0! left-0! translate-x-0! translate-y-0! flex flex-col p-8!">
+                <DialogHeader className="pb-4">
+                    <DialogTitle className="text-center text-3xl">
+                        {organizationName}
+                    </DialogTitle>
+                </DialogHeader>
+
+                <div className="flex flex-wrap items-center justify-center flex-1 gap-8 lg:gap-16">
+                    {/* Join Code */}
+                    <div className="flex flex-col items-center">
+                        <p className="text-lg md:text-xl mb-3 uppercase tracking-wider font-semibold text-violet-500">
+                            Organization Join Code
+                        </p>
+                        <div className="rounded-2xl border-4 border-violet-500 bg-muted/50 px-8 py-6 md:px-16 md:py-12">
+                            <p
+                                className="font-bold font-mono tracking-[0.15em] text-center"
+                                style={{
+                                    fontSize: "clamp(3rem, 10vw, 12rem)",
+                                }}
+                            >
+                                {formatCodeForDisplay(joinCode)}
+                            </p>
+                        </div>
+                        <p className="text-4xl text-muted-foreground mt-2">
+                            The hyphen is for readability only.
+                        </p>
+                    </div>
+
+                    {/* Procedure Steps */}
+                    <div className="flex flex-col items-start bg-muted/30 rounded-2xl p-6 md:p-10 border">
+                        <p className="text-2xl md:text-3xl font-semibold mb-6">
+                            How to Join
+                        </p>
+                        <ol className="space-y-4 text-xl md:text-2xl">
+                            <li className="flex items-start gap-4">
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
+                                    1
+                                </span>
+                                <span>
+                                    Go to{" "}
+                                    <span className="font-mono font-semibold text-violet-500">
+                                        www.classclarus.com/join
+                                    </span>
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-4">
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
+                                    2
+                                </span>
+                                <span>
+                                    Input the code you see on the screen
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-4">
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
+                                    3
+                                </span>
+                                <span>
+                                    Click the{" "}
+                                    <span className="font-semibold">
+                                        Join Organization
+                                    </span>{" "}
+                                    button
+                                </span>
+                            </li>
+                            <li className="flex items-start gap-4">
+                                <span className="shrink-0 flex items-center justify-center size-10 md:size-12 rounded-full text-white font-bold text-lg md:text-xl bg-violet-500">
+                                    4
+                                </span>
+                                <span>All done!</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <div className="flex justify-center gap-3 pt-4">
+                    <Button
+                        onClick={onCopyJoinCode}
+                        variant="outline"
+                        size="lg"
+                    >
+                        <Copy className="size-5 mr-2" />
+                        Copy Code
+                    </Button>
+                    <Button
+                        onClick={onOpenInNewWindow}
+                        variant="outline"
+                        size="lg"
+                    >
+                        <ExternalLink className="size-5 mr-2" />
+                        Open in New Window
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
