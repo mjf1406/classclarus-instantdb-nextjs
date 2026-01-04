@@ -82,11 +82,13 @@ export function JoinCodeDialog({
                                     fontSize: "clamp(3rem, 10vw, 12rem)",
                                 }}
                             >
-                                {formatCodeForDisplay(joinCodes[selectedCodeType])}
+                                {formatCodeForDisplay(
+                                    joinCodes[selectedCodeType]
+                                )}
                             </p>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                            Note: The hyphen is for readability only
+                        <p className="text-4xl text-muted-foreground mt-2">
+                            The hyphen is for readability only
                         </p>
                     </div>
 

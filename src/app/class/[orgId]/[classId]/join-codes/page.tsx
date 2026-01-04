@@ -302,11 +302,13 @@ export default function JoinCodesPage({ params }: JoinCodesPageProps) {
                                         fontSize: "clamp(2rem, 8vw, 6rem)",
                                     }}
                                 >
-                                    {formatCodeForDisplay(joinCodes[selectedCodeType])}
+                                    {formatCodeForDisplay(
+                                        joinCodes[selectedCodeType]
+                                    )}
                                 </p>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-2">
-                                Note: The hyphen is for readability only
+                            <p className="text-2xl text-muted-foreground mt-2">
+                                The hyphen is for readability only.
                             </p>
 
                             {/* Action Buttons */}
