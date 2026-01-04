@@ -748,7 +748,14 @@ export async function joinClassAsTeacher(
 
 export async function getClassStudents(classId: string): Promise<{
     success: boolean;
-    students?: Array<{ id: string; email?: string }>;
+    students?: Array<{
+        id: string;
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        imageURL?: string;
+        avatarURL?: string;
+    }>;
     error?: string;
 }> {
     try {
@@ -769,6 +776,10 @@ export async function getClassStudents(classId: string): Promise<{
             ? students.map((s: any) => ({
                   id: s.id ?? s,
                   email: s.email,
+                  firstName: s.firstName,
+                  lastName: s.lastName,
+                  imageURL: s.imageURL,
+                  avatarURL: s.avatarURL,
               }))
             : [];
 

@@ -40,7 +40,14 @@ function JoinPageContent() {
     const [error, setError] = useState<string | null>(null);
     const [classId, setClassId] = useState<string | null>(null);
     const [students, setStudents] = useState<
-        Array<{ id: string; email?: string }>
+        Array<{
+            id: string;
+            email?: string;
+            firstName?: string;
+            lastName?: string;
+            imageURL?: string;
+            avatarURL?: string;
+        }>
     >([]);
     const [hasProcessedUrlCode, setHasProcessedUrlCode] = useState(false);
     const [joinToken, setJoinToken] = useState<string | null>(null);

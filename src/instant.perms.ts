@@ -80,7 +80,9 @@ const rules = {
         allow: {
             view: "isAuthenticated",
             create: "false",
-            update: "isAuthenticated && isOwner && isStillOwner",
+            // Allow users to update their own records, OR allow class/org admins to update users
+            // who are members of classes/organizations where the admin has permissions
+            update: "isAuthenticated && ((isOwner && isStillOwner) || (auth.id in data.ref('studentClasses.classAdmins.id') || auth.id in data.ref('parentClasses.classAdmins.id') || auth.id in data.ref('teacherClasses.classAdmins.id') || auth.id in data.ref('studentOrganizations.admins.id') || auth.id in data.ref('parentOrganizations.admins.id') || auth.id in data.ref('teacherOrganizations.admins.id')))",
             delete: "false",
         },
         bind: dataBind,
