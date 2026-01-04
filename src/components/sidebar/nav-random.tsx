@@ -14,6 +14,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { useClassRole } from "@/hooks/use-class-role";
 
 const items = [
     {
@@ -25,23 +26,40 @@ const items = [
         title: "Random Event",
         path: "random-event",
         icon: Calendar,
+        requiresTeacherOrAbove: true,
     },
     {
         title: "Randomizer",
         path: "randomizer",
         icon: Dice6,
+        requiresTeacherOrAbove: true,
     },
 ];
 
 export function NavRandom({ pathname }: { pathname: string }) {
     const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
+    const { isTeacherOrAbove } = useClassRole();
 
     const orgId = params.orgId as string;
     const classId = params.classId as string | undefined;
 
     // Don't render navigation if we're not in a class context
     if (!classId) {
+        return null;
+    }
+
+    // Filter items based on role
+    const visibleItems = items.filter((item) => {
+        // Hide items that require teacher or above for students/parents
+        if (item.requiresTeacherOrAbove && !isTeacherOrAbove) {
+            return false;
+        }
+        return true;
+    });
+
+    // Don't render if no items are visible
+    if (visibleItems.length === 0) {
         return null;
     }
 
@@ -56,7 +74,7 @@ export function NavRandom({ pathname }: { pathname: string }) {
         <SidebarGroup>
             <SidebarGroupLabel>Random</SidebarGroupLabel>
             <SidebarMenu>
-                {items.map((item) => {
+                {visibleItems.map((item) => {
                     const href = `/class/${orgId}/${classId}/${item.path}`;
                     const isActive = pathname === href;
 

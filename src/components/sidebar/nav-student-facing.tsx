@@ -14,6 +14,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { useClassRole } from "@/hooks/use-class-role";
 
 const items = [
     {
@@ -26,12 +27,18 @@ const items = [
 export function NavStudentFacing({ pathname }: { pathname: string }) {
     const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
+    const { isTeacherOrAbove } = useClassRole();
 
     const orgId = params.orgId as string;
     const classId = params.classId as string | undefined;
 
     // Don't render navigation if we're not in a class context
     if (!classId) {
+        return null;
+    }
+
+    // Hide this entire section for students/parents (only show for teachers/admins)
+    if (!isTeacherOrAbove) {
         return null;
     }
 

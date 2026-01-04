@@ -4,7 +4,14 @@
 
 import { useState, useMemo } from "react";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
-import { GraduationCap, Plus, Search, X } from "lucide-react";
+import {
+    Archive,
+    ChevronDown,
+    GraduationCap,
+    Plus,
+    Search,
+    X,
+} from "lucide-react";
 
 import { db } from "@/lib/db/db";
 import { useAuthContext } from "@/components/auth/auth-provider";
@@ -20,6 +27,11 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from "@/components/ui/empty";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface ClassListProps {
     organizationId: string;
@@ -27,6 +39,7 @@ interface ClassListProps {
 
 export default function ClassList({ organizationId }: ClassListProps) {
     const [searchQuery, setSearchQuery] = useState("");
+    const [isArchivedOpen, setIsArchivedOpen] = useState(false);
     // Use 25ms delay when clearing (empty search), 100ms when typing
     const debouncedSearchQuery = useDebouncedValue(
         searchQuery,
@@ -91,13 +104,54 @@ export default function ClassList({ organizationId }: ClassListProps) {
         return isClassOwner || classAdmins.includes(user.id);
     };
 
+    // Check if user can archive a specific class (must be class owner/admin AND org owner/admin)
+    const canArchiveClass = (classData: (typeof classes)[0]) => {
+        if (!user?.id) return false;
+        if (!canEditInOrg) return false; // Must be org owner/admin
+        // Also must be class owner or class admin
+        const isClassOwner = classData.owner?.id === user.id;
+        const linkedClassAdmins = classData.classAdmins ?? [];
+        const classAdmins = Array.isArray(linkedClassAdmins)
+            ? linkedClassAdmins.map((admin: any) => admin.id ?? admin)
+            : Array.isArray(classData.classAdmins)
+            ? classData.classAdmins
+            : [];
+        return isClassOwner || classAdmins.includes(user.id);
+    };
+
+    // Split classes into active and archived
+    const { activeClasses, archivedClasses } = useMemo(() => {
+        const active: typeof classes = [];
+        const archived: typeof classes = [];
+
+        classes.forEach((cls) => {
+            if (cls.archivedAt == null) {
+                active.push(cls);
+            } else {
+                archived.push(cls);
+            }
+        });
+
+        return { activeClasses: active, archivedClasses: archived };
+    }, [classes]);
+
     // Filter classes by search query (name only)
     // Use debounced value for smooth filtering (25ms when clearing, 100ms when typing)
-    const filteredClasses = useMemo(() => {
-        if (!debouncedSearchQuery.trim()) return classes;
+    const filteredActiveClasses = useMemo(() => {
+        if (!debouncedSearchQuery.trim()) return activeClasses;
         const query = debouncedSearchQuery.toLowerCase().trim();
-        return classes.filter((cls) => cls.name.toLowerCase().includes(query));
-    }, [classes, debouncedSearchQuery]);
+        return activeClasses.filter((cls) =>
+            cls.name.toLowerCase().includes(query)
+        );
+    }, [activeClasses, debouncedSearchQuery]);
+
+    const filteredArchivedClasses = useMemo(() => {
+        if (!debouncedSearchQuery.trim()) return archivedClasses;
+        const query = debouncedSearchQuery.toLowerCase().trim();
+        return archivedClasses.filter((cls) =>
+            cls.name.toLowerCase().includes(query)
+        );
+    }, [archivedClasses, debouncedSearchQuery]);
 
     // Loading state
     if (isLoading || isUserLoading || isOrgLoading) {
@@ -132,7 +186,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
         );
     }
 
-    // Empty state
+    // Empty state (no classes at all)
     if (classes.length === 0) {
         return (
             <div className="space-y-6">
@@ -172,19 +226,24 @@ export default function ClassList({ organizationId }: ClassListProps) {
     }
 
     // List view
+    const hasActiveClasses = activeClasses.length > 0;
+    const hasArchivedClasses = archivedClasses.length > 0;
+    const hasSearchResults =
+        filteredActiveClasses.length > 0 || filteredArchivedClasses.length > 0;
+
     return (
         <div className="space-y-6">
             <ClassListHeader
                 organizationId={organizationId}
-                count={classes.length}
-                filteredCount={filteredClasses.length}
+                count={activeClasses.length}
+                filteredCount={filteredActiveClasses.length}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 canCreate={canEditInOrg}
             />
 
             {/* No search results */}
-            {filteredClasses.length === 0 && searchQuery.trim() && (
+            {!hasSearchResults && searchQuery.trim() && (
                 <Empty className="min-h-60 border bg-card rounded-xl">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -208,17 +267,87 @@ export default function ClassList({ organizationId }: ClassListProps) {
                 </Empty>
             )}
 
-            {/* Classes grid */}
-            {filteredClasses.length > 0 && (
+            {/* Active classes grid */}
+            {hasActiveClasses && filteredActiveClasses.length > 0 && (
                 <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                    {filteredClasses.map((cls) => (
+                    {filteredActiveClasses.map((cls) => (
                         <ClassCard
                             key={cls.id}
                             classData={cls}
                             canEdit={canEditClass(cls)}
+                            canArchive={canArchiveClass(cls)}
                         />
                     ))}
                 </div>
+            )}
+
+            {/* Empty state for active classes only */}
+            {hasActiveClasses &&
+                filteredActiveClasses.length === 0 &&
+                searchQuery.trim() && (
+                    <Empty className="min-h-60 border bg-card rounded-xl">
+                        <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                                <Search className="size-6" />
+                            </EmptyMedia>
+                            <EmptyTitle>No active classes found</EmptyTitle>
+                            <EmptyDescription>
+                                No active classes match &ldquo;{searchQuery}
+                                &rdquo;.
+                            </EmptyDescription>
+                        </EmptyHeader>
+                    </Empty>
+                )}
+
+            {/* Archived classes section */}
+            {hasArchivedClasses && (
+                <Collapsible
+                    open={isArchivedOpen}
+                    onOpenChange={setIsArchivedOpen}
+                    className="space-y-4"
+                >
+                    <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full">
+                        <ChevronDown
+                            className={`size-4 transition-transform duration-200 ${
+                                isArchivedOpen ? "rotate-180" : ""
+                            }`}
+                        />
+                        <Archive className="size-4" />
+                        <span>Archived Classes</span>
+                        <span className="ml-auto px-2 py-0.5 rounded-md bg-muted text-xs font-medium">
+                            {filteredArchivedClasses.length}
+                        </span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4">
+                        {filteredArchivedClasses.length > 0 ? (
+                            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                                {filteredArchivedClasses.map((cls) => (
+                                    <ClassCard
+                                        key={cls.id}
+                                        classData={cls}
+                                        canEdit={canEditClass(cls)}
+                                        canArchive={canArchiveClass(cls)}
+                                    />
+                                ))}
+                            </div>
+                        ) : searchQuery.trim() ? (
+                            <Empty className="min-h-40 border bg-card rounded-xl">
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon">
+                                        <Search className="size-6" />
+                                    </EmptyMedia>
+                                    <EmptyTitle>
+                                        No archived classes found
+                                    </EmptyTitle>
+                                    <EmptyDescription>
+                                        No archived classes match &ldquo;
+                                        {searchQuery}&rdquo;.
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                            </Empty>
+                        ) : null}
+                    </CollapsibleContent>
+                </Collapsible>
             )}
         </div>
     );

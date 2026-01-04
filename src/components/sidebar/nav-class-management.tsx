@@ -14,6 +14,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { useClassRole } from "@/hooks/use-class-role";
 
 const items = [
     {
@@ -40,12 +41,14 @@ const items = [
         title: "Manage Members",
         path: "manage-members",
         icon: Users,
+        requiresOwnerOrAdmin: true,
     },
 ];
 
 export function NavClassManagement({ pathname }: { pathname: string }) {
     const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
+    const { isOwnerOrAdmin } = useClassRole();
 
     const orgId = params.orgId as string;
     const classId = params.classId as string | undefined;
@@ -62,11 +65,25 @@ export function NavClassManagement({ pathname }: { pathname: string }) {
         }
     };
 
+    // Filter items based on role
+    const visibleItems = items.filter((item) => {
+        // Hide items that require owner/admin for non-admins
+        if (item.requiresOwnerOrAdmin && !isOwnerOrAdmin) {
+            return false;
+        }
+        return true;
+    });
+
+    // Don't render if no items are visible
+    if (visibleItems.length === 0) {
+        return null;
+    }
+
     return (
         <SidebarGroup>
             <SidebarGroupLabel>Class Management</SidebarGroupLabel>
             <SidebarMenu>
-                {items.map((item) => {
+                {visibleItems.map((item) => {
                     const href = `/class/${orgId}/${classId}/${item.path}`;
                     const isActive = pathname === href;
 

@@ -16,6 +16,7 @@ import {
     Maximize2,
     ExternalLink,
     Link2,
+    Archive,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -64,6 +65,7 @@ interface ClassData {
     teachers?: string[]; // Deprecated - kept for backward compatibility during migration
     created: Date | string | number;
     updated: Date | string | number;
+    archivedAt?: Date | string | number | null;
     owner?: {
         id: string;
         email?: string;
@@ -114,11 +116,13 @@ type JoinCodeType = "student" | "teacher" | "parent";
 interface ClassCardProps {
     classData: ClassData;
     canEdit?: boolean;
+    canArchive?: boolean;
 }
 
 const ClassCard = React.memo(function ClassCard({
     classData,
     canEdit,
+    canArchive,
 }: ClassCardProps) {
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
     const [showEditDialog, setShowEditDialog] = React.useState(false);
@@ -143,8 +147,11 @@ const ClassCard = React.memo(function ClassCard({
         classAdmins: linkedAdmins,
         created,
         updated,
+        archivedAt,
         owner,
     } = classData;
+
+    const isArchived = archivedAt != null;
 
     const organizationId = organization?.id;
 
@@ -169,6 +176,24 @@ const ClassCard = React.memo(function ClassCard({
     const handleDelete = () => {
         db.transact(db.tx.classes[id].delete());
         setShowDeleteDialog(false);
+    };
+
+    const handleArchive = () => {
+        db.transact(
+            db.tx.classes[id].update({
+                archivedAt: new Date(),
+                updated: new Date(),
+            })
+        );
+    };
+
+    const handleUnarchive = () => {
+        db.transact(
+            db.tx.classes[id].update({
+                archivedAt: null,
+                updated: new Date(),
+            })
+        );
     };
 
     const handleCopyJoinCode = async (
@@ -371,9 +396,9 @@ const ClassCard = React.memo(function ClassCard({
             <article
                 className={cn(
                     "group relative overflow-hidden rounded-xl border bg-card transition-all duration-300",
-                    "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
-                    "dark:hover:shadow-primary/10",
-                    "hover:-translate-y-0.5"
+                    isArchived
+                        ? "opacity-60 border-muted"
+                        : "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:-translate-y-0.5"
                 )}
             >
                 {/* Gradient accent bar */}
@@ -407,11 +432,29 @@ const ClassCard = React.memo(function ClassCard({
                             <div className="flex items-center gap-2">
                                 <Link
                                     href={`/class/${organizationId}/${id}/home`}
-                                    className="truncate text-lg font-semibold text-foreground hover:text-primary transition-colors"
+                                    className={cn(
+                                        "truncate text-lg font-semibold transition-colors",
+                                        isArchived
+                                            ? "text-muted-foreground"
+                                            : "text-foreground hover:text-primary"
+                                    )}
                                 >
                                     {name}
                                 </Link>
-                                {canEdit && (
+                                {isArchived && (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-xs font-medium text-muted-foreground">
+                                                <Archive className="size-3" />
+                                                Archived
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            This class is archived
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
+                                {canEdit && !isArchived && (
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span className="flex items-center">
@@ -436,11 +479,14 @@ const ClassCard = React.memo(function ClassCard({
                         </div>
 
                         {/* Actions menu */}
-                        {canEdit && (
+                        {(canEdit || canArchive) && (
                             <ClassActionMenu
                                 variant="card"
                                 onEdit={() => setShowEditDialog(true)}
                                 onDelete={() => setShowDeleteDialog(true)}
+                                isArchived={isArchived}
+                                onArchive={canArchive ? handleArchive : undefined}
+                                onUnarchive={canArchive ? handleUnarchive : undefined}
                             />
                         )}
                     </div>

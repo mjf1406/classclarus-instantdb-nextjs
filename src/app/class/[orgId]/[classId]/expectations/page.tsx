@@ -3,6 +3,7 @@
 "use client";
 
 import { use } from "react";
+import { useTargetUserId } from "@/hooks/use-target-user-id";
 
 interface ExpectationsPageProps {
     params: Promise<{ orgId: string; classId: string }>;
@@ -10,6 +11,23 @@ interface ExpectationsPageProps {
 
 export default function ExpectationsPage({ params }: ExpectationsPageProps) {
     const { orgId, classId } = use(params);
+    const { targetUserId } = useTargetUserId();
+
+    // When implementing data queries, filter by targetUserId:
+    // - Students: filter to their own data (targetUserId = their user ID)
+    // - Parents: filter to selected child's data (targetUserId = child's user ID)
+    // - Teachers/Admins: show all data (targetUserId = null, no filter)
+    //
+    // Example query:
+    // const { data } = db.useQuery({
+    //     expectations: {
+    //         $: {
+    //             where: targetUserId
+    //                 ? { studentId: targetUserId }
+    //                 : { classId },
+    //         },
+    //     },
+    // });
 
     return (
         <div className="min-h-screen bg-linear-to-b from-muted/30 to-background">

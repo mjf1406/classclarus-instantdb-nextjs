@@ -29,6 +29,7 @@ import { db } from "@/lib/db/db";
 import CreateClassDialog from "../classes/create-class-dialog";
 import CreateOrganizationDialog from "../organizations/create-org-dialog";
 import { useAuthContext } from "../auth/auth-provider";
+import { ChildSwitcher } from "./child-switcher";
 
 type User =
     | {
@@ -61,10 +62,38 @@ export function OrganizationSwitcher({
     const { isMobile } = useSidebar();
     const params = useParams();
     const router = useRouter();
-    const organizationId = params.organizationId as string | undefined;
+    const organizationId = (params.orgId || params.organizationId) as
+        | string
+        | undefined;
     const classId = params.classId as string | undefined;
     const { organizations, isLoading: orgLoading } = useAuthContext();
     const isLoading = isLoadingProp ?? orgLoading;
+
+    // Check if user is a parent with children (for class context)
+    const { data: userData, isLoading: userDataLoading } = db.useQuery(
+        user?.id && classId
+            ? {
+                  $users: {
+                      $: { where: { id: user.id } },
+                      children: {},
+                  },
+              }
+            : null
+    );
+
+    const hasChildren = (userData?.$users?.[0]?.children?.length ?? 0) > 0;
+    const isParentInClassContext = !!classId && hasChildren;
+
+    // If parent viewing class data, show child switcher instead
+    if (isParentInClassContext && !userDataLoading) {
+        return (
+            <ChildSwitcher
+                user={user}
+                isLoading={isLoading}
+                pathname={pathname}
+            />
+        );
+    }
     const [isCreateClassDialogOpen, setIsCreateClassDialogOpen] =
         useState(false);
     const [selectedOrgForCreate, setSelectedOrgForCreate] = useState<{

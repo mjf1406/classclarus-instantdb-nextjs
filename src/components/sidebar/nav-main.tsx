@@ -21,6 +21,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { useClassRole } from "@/hooks/use-class-role";
 
 const items = [
     {
@@ -42,11 +43,13 @@ const items = [
         title: "Class Time",
         path: "class-time",
         icon: Clock,
+        requiresTeacherOrAbove: true,
     },
     {
         title: "Join Codes",
         path: "join-codes",
         icon: Merge,
+        requiresTeacherOrAbove: true,
     },
     {
         title: "Join Org/Class",
@@ -59,6 +62,7 @@ const items = [
 export function NavMain({ pathname }: { pathname: string }) {
     const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
+    const { isTeacherOrAbove } = useClassRole();
 
     const orgId = params.orgId as string;
     const classId = params.classId as string | undefined;
@@ -70,14 +74,21 @@ export function NavMain({ pathname }: { pathname: string }) {
         }
     };
 
-    // Filter items based on context
+    // Filter items based on context and role
     const visibleItems = items.filter((item) => {
         // Always show top-level items
         if (item.isTopLevel) {
             return true;
         }
         // Only show class-specific items when in a class context
-        return !!classId;
+        if (!classId) {
+            return false;
+        }
+        // Hide items that require teacher or above for students/parents
+        if (item.requiresTeacherOrAbove && !isTeacherOrAbove) {
+            return false;
+        }
+        return true;
     });
 
     // Don't render navigation if there are no visible items

@@ -19,6 +19,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { useOrgRole } from "@/hooks/use-org-role";
 
 const items = [
     {
@@ -30,16 +31,19 @@ const items = [
         title: "Dashboard",
         path: "dashboard",
         icon: LayoutDashboard,
+        requiresTeacherOrAbove: true,
     },
     {
         title: "Manage Members",
         path: "manage-members",
         icon: Users,
+        requiresOwnerOrAdmin: true,
     },
     {
         title: "Join Code",
         path: "join-org",
         icon: UserPlus,
+        requiresOwnerOrAdmin: true,
     },
     {
         title: "Classes",
@@ -51,6 +55,7 @@ const items = [
 export function NavOrg({ pathname }: { pathname: string }) {
     const params = useParams();
     const { isMobile, setOpenMobile } = useSidebar();
+    const { isOwnerOrAdmin, isTeacherOrAbove } = useOrgRole();
 
     const orgId = params.orgId as string;
 
@@ -61,10 +66,28 @@ export function NavOrg({ pathname }: { pathname: string }) {
         }
     };
 
+    // Filter items based on role
+    const visibleItems = items.filter((item) => {
+        // Hide items that require owner/admin for non-admins
+        if (item.requiresOwnerOrAdmin && !isOwnerOrAdmin) {
+            return false;
+        }
+        // Hide items that require teacher or above for students/parents
+        if (item.requiresTeacherOrAbove && !isTeacherOrAbove) {
+            return false;
+        }
+        return true;
+    });
+
+    // Don't render if no items are visible
+    if (visibleItems.length === 0) {
+        return null;
+    }
+
     return (
         <SidebarGroup>
             <SidebarMenu>
-                {items.map((item) => {
+                {visibleItems.map((item) => {
                     const href = `/org/${orgId}/${item.path}`;
                     const isActive =
                         pathname === href || pathname.startsWith(href + "/");

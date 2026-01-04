@@ -2,7 +2,7 @@
 
 "use client";
 
-import { Edit, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Edit, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -15,6 +15,9 @@ import {
 interface ClassActionMenuProps {
     onEdit: () => void;
     onDelete: () => void;
+    isArchived?: boolean;
+    onArchive?: () => void;
+    onUnarchive?: () => void;
     variant?: "card" | "page";
     className?: string;
 }
@@ -22,6 +25,9 @@ interface ClassActionMenuProps {
 export function ClassActionMenu({
     onEdit,
     onDelete,
+    isArchived = false,
+    onArchive,
+    onUnarchive,
     variant = "page",
     className,
 }: ClassActionMenuProps) {
@@ -44,6 +50,18 @@ export function ClassActionMenu({
             e.stopPropagation();
         }
         onDelete();
+    };
+
+    const handleArchive = (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (isArchived && onUnarchive) {
+            onUnarchive();
+        } else if (!isArchived && onArchive) {
+            onArchive();
+        }
     };
 
     return (
@@ -71,6 +89,24 @@ export function ClassActionMenu({
                         <EditIcon className="size-4" />
                         Edit
                     </DropdownMenuItem>
+                    {(onArchive || onUnarchive) && (
+                        <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleArchive}>
+                                {isArchived ? (
+                                    <>
+                                        <ArchiveRestore className="size-4" />
+                                        Unarchive
+                                    </>
+                                ) : (
+                                    <>
+                                        <Archive className="size-4" />
+                                        Archive
+                                    </>
+                                )}
+                            </DropdownMenuItem>
+                        </>
+                    )}
                     {variant === "card" && <DropdownMenuSeparator />}
                     <DropdownMenuItem
                         className="text-destructive focus:text-destructive"

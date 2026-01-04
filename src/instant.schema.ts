@@ -39,6 +39,7 @@ const _schema = i.schema({
             icon: i.string().optional(),
             created: i.date(),
             updated: i.date(),
+            archivedAt: i.date().indexed().optional(), // null = active, date = archived
         }),
         orgJoinCodes: i.entity({
             code: i.string().unique().indexed(),

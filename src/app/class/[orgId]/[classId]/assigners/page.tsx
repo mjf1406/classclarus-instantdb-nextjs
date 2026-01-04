@@ -3,6 +3,7 @@
 "use client";
 
 import { use } from "react";
+import { useTargetUserId } from "@/hooks/use-target-user-id";
 
 interface AssignersPageProps {
     params: Promise<{ orgId: string; classId: string }>;
@@ -10,6 +11,23 @@ interface AssignersPageProps {
 
 export default function AssignersPage({ params }: AssignersPageProps) {
     const { orgId, classId } = use(params);
+    const { targetUserId } = useTargetUserId();
+
+    // When implementing data queries, filter by targetUserId:
+    // - Students: filter to their own history (targetUserId = their user ID)
+    // - Parents: filter to selected child's history (targetUserId = child's user ID)
+    // - Teachers/Admins: show all data (targetUserId = null, no filter)
+    //
+    // Example query:
+    // const { data } = db.useQuery({
+    //     assignerHistory: {
+    //         $: {
+    //             where: targetUserId
+    //                 ? { studentId: targetUserId }
+    //                 : { classId },
+    //         },
+    //     },
+    // });
 
     return (
         <div className="min-h-screen bg-linear-to-b from-muted/30 to-background">
