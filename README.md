@@ -4,6 +4,12 @@
 
 ## Change Log
 
+### 2026/01/05
+
+-   UI: added mobile-only tab labels to member management pages
+-   BUG: member management tabs no longer extend past the viewport horizontally on mobile
+-   BE: added lastLogon to $user table
+
 ### 2026/01/03
 
 -   BE: changed join codes from 8 to 6 characters due to [the math](https://docs.google.com/spreadsheets/d/1b2ICoE1dsr3VMKftyfGpN8sAGM04QLoqnGSFdqcoVHI/edit?usp=sharing)

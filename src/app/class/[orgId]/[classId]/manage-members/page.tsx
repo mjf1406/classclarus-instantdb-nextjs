@@ -188,7 +188,7 @@ export default function ManageMembersPage({ params }: ManageMembersPageProps) {
                                             : "text-muted-foreground"
                                     )}
                                 />
-                                <span>{tab.label}</span>
+                                <span className="hidden sm:inline">{tab.label}</span>
                                 <span
                                     className={cn(
                                         "text-xs px-1.5 py-0.5 rounded-full",
@@ -206,6 +206,12 @@ export default function ManageMembersPage({ params }: ManageMembersPageProps) {
 
                 {/* Tab Content */}
                 <div className="min-h-100">
+                    {/* Mobile-only tab label */}
+                    <div className="mb-4 sm:hidden">
+                        <h2 className="text-xl font-semibold">
+                            {tabs.find((tab) => tab.id === activeTab)?.label}
+                        </h2>
+                    </div>
                     {activeTab === "students" && (
                         <ClassStudentParentManager
                             students={students}
