@@ -189,13 +189,18 @@ function CodeStep({
                         },
                     });
                     const userData = data?.$users?.[0];
+                    const updateData: {
+                        lastLogon: Date;
+                        created?: Date;
+                    } = {
+                        lastLogon: new Date(),
+                    };
                     if (userData && !userData.created) {
-                        db.transact(
-                            db.tx.$users[result.user.id].update({
-                                created: new Date(),
-                            })
-                        );
+                        updateData.created = new Date();
                     }
+                    db.transact(
+                        db.tx.$users[result.user.id].update(updateData)
+                    );
                 }
                 setIsLoading(false);
                 onSuccess();

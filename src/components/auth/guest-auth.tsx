@@ -12,6 +12,7 @@ const handleGuestSignIn = () => {
                 db.transact(
                     db.tx.$users[result.user.id].update({
                         created: new Date(),
+                        lastLogon: new Date(),
                     })
                 );
             }

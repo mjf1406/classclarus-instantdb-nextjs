@@ -61,11 +61,13 @@ function handleGoogleSuccess(
                     firstName: string;
                     lastName: string;
                     plan: string;
+                    lastLogon: Date;
                     created?: Date;
                 } = {
                     firstName,
                     lastName,
                     plan: "free",
+                    lastLogon: new Date(),
                 };
                 if (userData && !userData.created) {
                     updateData.created = new Date();

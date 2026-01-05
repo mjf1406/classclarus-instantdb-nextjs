@@ -2,8 +2,7 @@
 
 "use client";
 
-import { useState, useRef, use } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,17 +10,15 @@ import {
     Bell,
     ChevronsUpDown,
     CreditCard,
-    HelpCircle,
-    LogIn,
     LogOut,
-    Mail,
     Sparkles,
 } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
 
 import { db } from "@/lib/db/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MagicCodeAuth } from "@/components/auth/magic-code-auth";
+import TryAsGuestButton from "@/components/auth/guest-auth";
+import { GoogleOAuthButton } from "@/components/auth/google-oauth";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -37,18 +34,10 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useAuthContext } from "../auth/auth-provider";
-import GuestDescription from "@/components/guest/guest-description";
 import GuestUpgradeCard from "@/components/guest/guest-upgrade-card";
 import { ThemeSwitch } from "@/components/theme/theme-switch";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const GOOGLE_CLIENT_NAME = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_NAME || "";
 
 type User =
     | {
@@ -77,7 +66,6 @@ export function NavUser({
     isLoading?: boolean;
 }) {
     const { isMobile } = useSidebar();
-    const [nonce] = useState(() => uuidv4());
     const { user: contextUser, isLoading: contextLoading } = useAuthContext();
     const user = userProp ?? contextUser;
     const isLoading = isLoadingProp ?? contextLoading;
@@ -111,7 +99,7 @@ export function NavUser({
                 />
             </db.SignedIn>
             <db.SignedOut>
-                <NavUserSignedOut nonce={nonce} />
+                <NavUserSignedOut />
             </db.SignedOut>
         </SidebarMenu>
     );
@@ -278,218 +266,17 @@ function NavUserSignedIn({
     );
 }
 
-function NavUserSignedOut({ nonce }: { nonce: string }) {
-    const googleButtonRef = useRef<HTMLDivElement>(null);
-    const { state } = useSidebar();
-    const isCollapsed = state === "collapsed";
-    const [tooltipOpen, setTooltipOpen] = useState(false);
-
-    const handleGuestSignIn = () => {
-        db.auth.signInAsGuest().catch((err) => {
-            console.error("Error signing in as guest:", err);
-            alert(
-                "Failed to sign in as guest: " +
-                    (err.body?.message || err.message)
-            );
-        });
-    };
-
-    const isManualToggle = useRef(false);
-
-    const handleHelpIconClick = (e: React.PointerEvent) => {
-        e.stopPropagation();
-        // Mark that this is a manual toggle
-        isManualToggle.current = true;
-        // Toggle tooltip on click (for mobile)
-        setTooltipOpen((prev) => !prev);
-        // Reset the flag after a short delay
-        setTimeout(() => {
-            isManualToggle.current = false;
-        }, 200);
-    };
-
-    const handleTooltipOpenChange = (open: boolean) => {
-        // If this is a manual toggle, ignore the change (we already handled it)
-        if (isManualToggle.current) {
-            return;
-        }
-        // Allow tooltip to be controlled by hover (desktop)
-        setTooltipOpen(open);
-    };
-
-    const handleGoogleSuccess = (credentialResponse: {
-        credential?: string;
-    }) => {
-        if (!GOOGLE_CLIENT_NAME) {
-            console.error("Google Client Name is not configured");
-            alert(
-                "Google OAuth is not properly configured. Please check your environment variables."
-            );
-            return;
-        }
-
-        if (!credentialResponse.credential) {
-            console.error("No credential received from Google");
-            alert(
-                "Failed to receive credential from Google. Please try again."
-            );
-            return;
-        }
-
-        // Store JWT token temporarily for server action to extract firstName/lastName
-        sessionStorage.setItem(
-            "google_id_token",
-            credentialResponse.credential
-        );
-
-        db.auth
-            .signInWithIdToken({
-                clientName: GOOGLE_CLIENT_NAME,
-                idToken: credentialResponse.credential,
-                nonce,
-            })
-            .catch((err) => {
-                console.error("Error signing in with Google:", err);
-                // Clear token on error
-                sessionStorage.removeItem("google_id_token");
-                alert(
-                    "Failed to sign in with Google: " +
-                        (err.body?.message || err.message)
-                );
-            });
-    };
-
-    const handleGoogleError = () => {
-        alert("Google login failed. Please try again.");
-    };
-
-    const handleGoogleButtonClick = () => {
-        // Find the Google OAuth button inside the hidden container
-        const googleButton = googleButtonRef.current?.querySelector(
-            'div[role="button"], button'
-        ) as HTMLElement;
-        if (googleButton) {
-            googleButton.click();
-        }
-    };
-
+function NavUserSignedOut() {
     return (
         <>
             <SidebarMenuItem>
-                {isCollapsed ? (
-                    <SidebarMenuButton
-                        onClick={handleGuestSignIn}
-                        variant="outline"
-                        size="sm"
-                        tooltip={{
-                            children: (
-                                <div>
-                                    <p className="font-medium mb-1">
-                                        Try as Guest
-                                    </p>
-                                    <div className="text-xs max-w-48 [&>p]:text-xs [&>p]:text-foreground">
-                                        <GuestDescription />
-                                    </div>
-                                </div>
-                            ),
-                        }}
-                    >
-                        <LogIn />
-                        <span>Try as Guest</span>
-                    </SidebarMenuButton>
-                ) : (
-                    <div className="flex items-center gap-2 w-full">
-                        <SidebarMenuButton
-                            onClick={handleGuestSignIn}
-                            variant="outline"
-                            size="sm"
-                            tooltip="Try as Guest"
-                            className="flex-1"
-                        >
-                            <LogIn />
-                            <span>Try as Guest</span>
-                        </SidebarMenuButton>
-                        <Tooltip
-                            open={tooltipOpen}
-                            onOpenChange={handleTooltipOpenChange}
-                        >
-                            <TooltipTrigger asChild>
-                                <button
-                                    type="button"
-                                    onPointerDown={handleHelpIconClick}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                    aria-label="What is guest mode?"
-                                >
-                                    <HelpCircle className="h-4 w-4" />
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <div className="max-w-32 [&>p]:text-xs [&>p]:text-foreground">
-                                    <GuestDescription />
-                                </div>
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                )}
+                <TryAsGuestButton />
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <MagicCodeAuth
-                    trigger={
-                        <SidebarMenuButton
-                            variant="outline"
-                            size="sm"
-                            tooltip="Sign in with Email"
-                        >
-                            <Mail className="h-4 w-4" />
-                            <span>Sign in with Email</span>
-                        </SidebarMenuButton>
-                    }
-                />
+                <MagicCodeAuth />
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <div
-                    ref={googleButtonRef}
-                    className="hidden"
-                >
-                    <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={handleGoogleError}
-                        nonce={nonce}
-                        useOneTap={false}
-                        auto_select={false}
-                    />
-                </div>
-                <SidebarMenuButton
-                    onClick={handleGoogleButtonClick}
-                    variant="outline"
-                    size="sm"
-                    tooltip="Sign in with Google"
-                >
-                    <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            fill="#4285F4"
-                        />
-                        <path
-                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                            fill="#34A853"
-                        />
-                        <path
-                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                            fill="#FBBC05"
-                        />
-                        <path
-                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                            fill="#EA4335"
-                        />
-                    </svg>
-                    <span>Sign in with Google</span>
-                </SidebarMenuButton>
+                <GoogleOAuthButton />
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <div className="flex items-center justify-between gap-2 w-full px-2 py-1.5">
