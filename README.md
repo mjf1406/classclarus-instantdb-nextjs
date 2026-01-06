@@ -6,6 +6,7 @@
 
 ### 2026/01/05
 
+-   UI: moved Join Org/Class button to navbars of /org and /class pages
 -   BE: updated perms to allow teachers to see join codes
 -   BUG: parents can now properly view the class their children are in
 -   UI: added mobile-only tab labels to member management pages

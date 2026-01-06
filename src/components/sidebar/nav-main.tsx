@@ -8,7 +8,6 @@ import {
     Clock,
     Home,
     Merge,
-    UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -50,12 +49,6 @@ const items = [
         path: "join-codes",
         icon: Merge,
         requiresTeacherOrAbove: true,
-    },
-    {
-        title: "Join Org/Class",
-        path: "join",
-        icon: UserPlus,
-        isTopLevel: true,
     },
 ];
 

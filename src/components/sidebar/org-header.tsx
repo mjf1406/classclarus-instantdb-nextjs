@@ -20,6 +20,7 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
 import { useAuthContext } from "@/components/auth/auth-provider";
+import { JoinOrgClassButton } from "@/components/join-codes";
 
 export function OrgHeader() {
     const params = useParams();
@@ -106,7 +107,9 @@ export function OrgHeader() {
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
+            <div className="flex items-center px-4">
+                <JoinOrgClassButton />
+            </div>
         </header>
     );
 }
-

@@ -21,6 +21,7 @@ import {
 import { useAuthContext } from "@/components/auth/auth-provider";
 import OrgCard, { OrgCardSkeleton } from "@/components/organizations/org-card";
 import CreateOrganizationDialog from "@/components/organizations/create-org-dialog";
+import { JoinOrgClassButton } from "@/components/join-codes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,7 +32,6 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from "@/components/ui/empty";
-import Link from "next/link";
 
 export default function OrgList() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -275,15 +275,7 @@ function OrgListHeader({
                 </div>
                 <div className="space-x-4">
                     <CreateOrganizationDialog />
-                    <Button
-                        asChild
-                        variant={"outline"}
-                    >
-                        <Link href="/join">
-                            Join{" "}
-                            <span className="hidden md:inline">Org/Class</span>
-                        </Link>
-                    </Button>
+                    <JoinOrgClassButton />
                 </div>
             </div>
             {/* What is an Organization? collapsible */}
