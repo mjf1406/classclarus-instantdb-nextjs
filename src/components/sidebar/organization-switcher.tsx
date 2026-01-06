@@ -69,6 +69,15 @@ export function OrganizationSwitcher({
     const { organizations, isLoading: orgLoading } = useAuthContext();
     const isLoading = isLoadingProp ?? orgLoading;
 
+    // All hooks must be called before any conditional returns
+    const [isCreateClassDialogOpen, setIsCreateClassDialogOpen] =
+        useState(false);
+    const [selectedOrgForCreate, setSelectedOrgForCreate] = useState<{
+        id: string;
+    } | null>(null);
+    const createOrgTriggerRef = useRef<HTMLButtonElement>(null);
+    const createClassTriggerRef = useRef<HTMLButtonElement>(null);
+
     // Check if user is a parent with children (for class context)
     const { data: userData, isLoading: userDataLoading } = db.useQuery(
         user?.id && classId
@@ -94,13 +103,6 @@ export function OrganizationSwitcher({
             />
         );
     }
-    const [isCreateClassDialogOpen, setIsCreateClassDialogOpen] =
-        useState(false);
-    const [selectedOrgForCreate, setSelectedOrgForCreate] = useState<{
-        id: string;
-    } | null>(null);
-    const createOrgTriggerRef = useRef<HTMLButtonElement>(null);
-    const createClassTriggerRef = useRef<HTMLButtonElement>(null);
 
     const selectedOrganization = organizationId
         ? organizations.find((org) => org.id === organizationId)

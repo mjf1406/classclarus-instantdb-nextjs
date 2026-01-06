@@ -6,6 +6,8 @@
 
 ### 2026/01/05
 
+-   BE: updated perms to allow teachers to see join codes
+-   BUG: parents can now properly view the class their children are in
 -   UI: added mobile-only tab labels to member management pages
 -   BUG: member management tabs no longer extend past the viewport horizontally on mobile
 -   BE: added lastLogon to $user table
