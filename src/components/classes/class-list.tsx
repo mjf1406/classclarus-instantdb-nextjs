@@ -48,7 +48,9 @@ interface ClassListProps {
 export default function ClassList({ organizationId }: ClassListProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [isArchivedOpen, setIsArchivedOpen] = useState(false);
-    const [roleFilter, setRoleFilter] = useState<"all" | "teacher" | "parent" | "student">("all");
+    const [roleFilter, setRoleFilter] = useState<
+        "all" | "teacher" | "parent" | "student"
+    >("all");
     const [memberFilter, setMemberFilter] = useState<string | null>(null);
     // Use 25ms delay when clearing (empty search), 100ms when typing
     const debouncedSearchQuery = useDebouncedValue(
@@ -65,6 +67,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
             classAdmins: {},
             classTeachers: {},
             classStudents: {},
+            classParents: {},
             joinCodeEntity: {},
             organization: {
                 owner: {},
@@ -149,58 +152,70 @@ export default function ClassList({ organizationId }: ClassListProps) {
     }, [classes]);
 
     // Helper function to check if a class matches the role/member filter
-    const matchesRoleFilter = useCallback((cls: (typeof classes)[0]): boolean => {
-        if (roleFilter === "all") return true;
-        
-        if (memberFilter) {
-            // Filter by specific member
-            switch (roleFilter) {
-                case "teacher": {
-                    const classTeachers = cls.classTeachers ?? [];
-                    return classTeachers.some((teacher: any) => {
-                        const teacherId = typeof teacher === "string" ? teacher : teacher?.id;
-                        return teacherId === memberFilter;
-                    });
+    const matchesRoleFilter = useCallback(
+        (cls: (typeof classes)[0]): boolean => {
+            if (roleFilter === "all") return true;
+
+            if (memberFilter) {
+                // Filter by specific member
+                switch (roleFilter) {
+                    case "teacher": {
+                        const classTeachers = cls.classTeachers ?? [];
+                        return classTeachers.some((teacher: any) => {
+                            const teacherId =
+                                typeof teacher === "string"
+                                    ? teacher
+                                    : teacher?.id;
+                            return teacherId === memberFilter;
+                        });
+                    }
+                    case "parent": {
+                        const classParents = cls.classParents ?? [];
+                        return classParents.some((parent: any) => {
+                            const parentId =
+                                typeof parent === "string"
+                                    ? parent
+                                    : parent?.id;
+                            return parentId === memberFilter;
+                        });
+                    }
+                    case "student": {
+                        const classStudents = cls.classStudents ?? [];
+                        return classStudents.some((student: any) => {
+                            const studentId =
+                                typeof student === "string"
+                                    ? student
+                                    : student?.id;
+                            return studentId === memberFilter;
+                        });
+                    }
                 }
-                case "parent": {
-                    const classParents = cls.classParents ?? [];
-                    return classParents.some((parent: any) => {
-                        const parentId = typeof parent === "string" ? parent : parent?.id;
-                        return parentId === memberFilter;
-                    });
-                }
-                case "student": {
-                    const classStudents = cls.classStudents ?? [];
-                    return classStudents.some((student: any) => {
-                        const studentId = typeof student === "string" ? student : student?.id;
-                        return studentId === memberFilter;
-                    });
+            } else {
+                // Filter by role (any member of that role)
+                switch (roleFilter) {
+                    case "teacher":
+                        return (cls.classTeachers ?? []).length > 0;
+                    case "parent":
+                        return (cls.classParents ?? []).length > 0;
+                    case "student":
+                        return (cls.classStudents ?? []).length > 0;
                 }
             }
-        } else {
-            // Filter by role (any member of that role)
-            switch (roleFilter) {
-                case "teacher":
-                    return (cls.classTeachers ?? []).length > 0;
-                case "parent":
-                    return (cls.classParents ?? []).length > 0;
-                case "student":
-                    return (cls.classStudents ?? []).length > 0;
-            }
-        }
-        return true;
-    }, [roleFilter, memberFilter]);
+            return true;
+        },
+        [roleFilter, memberFilter]
+    );
 
     // Filter classes by search query and role/member filter
     // Use debounced value for smooth filtering (25ms when clearing, 100ms when typing)
     const filteredActiveClasses = useMemo(() => {
         let filtered = activeClasses;
-        
+
         // Apply role/member filter
         if (roleFilter !== "all") {
             filtered = filtered.filter(matchesRoleFilter);
         }
-        
+
         // Apply search query filter
         if (debouncedSearchQuery.trim()) {
             const query = debouncedSearchQuery.toLowerCase().trim();
@@ -208,18 +223,18 @@ export default function ClassList({ organizationId }: ClassListProps) {
                 cls.name.toLowerCase().includes(query)
             );
         }
-        
+
         return filtered;
     }, [activeClasses, debouncedSearchQuery, matchesRoleFilter, roleFilter]);
 
     const filteredArchivedClasses = useMemo(() => {
         let filtered = archivedClasses;
-        
+
         // Apply role/member filter
         if (roleFilter !== "all") {
             filtered = filtered.filter(matchesRoleFilter);
         }
-        
+
         // Apply search query filter
         if (debouncedSearchQuery.trim()) {
             const query = debouncedSearchQuery.toLowerCase().trim();
@@ -227,7 +242,7 @@ export default function ClassList({ organizationId }: ClassListProps) {
                 cls.name.toLowerCase().includes(query)
             );
         }
-        
+
         return filtered;
     }, [archivedClasses, debouncedSearchQuery, matchesRoleFilter, roleFilter]);
 
@@ -469,34 +484,71 @@ function ClassListHeader({
     isLoading?: boolean;
     canCreate: boolean;
     organization?: {
-        orgTeachers?: Array<{ id: string; firstName?: string; lastName?: string; email?: string }>;
-        orgParents?: Array<{ id: string; firstName?: string; lastName?: string; email?: string }>;
-        orgStudents?: Array<{ id: string; firstName?: string; lastName?: string; email?: string }>;
+        orgTeachers?: Array<{
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+        }>;
+        orgParents?: Array<{
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+        }>;
+        orgStudents?: Array<{
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+        }>;
     };
     roleFilter?: "all" | "teacher" | "parent" | "student";
     memberFilter?: string | null;
-    onRoleFilterChange?: (value: "all" | "teacher" | "parent" | "student") => void;
+    onRoleFilterChange?: (
+        value: "all" | "teacher" | "parent" | "student"
+    ) => void;
     onMemberFilterChange?: (value: string | null) => void;
 }) {
     const showSearch = count > 0 || (searchQuery && searchQuery.length > 0);
     const isFiltered = searchQuery && searchQuery.trim().length > 0;
-    
+
     // Get members for the selected role
     const getMembersForRole = (role: "teacher" | "parent" | "student") => {
         if (!organization) return [];
         switch (role) {
             case "teacher":
-                return (organization.orgTeachers ?? []) as Array<{ id: string; firstName?: string; lastName?: string; email?: string }>;
+                return (organization.orgTeachers ?? []) as Array<{
+                    id: string;
+                    firstName?: string;
+                    lastName?: string;
+                    email?: string;
+                }>;
             case "parent":
-                return (organization.orgParents ?? []) as Array<{ id: string; firstName?: string; lastName?: string; email?: string }>;
+                return (organization.orgParents ?? []) as Array<{
+                    id: string;
+                    firstName?: string;
+                    lastName?: string;
+                    email?: string;
+                }>;
             case "student":
-                return (organization.orgStudents ?? []) as Array<{ id: string; firstName?: string; lastName?: string; email?: string }>;
+                return (organization.orgStudents ?? []) as Array<{
+                    id: string;
+                    firstName?: string;
+                    lastName?: string;
+                    email?: string;
+                }>;
         }
     };
-    
-    const membersForRole = roleFilter && roleFilter !== "all" ? getMembersForRole(roleFilter) : [];
-    
-    const getMemberDisplayName = (member: { firstName?: string; lastName?: string; email?: string }) => {
+
+    const membersForRole =
+        roleFilter && roleFilter !== "all" ? getMembersForRole(roleFilter) : [];
+
+    const getMemberDisplayName = (member: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    }) => {
         if (member.firstName && member.lastName) {
             return `${member.firstName} ${member.lastName}`;
         }
@@ -562,63 +614,81 @@ function ClassListHeader({
             )}
 
             {/* Filter bar - only show for admins */}
-            {canCreate && organization && onRoleFilterChange && onMemberFilterChange && (
-                <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Filter className="size-4" />
-                        <span>Filter by:</span>
-                    </div>
-                    <Select
-                        value={roleFilter ?? "all"}
-                        onValueChange={(value) => {
-                            onRoleFilterChange(value as "all" | "teacher" | "parent" | "student");
-                            onMemberFilterChange(null); // Reset member filter when role changes
-                        }}
-                    >
-                        <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Roles</SelectItem>
-                            <SelectItem value="teacher">Teacher</SelectItem>
-                            <SelectItem value="parent">Parent</SelectItem>
-                            <SelectItem value="student">Student</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {roleFilter && roleFilter !== "all" && membersForRole.length > 0 && (
+            {canCreate &&
+                organization &&
+                onRoleFilterChange &&
+                onMemberFilterChange && (
+                    <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Filter className="size-4" />
+                            <span>Filter by:</span>
+                        </div>
                         <Select
-                            value={memberFilter ?? ""}
-                            onValueChange={(value) => onMemberFilterChange(value || null)}
+                            value={roleFilter ?? "all"}
+                            onValueChange={(value) => {
+                                onRoleFilterChange(
+                                    value as
+                                        | "all"
+                                        | "teacher"
+                                        | "parent"
+                                        | "student"
+                                );
+                                onMemberFilterChange(null); // Reset member filter when role changes
+                            }}
                         >
-                            <SelectTrigger className="w-[200px]">
-                                <SelectValue placeholder="Select member..." />
+                            <SelectTrigger className="w-[140px]">
+                                <SelectValue placeholder="Role" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All {roleFilter}s</SelectItem>
-                                {membersForRole.map((member) => (
-                                    <SelectItem key={member.id} value={member.id}>
-                                        {getMemberDisplayName(member)}
-                                    </SelectItem>
-                                ))}
+                                <SelectItem value="all">All Roles</SelectItem>
+                                <SelectItem value="teacher">Teacher</SelectItem>
+                                <SelectItem value="parent">Parent</SelectItem>
+                                <SelectItem value="student">Student</SelectItem>
                             </SelectContent>
                         </Select>
-                    )}
-                    {(roleFilter !== "all" || memberFilter) && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                                onRoleFilterChange("all");
-                                onMemberFilterChange(null);
-                            }}
-                            className="ml-auto"
-                        >
-                            <X className="size-4" />
-                            Clear filters
-                        </Button>
-                    )}
-                </div>
-            )}
+                        {roleFilter &&
+                            roleFilter !== "all" &&
+                            membersForRole.length > 0 && (
+                                <Select
+                                    value={memberFilter ?? ""}
+                                    onValueChange={(value) =>
+                                        onMemberFilterChange(value || null)
+                                    }
+                                >
+                                    <SelectTrigger className="w-[200px]">
+                                        <SelectValue placeholder="Select member..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">
+                                            All {roleFilter}s
+                                        </SelectItem>
+                                        {membersForRole.map((member) => (
+                                            <SelectItem
+                                                key={member.id}
+                                                value={member.id}
+                                            >
+                                                {getMemberDisplayName(member)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        {(roleFilter !== "all" || memberFilter) && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    onRoleFilterChange("all");
+                                    onMemberFilterChange(null);
+                                }}
+                                className="ml-auto"
+                            >
+                                <X className="size-4" />
+                                Clear filters
+                            </Button>
+                        )}
+                    </div>
+                )}
         </div>
     );
 }
