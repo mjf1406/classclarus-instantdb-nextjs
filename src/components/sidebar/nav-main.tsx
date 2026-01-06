@@ -2,13 +2,7 @@
 
 "use client";
 
-import {
-    LayoutDashboard,
-    Coins,
-    Clock,
-    Home,
-    Merge,
-} from "lucide-react";
+import { LayoutDashboard, Coins, Clock, Home, Merge } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -69,10 +63,6 @@ export function NavMain({ pathname }: { pathname: string }) {
 
     // Filter items based on context and role
     const visibleItems = items.filter((item) => {
-        // Always show top-level items
-        if (item.isTopLevel) {
-            return true;
-        }
         // Only show class-specific items when in a class context
         if (!classId) {
             return false;
@@ -94,9 +84,7 @@ export function NavMain({ pathname }: { pathname: string }) {
             {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
             <SidebarMenu>
                 {visibleItems.map((item) => {
-                    const href = item.isTopLevel 
-                        ? `/${item.path}` 
-                        : `/class/${orgId}/${classId}/${item.path}`;
+                    const href = `/class/${orgId}/${classId}/${item.path}`;
                     const isActive = pathname === href;
 
                     return (
