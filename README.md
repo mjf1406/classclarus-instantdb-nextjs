@@ -6,6 +6,8 @@
 
 ### 2026/01/05
 
+-   UI: added role to the navbar header of /org and /class pages
+-   UI: added title of page, either Organization or Class, to the navbar header of /org and /class pages
 -   UI: moved Join Org/Class button to navbars of /org and /class pages
 -   BE: updated perms to allow teachers to see join codes
 -   BUG: parents can now properly view the class their children are in

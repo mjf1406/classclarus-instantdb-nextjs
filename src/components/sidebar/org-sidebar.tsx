@@ -40,12 +40,19 @@ export function OrgSidebar({
             {...props}
         >
             <SidebarHeader>
-                <Link
-                    href="/"
-                    prefetch={false}
-                >
-                    {state === "collapsed" ? <Icon /> : <Logo />}
-                </Link>
+                <div className="flex flex-col items-center gap-2">
+                    <Link
+                        href="/"
+                        prefetch={false}
+                    >
+                        {state === "collapsed" ? <Icon /> : <Logo />}
+                    </Link>
+                    {state !== "collapsed" && (
+                        <h2 className="text-lg font-medium text-muted-foreground text-center">
+                            Organization
+                        </h2>
+                    )}
+                </div>
             </SidebarHeader>
             <SidebarContent>
                 <NavOrg pathname={pathname} />

@@ -21,6 +21,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
 import { useAuthContext } from "@/components/auth/auth-provider";
 import { JoinOrgClassButton } from "@/components/join-codes";
+import { useOrgRole, OrgRole } from "@/hooks/use-org-role";
+import { Crown, ShieldCheck, GraduationCap, Users } from "lucide-react";
 
 export function OrgHeader() {
     const params = useParams();
@@ -28,6 +30,9 @@ export function OrgHeader() {
     const pathname = usePathname();
     const organizationId = params.orgId as string;
     const { user, isLoading, organizations, error } = useAuthContext();
+    
+    // Get user's role in the organization - must be called before any early returns
+    const { role } = useOrgRole();
 
     if (isLoading) {
         return null;
@@ -59,6 +64,58 @@ export function OrgHeader() {
     };
 
     const activePage = getPageName();
+
+    // Helper functions for role display
+    const getRoleIcon = (role: OrgRole) => {
+        switch (role) {
+            case "owner":
+                return Crown;
+            case "admin":
+                return ShieldCheck;
+            case "teacher":
+                return GraduationCap;
+            case "student":
+                return Users;
+            case "parent":
+                return Users;
+            default:
+                return null;
+        }
+    };
+
+    const getRoleColor = (role: OrgRole) => {
+        switch (role) {
+            case "owner":
+                return "text-amber-500";
+            case "admin":
+                return "text-violet-500";
+            case "teacher":
+                return "text-emerald-500";
+            case "student":
+                return "text-blue-500";
+            case "parent":
+                return "text-amber-500";
+            default:
+                return "text-muted-foreground";
+        }
+    };
+
+    const getRoleLabel = (role: OrgRole) => {
+        switch (role) {
+            case "owner":
+                return "Owner";
+            case "admin":
+                return "Admin";
+            case "teacher":
+                return "Teacher";
+            case "student":
+                return "Student";
+            case "parent":
+                return "Parent";
+            default:
+                return "";
+        }
+    };
 
     return (
         <header className="flex sticky top-0 h-16 justify-between shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 bg-background z-50">
@@ -98,9 +155,34 @@ export function OrgHeader() {
                             <>
                                 <BreadcrumbSeparator />
                                 <BreadcrumbItem>
-                                    <BreadcrumbPage>
-                                        {getPageName()}
-                                    </BreadcrumbPage>
+                                    <div className="flex items-center gap-2">
+                                        <BreadcrumbPage>
+                                            {getPageName()}
+                                        </BreadcrumbPage>
+                                        {role && (
+                                            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                                <span>as</span>
+                                                {(() => {
+                                                    const RoleIcon =
+                                                        getRoleIcon(role);
+                                                    return RoleIcon ? (
+                                                        <RoleIcon
+                                                            className={`size-4 ${getRoleColor(
+                                                                role
+                                                            )}`}
+                                                        />
+                                                    ) : null;
+                                                })()}
+                                                <span
+                                                    className={getRoleColor(
+                                                        role
+                                                    )}
+                                                >
+                                                    {getRoleLabel(role)}
+                                                </span>
+                                            </span>
+                                        )}
+                                    </div>
                                 </BreadcrumbItem>
                             </>
                         )}

@@ -41,12 +41,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {...props}
         >
             <SidebarHeader>
-                <Link
-                    href="/"
-                    prefetch={false}
-                >
-                    {state === "collapsed" ? <Icon /> : <Logo />}
-                </Link>
+                <div className="flex flex-col items-center gap-2">
+                    <Link
+                        href="/"
+                        prefetch={false}
+                    >
+                        {state === "collapsed" ? <Icon /> : <Logo />}
+                    </Link>
+                    {state !== "collapsed" && (
+                        <h2 className="text-lg font-medium text-muted-foreground text-center">
+                            Class
+                        </h2>
+                    )}
+                </div>
                 {/* <OrganizationSwitcher /> */}
             </SidebarHeader>
             <SidebarContent>
